@@ -8,12 +8,12 @@ import { useDataProvider, useListContext } from "react-admin";
 import { useMutation } from "react-query";
 import type { Post } from ".";
 import { PostsByStatus, getPostsByStatus, statuses } from ".";
-import { MyDataProvider } from "../dataProvider";
+// import { MyDataProvider } from "../dataProvider";
 import { PostColumn } from "./PostColumn";
 
 export const PostListContent = () => {
 	const { data: unorderedPosts, isLoading, refetch } = useListContext<Post>();
-	const dataProvider = useDataProvider<MyDataProvider>();
+	// const dataProvider = useDataProvider<MyDataProvider>();
 
 	const [postsByStatus, setPostsByStatus] = useState<PostsByStatus>(
 		getPostsByStatus([])
@@ -75,16 +75,16 @@ export const PostListContent = () => {
 			{ status: destinationStatus, index: destination.index },
 			postsByStatus
 		);
-		console.info('PPPPPPPPPPPPPPPP', newPostsByStatus);
+
 		setPostsByStatus(
 			newPostsByStatus
 		);
 
 		// trigger the mutation to persist the changes
-		mutation.mutateAsync({
-			source: sourcePost,
-			destination: destinationPost,
-		});
+		// mutation.mutateAsync({
+		// 	source: sourcePost,
+		// 	destination: destinationPost,
+		// });
 	};
 
 	return (

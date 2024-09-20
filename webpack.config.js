@@ -16,7 +16,41 @@ const CopyPlugin = require('copy-webpack-plugin');
 const tar = require('tar');
 const glob = require('glob');
 const execSync = require('child_process').execSync;
-const allPossibleCategories = require('@joplin/lib/pluginCategories.json');
+const allPossibleCategories = [
+	{
+	  "name": "appearance"
+	},
+	{
+	  "name": "developer tools"
+	},
+	{
+	  "name": "productivity"
+	},
+	{
+	  "name": "themes"
+	},
+	{
+	  "name": "integrations"
+	},
+	{
+	  "name": "viewer"
+	},
+	{
+	  "name": "search"
+	},
+	{
+	  "name": "tags"
+	},
+	{
+	  "name": "editor"
+	},
+	{
+	  "name": "files"
+	},
+	{
+	  "name": "personal knowledge management"
+	}
+];
 
 const rootDir = path.resolve(__dirname);
 const userConfigFilename = './plugin.config.json';
@@ -176,7 +210,10 @@ function onBuildCompleted() {
 const baseConfig = {
 	mode: 'production',
 	target: 'node',
-	stats: 'errors-only',
+	// stats: 'errors-only',
+	infrastructureLogging: {
+		level: 'verbose',
+	},
 	module: {
 		rules: [
 			{
@@ -185,6 +222,14 @@ const baseConfig = {
 				exclude: /node_modules/,
 			},
 		],
+	},
+	cache: {
+		type: 'filesystem',
+		allowCollectingMemory: true,
+		buildDependencies: {
+			config: [__filename],
+		},
+		cacheDirectory: path.resolve(__dirname, 'cache', 'webpack'),
 	},
 };
 
