@@ -20,5 +20,16 @@ export interface State {
 
 export interface IpcMessage {
 	type: 'getNoteBody' | 'setNoteBody';
-	value: any;
+	value?: any;
+}
+
+export interface OnMessageMessage {
+	message: IpcMessage;
+}
+
+type WebviewApiOnMessageHandler = (message:OnMessageMessage) => void;
+
+export interface WebviewApi {
+	postMessage<T>(message:IpcMessage): Promise<T>;
+	onMessage(handler:WebviewApiOnMessageHandler);
 }

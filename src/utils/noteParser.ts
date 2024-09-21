@@ -39,11 +39,15 @@ export const parseNote = (noteBody:string) => {
 
 			if (currentCard.body) currentCard.body += '\n';
 			currentCard.body += line;
-			currentCard.body = currentCard.body.trim();
 		} else if (state === 'inBody') {
 			if (currentCard.body) currentCard.body += '\n';
 			currentCard.body += line;
-			currentCard.body = currentCard.body.trim();
+		}
+	}
+
+	for (const stack of board.stacks) {
+		for (const card of stack.cards) {
+			card.body = card.body.trim();
 		}
 	}
 
@@ -66,4 +70,24 @@ export const serializeBoard = (board:Board) => {
 	}
 
 	return output.join('\n');
+}
+
+export const boardsEqual = (board1:Board, board2:Board) => {
+	if (board1.stacks.length !== board2.stacks.length) return false;
+
+	for (const [index, stack1] of board1.stacks.entries()) {
+		const stack2 = board2.stacks[index];
+
+		if (stack1.title !== stack2.title) return false;
+		if (stack1.cards.length !== stack2.cards.length) return false;
+
+		for (const [cardIndex, card1] of stack1.cards.entries()) {
+			const card2 = stack2.cards[cardIndex];
+
+			if (card1.title !== card2.title) return false;
+			if (card1.body !== card2.body) return false;
+		}
+	}
+
+	return true;
 }

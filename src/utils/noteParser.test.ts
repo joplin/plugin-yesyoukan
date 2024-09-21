@@ -23,6 +23,9 @@ Content 3
 
 Content 4
 
+
+Some empty lines above
+
 # Completed
 
 
@@ -71,7 +74,7 @@ describe('noteParser', () => {
 							{
 								id: '',
 								title: 'Post 4',
-								body: 'Content 4',
+								body: 'Content 4\n\n\nSome empty lines above',
 							},
 						]
 					},

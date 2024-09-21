@@ -1,5 +1,8 @@
 import joplin from 'api';
 import { IpcMessage } from './utils/types';
+import AsyncActionQueue from './utils/AsyncActionQueue';
+
+const noteUpdateQueue = new AsyncActionQueue(100);
 
 joplin.plugins.register({
 	onStart: async function() {
@@ -12,6 +15,14 @@ joplin.plugins.register({
 		await panels.addScript(view, './style/reset.css');
 		await panels.addScript(view, './style/main.css');
 
+		const makeNoteUpdateAction = () => {
+			return async () => {
+				const note = await joplin.workspace.selectedNote();
+				if (!note) return;
+				panels.postMessage(view, { type: 'setNoteBody', value: note.body });
+			};
+		};
+
 		panels.onMessage(view, async (message:IpcMessage) => {
 			console.info('PostMessagePlugin (Webview): Got message from webview:', message);
 
@@ -22,15 +33,15 @@ joplin.plugins.register({
 			}
 
 			if (message.type === 'setNoteBody') {
-				// const noteIds = await joplin.workspace.selectedNoteIds();
-				// if (!noteIds.length) throw new Error('No note is selected');
-				// const noteId = noteIds[0];
-				//await joplin.data.put(['notes', noteId], null, { body: message.value });
 				await joplin.commands.execute('editor.setText', message.value);
 				return;
 			}
 
 			throw new Error('Unknown message: ' + JSON.stringify(message));
+		});
+
+		joplin.workspace.onNoteChange(async () => {
+			noteUpdateQueue.push(makeNoteUpdateAction());
 		});
 	},
 });
