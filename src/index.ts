@@ -8,7 +8,8 @@ joplin.plugins.register({
 		
 		await panels.setHtml(view, '<div id="root"></div>');
 		await panels.addScript(view, './panel.js');
-		await panels.addScript(view, './styles.css');
+		await panels.addScript(view, './style/reset.css');
+		await panels.addScript(view, './style/main.css');
 
 		panels.onMessage(view, async (message:string) => {
 			console.info('PostMessagePlugin (Webview): Got message from webview:', message);

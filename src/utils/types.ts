@@ -1,6 +1,19 @@
-import { Post } from "src/posts";
+export interface Card {
+	id: string;
+	title: string;
+	body: string;
+}
 
-export interface Data {
-	posts: Post[],
-	// comments: Comment[],
+export interface Stack {
+	id: string;
+	title: string;
+	cards: Card[];
+}
+
+export interface Board {
+	stacks: Stack[];
+}
+
+export interface State {
+	board: Board;
 }

@@ -1,0 +1,30 @@
+.stacks {
+	display: flex;
+	flex-direction: row;
+}
+
+.stack {
+	display: flex;
+	border: 1px solid black;
+	margin: 1em;
+	padding: 1em;
+	flex-direction: column;
+
+	> h2 {
+		font-weight: bold;
+		font-size: 1.5em;
+	}
+}
+
+.cards {
+	display: flex;
+	flex-direction: column;
+}
+
+.card {
+	display: flex;
+	flex-direction: column;
+	border: 1px solid red;
+	margin: 1em;
+	padding: 1em;
+}

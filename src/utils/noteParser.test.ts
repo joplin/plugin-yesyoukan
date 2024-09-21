@@ -68,7 +68,7 @@ describe('noteParser', () => {
 
 
 					{
-						title: 'Completedh',
+						title: 'Completed',
 						cards: []
 					},
 				],
