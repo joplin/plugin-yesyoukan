@@ -17,3 +17,8 @@ export interface Board {
 export interface State {
 	board: Board;
 }
+
+export interface IpcMessage {
+	type: 'getNoteBody' | 'setNoteBody';
+	value: any;
+}

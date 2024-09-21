@@ -1,80 +1,44 @@
 import * as React from "react";
-import { useCallback, useState } from "react";
-import { State } from "./utils/types";
+import { useCallback, useState, useEffect } from "react";
+import { Board, State } from "./utils/types";
 import StackViewer from "./gui/StackViewer";
 import { DragDropContext, Droppable, OnDragEndResponder } from "@hello-pangea/dnd";
 import {current, produce} from "immer"
+import uuid from "./utils/uuid";
+import { parseNote, serializeBoard } from "./utils/noteParser";
+import AsyncActionQueue from "./utils/AsyncActionQueue";
 
-// declare var webviewApi: any;
+declare var webviewApi: any;
 
-const uuidgen = () => {
-	return Math.round(Math.random() * 100000).toString() + '_' + Date.now().toString();
-}
-
-const defaultState:State = {
-	board: {
-		stacks: [
-			{
-				id: uuidgen(),
-				title: 'Draft',
-				cards: [
-					{
-						id: uuidgen(),
-						title: 'Post 1',
-						body: 'Content 1',
-					},
-					{
-						id: uuidgen(),
-						title: 'Post 2',
-						body: 'Content 2',
-					},
-				]
-			},
-
-			{
-				id: uuidgen(),
-				title: 'To review',
-				cards: [
-					{
-						id: uuidgen(),
-						title: 'Post 3',
-						body: 'Content 3',
-					},
-				]
-			},
-
-			{
-				id: uuidgen(),
-				title: 'To publish',
-				cards: [
-					{
-						id: uuidgen(),
-						title: 'Post 4',
-						body: 'Content 4',
-					},
-				]
-			},
-
-
-			{
-				id: uuidgen(),
-				title: 'Completed',
-				cards: []
-			},
-		],
-	},
-};
+const updateNoteQueue = new AsyncActionQueue(100);
 
 export const App = () => {
-	const [state, setState] = useState<State>(defaultState);
+	const [board, setBoard] = useState<Board>({ stacks: [] });
 
 	const renderStacks = () => {
 		const output:React.JSX.Element[] = [];
-		for (let [index, stack] of state.board.stacks.entries()) {
+		for (let [index, stack] of board.stacks.entries()) {
 			output.push(<StackViewer key={stack.id} value={stack} index={index}/>);
 		}
 		return output;
 	}
+
+	useEffect(() => {
+		const fn = async() => {
+			const noteBody = await webviewApi.postMessage({ type: 'getNoteBody' });
+			const newBoard = parseNote(noteBody);
+			setBoard(newBoard);
+		}
+
+		void fn();
+	}, []);
+
+	useEffect(() => {
+		updateNoteQueue.push(async () => {
+			const noteBody = serializeBoard(board);
+			await webviewApi.postMessage({ type: 'setNoteBody', value: noteBody });	
+		});
+	}, [board, webviewApi, updateNoteQueue]);
 
 	const onDragEnd:OnDragEndResponder = useCallback((result) => {
 		const { destination, source, type } = result;
@@ -83,25 +47,25 @@ export const App = () => {
 		if (destination.droppableId === source.droppableId && destination.index === source.index) return
 
 		if (type === 'card') {
-			const newState = produce(state, draft => {
-				const sourceStack = draft.board.stacks.find(s => s.id === source.droppableId);
-				const destinationStack = draft.board.stacks.find(s => s.id === destination.droppableId);
+			const newBoard = produce(board, draft => {
+				const sourceStack = draft.stacks.find(s => s.id === source.droppableId);
+				const destinationStack = draft.stacks.find(s => s.id === destination.droppableId);
 				const removed = sourceStack.cards.splice(source.index, 1);
 				destinationStack.cards.splice(destination.index, 0, removed[0]);
 			});
 
-			setState(newState);
+			setBoard(newBoard);
 		} else if (type === "column") {
-			const newState = produce(state, draft => {
-				const removed = draft.board.stacks.splice(source.index, 1);
-				draft.board.stacks.splice(destination.index, 0, removed[0]);
+			const newBoard = produce(board, draft => {
+				const removed = draft.stacks.splice(source.index, 1);
+				draft.stacks.splice(destination.index, 0, removed[0]);
 			});
 
-			setState(newState);
+			setBoard(newBoard);
 		} else {
 			throw new Error('Unknown type: ' + type);
 		}
-	}, [state]);
+	}, [board]);
 
 	return (
 		<div className="app">
