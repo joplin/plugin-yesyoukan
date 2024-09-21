@@ -34,6 +34,7 @@
     "webpack-cli": "^4.10.0"
   },
   "dependencies": {
-    "@hello-pangea/dnd": "^17.0.0"
+    "@hello-pangea/dnd": "^17.0.0",
+    "immer": "^10.1.1"
   }
 }

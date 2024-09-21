@@ -1,15 +1,17 @@
 import * as React from "react";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { State } from "./utils/types";
 import StackViewer from "./gui/StackViewer";
 import { DragDropContext, OnDragEndResponder } from "@hello-pangea/dnd";
+import {produce} from "immer"
+
 // declare var webviewApi: any;
 
 const uuidgen = () => {
 	return Math.round(Math.random() * 100000).toString() + '_' + Date.now().toString();
 }
 
-const state:State = {
+const defaultState:State = {
 	board: {
 		stacks: [
 			{
@@ -64,6 +66,8 @@ const state:State = {
 };
 
 export const App = () => {
+	const [state, setState] = useState<State>(defaultState);
+
 	const renderStacks = () => {
 		const output:React.JSX.Element[] = [];
 		for (const stack of state.board.stacks) {
@@ -72,8 +76,21 @@ export const App = () => {
 		return output;
 	}
 
-	const onDragEnd:OnDragEndResponder = useCallback(() => {
-		// TODO
+	const onDragEnd:OnDragEndResponder = useCallback((result) => {
+		const { destination, source } = result;
+
+		if (!destination) return;
+		if (destination.droppableId === source.droppableId && destination.index === source.index) return
+		
+		const newState = produce(state, draft => {
+			const stack = draft.board.stacks.find(s => s.id === source.droppableId);
+			const removed = stack.cards.splice(source.index, 1);
+			stack.cards.splice(destination.index, 0, removed[0]);
+		});
+
+		console.info('NEW STATE', newState);
+
+		setState(newState);
 	}, []);
 
 	return (
