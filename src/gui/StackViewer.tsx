@@ -1,10 +1,11 @@
 import * as React from "react";
 import { Stack } from "src/utils/types";
 import CardViewer from "./CardViewer";
-import { Droppable } from "@hello-pangea/dnd";
+import { Draggable, Droppable } from "@hello-pangea/dnd";
 
 interface Props {
 	value: Stack;
+	index: number;
 }
 
 export default (props:Props) => {
@@ -17,16 +18,26 @@ export default (props:Props) => {
 	}
 
 	return (
-		<div className="stack">
-			<h2>{props.value.title}</h2>
-			<Droppable droppableId={props.value.id}>
-				{(provided) => (
-					<div className="cards" {...provided.droppableProps} ref={provided.innerRef}>
-						{renderCards()}
-						{provided.placeholder}
+		<Draggable draggableId={props.value.id} index={props.index}>
+			{(provided) => {
+				return (
+					<div className="stack" {...provided.draggableProps} ref={provided.innerRef}>
+						<h2 {...provided.dragHandleProps}>{props.value.title}</h2>
+						<Droppable droppableId={props.value.id} type="card">
+							{(provided, snapshot) => {
+								const classes = ['cards'];
+								if (snapshot.isDraggingOver) classes.push('is-dragging-over');
+								return (
+									<div className={classes.join(' ')} {...provided.droppableProps} ref={provided.innerRef}>
+										{renderCards()}
+										{provided.placeholder}
+									</div>
+								);
+							}}
+						</Droppable>
 					</div>
-				)}
-			</Droppable>
-		</div>
+				);
+			}}
+		</Draggable>
 	);
 }

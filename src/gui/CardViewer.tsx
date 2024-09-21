@@ -12,12 +12,16 @@ export default (props:Props) => {
 
 	return (
 		<Draggable draggableId={card.id} index={props.index}>
-			{(provided) => (
-				<div className="card" {...provided.draggableProps} {...provided.dragHandleProps} ref={provided.innerRef}>
-					<h3>{card.title}</h3>
-					<p>{card.body}</p>
-				</div>
-			)}
+			{(provided, snapshot) => {
+				const classes = ['card'];
+				if (snapshot.isDragging) classes.push('is-dragging');
+				return (
+					<div className={classes.join(' ')} {...provided.draggableProps} {...provided.dragHandleProps} ref={provided.innerRef}>
+						<h3>{card.title}</h3>
+						<p>{card.body}</p>
+					</div>
+				);
+			}}
 		</Draggable>
 	);
 }

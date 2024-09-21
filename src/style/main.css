@@ -1,24 +1,38 @@
+.app {
+	display: flex;
+}
+
 .stacks {
 	display: flex;
 	flex-direction: row;
+
+	> .stacks-inner {
+		display: flex;
+	}
 }
 
 .stack {
 	display: flex;
 	border: 1px solid black;
-	margin: 1em;
-	padding: 1em;
 	flex-direction: column;
 
 	> h2 {
 		font-weight: bold;
 		font-size: 1.5em;
+		padding: 1em;
 	}
 }
 
 .cards {
 	display: flex;
 	flex-direction: column;
+	background-color: white;
+	flex: 1;
+}
+
+.cards.is-dragging-over {
+	background-color: green;
+	transition: background-color 0.3s ease;
 }
 
 .card {
@@ -27,4 +41,9 @@
 	border: 1px solid red;
 	margin: 1em;
 	padding: 1em;
+	background-color: white;
+}
+
+.card.is-dragging {
+	background-color: yellow;
 }
