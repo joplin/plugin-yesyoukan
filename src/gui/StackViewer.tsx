@@ -12,7 +12,7 @@ export default (props:Props) => {
 	const renderCards = () => {
 		const output:React.JSX.Element[] = [];
 		for (let [index, card] of props.value.cards.entries()) {
-			output.push(<CardViewer index={index} key={card.id} value={card}/>);
+			output.push(<CardViewer isLast={index === props.value.cards.length - 1} index={index} key={card.id} value={card}/>);
 		}
 		return output;
 	}
@@ -22,7 +22,7 @@ export default (props:Props) => {
 			{(provided) => {
 				return (
 					<div className="stack" {...provided.draggableProps} ref={provided.innerRef}>
-						<h2 {...provided.dragHandleProps}>{props.value.title}</h2>
+						<h2 className="title" {...provided.dragHandleProps}>{props.value.title}</h2>
 						<Droppable droppableId={props.value.id} type="card">
 							{(provided, snapshot) => {
 								const classes = ['cards'];

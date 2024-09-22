@@ -1,4 +1,4 @@
-import { parseNote } from "./noteParser";
+import { parseNote, serializeBoard } from "./noteParser";
 import { Board, State } from "./types";
 
 const noteBody1 = `# Draft
@@ -27,8 +27,6 @@ Content 4
 Some empty lines above
 
 # Completed
-
-
 `
 
 describe('noteParser', () => {
@@ -100,10 +98,12 @@ describe('noteParser', () => {
 			return s;
 		});
 
-		console.info('ACTUAL', JSON.stringify(actual, null, '\t'));
-		console.info('EXPECTED', JSON.stringify(board, null, '\t'));
-
 		expect(actual).toEqual(board);
+
+		{
+			const actual = serializeBoard(board);
+			expect(actual).toBe(noteBody);
+		}
 	});
 
 });

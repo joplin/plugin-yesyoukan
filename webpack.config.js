@@ -208,7 +208,8 @@ function onBuildCompleted() {
 }
 
 const baseConfig = {
-	mode: 'production',
+	// mode: 'production',
+	mode: 'development',
 	target: 'node',
 	// stats: 'errors-only',
 	infrastructureLogging: {
@@ -267,7 +268,7 @@ const pluginConfig = { ...baseConfig, entry: './src/index.ts',
 		}),
 	] };
 
-const extraScriptConfig = { ...baseConfig, resolve: {
+const extraScriptConfig = { ...baseConfig, target:'web', resolve: {
 	alias: {
 		api: path.resolve(__dirname, 'api'),
 	},

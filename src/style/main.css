@@ -1,49 +1,76 @@
 .app {
 	display: flex;
+	color: var(--joplin-color);
+	font-family: var(--joplin-font-family);
+	font-size: var(--joplin-font-size);
 }
 
 .stacks {
 	display: flex;
 	flex-direction: row;
+	flex: 1;
 
 	> .stacks-inner {
 		display: flex;
+		flex: 1;
 	}
 }
 
 .stack {
 	display: flex;
-	border: 1px solid black;
 	flex-direction: column;
+	background-color: var(--joplin-background-color3);
+	flex: 1 1 0;
+	max-width: 20em;
+	margin-top: 10px;
+	margin-left: 10px;
+	margin-bottom: 10px;
+	border-radius: 8px;
+	transition: background-color 300ms ease;
+	min-height: 200px;
 
-	> h2 {
+	> .title {
 		font-weight: bold;
 		font-size: 1.5em;
 		padding: 1em;
+		font-size: calc(var(--joplin-font-size) * 1.5);
+		white-space: nowrap;
 	}
+}
+
+.stack:has(.cards.is-dragging-over) {
+	background-color: var(--joplin-selected-color);
+	transition: background-color 300ms ease;
+}
+
+.stack.is-last {
+	margin-right: 10px;
 }
 
 .cards {
 	display: flex;
 	flex-direction: column;
-	background-color: white;
 	flex: 1;
-}
-
-.cards.is-dragging-over {
-	background-color: green;
-	transition: background-color 0.3s ease;
 }
 
 .card {
 	display: flex;
 	flex-direction: column;
-	border: 1px solid red;
-	margin: 1em;
+	margin: 0 10px 10px 10px;
 	padding: 1em;
-	background-color: white;
-}
+	background-color: var(--joplin-background-color);
+	border: 1px solid var(--joplin-divider-color);
+	border-radius: 8px;
+	box-shadow: 0 0 4px rgba(38,50,56,.04);	
 
-.card.is-dragging {
-	background-color: yellow;
+	> .title {
+		font-weight: bold;
+		margin-bottom: 10px;
+	}
+
+	> .body {
+		p {
+			margin-bottom: 10px;
+		}
+	}
 }
