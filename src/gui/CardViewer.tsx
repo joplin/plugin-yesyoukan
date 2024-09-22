@@ -4,11 +4,7 @@ import { useMemo, useCallback, useState, useRef } from "react";
 import { Card, Stack } from "src/utils/types";
 import * as MarkdownIt from 'markdown-it';
 import ConfirmButtons from "./ConfirmButtons";
-
-enum Mode {
-	View = 1,
-	Edit = 2,
-}
+import useOnEditorKeyDown from "./hooks/useOnEditorKeyDown";
 
 export interface ChangeEvent {
 	card: Card;
@@ -44,7 +40,7 @@ const stringToCard = (originalCard:Card, newContent:string):Card => {
 export default (props:Props) => {
 	const card = props.value;
 
-	const [mode, setMode] = useState<Mode>(Mode.View);
+	const [isEditing, setIsEditing] = useState<boolean>(false);
 	const editorRef = useRef<HTMLTextAreaElement>(null);
 
 	const bodyHtml = useMemo(() => {
@@ -55,31 +51,24 @@ export default (props:Props) => {
 		props.onChange({
 			card: stringToCard(props.value, editorRef.current.value),
 		});
-		setMode(Mode.View);
+		setIsEditing(false);
 	}, [props.onChange, props.value]);
 
 	const onEditorCancel = useCallback(() => {
-		setMode(Mode.View);
+		setIsEditing(false);
 	}, []);
 
 	const onDoubleClick = useCallback(() => {
-		if (mode === Mode.View) {
-			setMode(Mode.Edit);
+		if (!isEditing) {
+			setIsEditing(true);
+			requestAnimationFrame(() => editorRef.current.focus());
 		}
-	}, [mode]);
+	}, [isEditing]);
 
-	const onEditorKeyDown = useCallback<React.KeyboardEventHandler<HTMLTextAreaElement>>((event) => {
-		if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
-			event.preventDefault()
-			onEditorSubmit();
-		} else if (event.key === 'Escape') {
-			event.preventDefault()
-			onEditorCancel();
-		}
-	}, [onEditorSubmit, onEditorCancel]);
+	const onEditorKeyDown = useOnEditorKeyDown({ onEditorSubmit, onEditorCancel });
 
 	const renderContent = () => {
-		if (mode === Mode.View) {
+		if (!isEditing) {
 			return (
 				<>
 					<h3 className="title">{card.title}</h3>
@@ -107,7 +96,7 @@ export default (props:Props) => {
 				const classes = ['card'];
 				if (snapshot.isDragging) classes.push('-dragging');
 				if (props.isLast) classes.push('-last');
-				if (mode === Mode.Edit) classes.push('-editing');
+				if (isEditing) classes.push('-editing');
 				return (
 					<div className={classes.join(' ')} {...provided.draggableProps} {...provided.dragHandleProps} ref={provided.innerRef} onDoubleClick={onDoubleClick}>
 						{renderContent()}

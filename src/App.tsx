@@ -1,14 +1,13 @@
 import * as React from "react";
 import { useCallback, useState, useEffect } from "react";
-import { Board, IpcMessage, State, WebviewApi } from "./utils/types";
-import StackViewer from "./gui/StackViewer";
+import { Board, WebviewApi } from "./utils/types";
+import StackViewer, { TitleChangeEventHandler } from "./gui/StackViewer";
 import { DragDropContext, Droppable, OnDragEndResponder } from "@hello-pangea/dnd";
-import {current, produce} from "immer"
-import uuid from "./utils/uuid";
+import { produce} from "immer"
 import { boardsEqual, parseNote, serializeBoard } from "./utils/noteParser";
 import AsyncActionQueue from "./utils/AsyncActionQueue";
 import { ChangeEventHandler as CardChangeEventHandler } from "./gui/CardViewer";
-import { findCardIndex } from "./utils/board";
+import { findCardIndex, findStackIndex } from "./utils/board";
 
 declare var webviewApi: WebviewApi;
 
@@ -28,10 +27,19 @@ export const App = () => {
 		setBoard(newBoard);
 	}, [board]);
 
+	const onStackTitleChange = useCallback<TitleChangeEventHandler>((event) => {
+		const newBoard = produce(board, draft => {
+			const stackIndex = findStackIndex(board, event.stackId);
+			draft.stacks[stackIndex].title = event.title;
+		});
+
+		setBoard(newBoard);
+	}, [board]);
+
 	const renderStacks = () => {
 		const output:React.JSX.Element[] = [];
 		for (let [index, stack] of board.stacks.entries()) {
-			output.push(<StackViewer onCardChange={onCardChange} key={stack.id} value={stack} index={index}/>);
+			output.push(<StackViewer onTitleChange={onStackTitleChange} onCardChange={onCardChange} key={stack.id} value={stack} index={index}/>);
 		}
 		return output;
 	}

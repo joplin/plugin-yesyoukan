@@ -44,7 +44,7 @@ body {
 	flex-direction: column;
 	background-color: var(--joplin-background-color3);
 	flex: 1 1 0;
-	max-width: 20em;
+	width: 270px;
 	margin-top: 10px;
 	margin-left: 10px;
 	margin-bottom: 10px;
@@ -54,12 +54,39 @@ body {
 	overflow-x: hidden;
 	overflow-y: auto;
 
-	> .title {
-		font-weight: bold;
-		font-size: 1.5em;
-		padding: 1em;
-		font-size: calc(var(--joplin-font-size) * 1.5);
-		white-space: nowrap;
+	> .title-box {
+		display: flex;
+		position: relative;
+		height: 40px;
+		align-items: center;
+		min-height: 40px;
+		max-height: 40px;
+		padding-left: 12px;
+		padding-right: 12px;
+
+		> .titleedit,
+		> .title {
+			font-weight: bold;
+			font-size: 1.5em;
+			font-size: calc(var(--joplin-font-size) * 1.5);
+			white-space: nowrap;	
+		}
+
+		> .title {
+			border: 1px solid transparent;
+		}
+
+		> .titleedit {
+			border: 1px solid var(--joplin-divider-color);
+			width: 100%;
+			border-radius: 4px;
+			padding-right: 20px;
+		}
+
+		> .buttons {
+			position: absolute;
+			right: 14px;
+		}
 	}
 }
 
@@ -134,12 +161,12 @@ body {
 		margin: 0;
 
 		&.-confirm {
-			color: var(--joplin-color4);
+			color: var(--joplin-color);
 		}
 
 		&.-cancel {
-			color: var(--joplin-destructive-color);
-			margin-left: 4px;
+			margin-left: 2px;
+			color: var(--joplin-color);
 		}
 	}
 

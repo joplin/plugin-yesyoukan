@@ -1,15 +1,61 @@
 import * as React from "react";
+import { useCallback, useState, useRef } from "react";
 import { Stack } from "src/utils/types";
-import CardViewer, { ChangeEventHandler as CarcChangeEventHandler } from "./CardViewer";
-import { Draggable, Droppable } from "@hello-pangea/dnd";
+import CardViewer, { ChangeEventHandler as CardChangeEventHandler } from "./CardViewer";
+import { Draggable, DraggableProvided, Droppable } from "@hello-pangea/dnd";
+import ConfirmButtons from "./ConfirmButtons";
+import useOnEditorKeyDown from "./hooks/useOnEditorKeyDown";
+
+export interface TitleChangeEvent {
+	stackId: string;
+	title: string;
+}
+
+export type TitleChangeEventHandler = (event:TitleChangeEvent) => void;
 
 interface Props {
 	value: Stack;
 	index: number;
-	onCardChange: CarcChangeEventHandler;
+	onCardChange: CardChangeEventHandler;
+	onTitleChange: TitleChangeEventHandler;
 }
 
 export default (props:Props) => {
+	const [isEditing, setIsEditing] = useState<boolean>(false);
+	const editorRef = useRef<HTMLInputElement>(null);
+
+	const onTitleDoubleClick = useCallback(() => {
+		setIsEditing(true);
+		requestAnimationFrame(() => editorRef.current.focus());
+	}, []);
+
+	const onEditorSubmit = useCallback(() => {
+		props.onTitleChange({
+			stackId: props.value.id,
+			title: editorRef.current.value,
+		});
+		setIsEditing(false);
+	}, [props.value, props.onTitleChange, props.value.id]);
+
+	const onEditorCancel = useCallback(() => {
+		setIsEditing(false);
+	}, []);
+
+	const onEditorKeyDown = useOnEditorKeyDown({ onEditorSubmit, onEditorCancel });
+
+	const renderTitle = () => {
+		if (!isEditing) {
+			return <h2 className="title">{props.value.title}</h2>
+		} else {
+			return (
+				<>
+					<input type="text" onKeyDown={onEditorKeyDown} className="titleedit" defaultValue={props.value.title} ref={editorRef} />
+					<ConfirmButtons className="buttons" showConfirm={false} onConfirm={onEditorSubmit} onCancel={onEditorCancel} />
+				</>
+			);
+		}
+	}
+
 	const renderCards = () => {
 		const output:React.JSX.Element[] = [];
 		for (let [index, card] of props.value.cards.entries()) {
@@ -23,7 +69,9 @@ export default (props:Props) => {
 			{(provided) => {
 				return (
 					<div className="stack" {...provided.draggableProps} ref={provided.innerRef}>
-						<h2 className="title" {...provided.dragHandleProps}>{props.value.title}</h2>
+						<div onDoubleClick={onTitleDoubleClick} className="title-box" {...provided.dragHandleProps}>
+							{renderTitle()}
+						</div>
 						<Droppable droppableId={props.value.id} type="card">
 							{(provided, snapshot) => {
 								const classes = ['cards'];
