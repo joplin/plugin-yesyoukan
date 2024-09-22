@@ -1,3 +1,26 @@
+html {
+	max-height: 100%;
+	height: 100%
+}
+
+body {
+	display: flex;
+    min-height: 100%;
+    height: 100%;
+}
+
+#joplin-plugin-content {
+	display: flex;
+    flex-direction: column;
+    min-height: 100%;
+    height: 100%;
+}
+
+#root {
+	display: flex;
+    min-height: 100%;
+}
+
 .app {
 	display: flex;
 	color: var(--joplin-color);
@@ -28,6 +51,8 @@
 	border-radius: 8px;
 	transition: background-color 300ms ease;
 	min-height: 200px;
+	overflow-x: hidden;
+	overflow-y: auto;
 
 	> .title {
 		font-weight: bold;
@@ -38,12 +63,12 @@
 	}
 }
 
-.stack:has(.cards.is-dragging-over) {
+.stack:has(.cards.-dragging-over) {
 	background-color: var(--joplin-selected-color);
 	transition: background-color 300ms ease;
 }
 
-.stack.is-last {
+.stack.-last {
 	margin-right: 10px;
 }
 
@@ -51,6 +76,9 @@
 	display: flex;
 	flex-direction: column;
 	flex: 1;
+	flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: 0;
 }
 
 .card {
@@ -62,6 +90,9 @@
 	border: 1px solid var(--joplin-divider-color);
 	border-radius: 8px;
 	box-shadow: 0 0 4px rgba(38,50,56,.04);	
+	max-height: 20em;
+	overflow-x: hidden;
+	overflow-y: auto;
 
 	> .title {
 		font-weight: bold;
@@ -73,4 +104,43 @@
 			margin-bottom: 10px;
 		}
 	}
+
+	> .editor {
+		> .note-editor {
+			height: 10em;
+			width: 100%;
+			border: 1px solid var(--joplin-divider-color);
+		}
+	}
+
+	&.-editing {
+		padding-bottom: 5px;
+	}
+}
+
+.confirm-buttons {
+	display: flex;
+	justify-content: flex-end;
+
+	> .button {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		border: none;
+		background: none;
+		width: 1.5em;
+		height: 1.5em;
+		padding: 0;
+		margin: 0;
+
+		&.-confirm {
+			color: var(--joplin-color4);
+		}
+
+		&.-cancel {
+			color: var(--joplin-destructive-color);
+			margin-left: 4px;
+		}
+	}
+
 }

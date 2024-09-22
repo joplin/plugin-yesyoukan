@@ -7,6 +7,8 @@ import {current, produce} from "immer"
 import uuid from "./utils/uuid";
 import { boardsEqual, parseNote, serializeBoard } from "./utils/noteParser";
 import AsyncActionQueue from "./utils/AsyncActionQueue";
+import { ChangeEventHandler as CardChangeEventHandler } from "./gui/CardViewer";
+import { findCardIndex } from "./utils/board";
 
 declare var webviewApi: WebviewApi;
 
@@ -15,10 +17,21 @@ const updateNoteQueue = new AsyncActionQueue(100);
 export const App = () => {
 	const [board, setBoard] = useState<Board>({ stacks: [] });
 
+	const onCardChange = useCallback<CardChangeEventHandler>((event) => {
+		const newBoard = produce(board, draft => {
+			const [stackIndex, cardIndex] = findCardIndex(draft, event.card.id);
+			const newCard = draft.stacks[stackIndex].cards[cardIndex];
+			newCard.title = event.card.title;
+			newCard.body = event.card.body;
+		});
+
+		setBoard(newBoard);
+	}, [board]);
+
 	const renderStacks = () => {
 		const output:React.JSX.Element[] = [];
 		for (let [index, stack] of board.stacks.entries()) {
-			output.push(<StackViewer key={stack.id} value={stack} index={index}/>);
+			output.push(<StackViewer onCardChange={onCardChange} key={stack.id} value={stack} index={index}/>);
 		}
 		return output;
 	}
