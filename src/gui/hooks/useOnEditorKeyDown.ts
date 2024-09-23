@@ -8,7 +8,9 @@ interface Props {
 
 export default (props:Props) => {
 	return useCallback<React.KeyboardEventHandler<unknown>>((event) => {
-		if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
+		if (event.shiftKey && event.key === 'Enter') {
+			// Just enter a newline
+		} else if (event.key === 'Enter') {
 			event.preventDefault()
 			props.onEditorSubmit();
 		} else if (event.key === 'Escape') {

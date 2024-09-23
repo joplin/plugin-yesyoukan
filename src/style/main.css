@@ -54,38 +54,51 @@ body {
 	overflow-x: hidden;
 	overflow-y: auto;
 
-	> .title-box {
+	> .stack-header {
 		display: flex;
-		position: relative;
-		height: 40px;
-		align-items: center;
-		min-height: 40px;
-		max-height: 40px;
-		padding-left: 12px;
-		padding-right: 12px;
 
-		> .titleedit,
-		> .title {
-			font-weight: bold;
-			font-size: 1.5em;
-			font-size: calc(var(--joplin-font-size) * 1.5);
-			white-space: nowrap;	
-		}
+		> .title-wrapper {
+			display: flex;
+			position: relative;
+			height: 40px;
+			align-items: center;
+			min-height: 40px;
+			max-height: 40px;
+			padding-left: 12px;
+			padding-right: 0;
 
-		> .title {
-			border: 1px solid transparent;
-		}
+			> .titleedit,
+			> .title {
+				font-weight: bold;
+				font-size: 1.5em;
+				font-size: calc(var(--joplin-font-size) * 1.5);
+				white-space: nowrap;	
+			}
 
-		> .titleedit {
-			border: 1px solid var(--joplin-divider-color);
-			width: 100%;
-			border-radius: 4px;
-			padding-right: 20px;
+			> .title {
+				border: 1px solid transparent;
+			}
+
+			> .titleedit {
+				border: 1px solid var(--joplin-divider-color);
+				width: 100%;
+				border-radius: 4px;
+				padding-right: 20px;
+			}
+
+			> .buttons {
+				position: absolute;
+				right: 2px;
+				align-items: center;
+			}
 		}
 
 		> .buttons {
-			position: absolute;
-			right: 14px;
+			display: flex;
+			justify-content: flex-end;
+			align-items: center;
+			flex: 1;
+			padding-right: 4px;
 		}
 	}
 }
@@ -172,16 +185,12 @@ body {
 
 }
 
-.heading-buttons {
-	display: flex;
-	justify-content: flex-end;
-	flex: 1;
-}
-
 .kebab-button {
 	display: flex;
 	justify-content: center;
 	align-items: center;
 	border: none;
 	background: none;
+	width: 22px;
+    height: 22px;
 }

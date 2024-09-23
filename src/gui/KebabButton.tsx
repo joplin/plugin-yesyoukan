@@ -1,11 +1,32 @@
 import * as React from "react";
-import Button from '@mui/material/Button';
+import { useCallback } from "react";
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import { ThemeProvider, createTheme, CssBaseline, Divider } from '@mui/material';
 
-interface Props {
+interface MenuItemBase {
+	id: string;
+	label: string;
+	isDivider?: false;
+}
 
+interface MenuDivider {
+	id?: never;
+	label?: never;
+	isDivider: true;
+}
+
+export type MenuItem = MenuItemBase | MenuDivider;
+
+export interface ItemClickEvent {
+	itemId: string;
+}
+
+export type ItemClickEventHandler = (event:ItemClickEvent) => void;
+
+interface Props {
+	menuItems: MenuItem[];
+	onItemClick: ItemClickEventHandler;
 }
 
 let computedStyle_:CSSStyleDeclaration|null = null;
@@ -57,31 +78,45 @@ export default (props:Props) => {
 	const onClick = (event: React.MouseEvent<HTMLButtonElement>) => {
 		setAnchorEl(event.currentTarget);
 	};
-	const handleClose = () => {
+
+	const onClose = () => {
 		setAnchorEl(null);
-	};
+	}
+
+	const onMenuItemClick = useCallback<React.MouseEventHandler>((event) => {
+		onClose();
+		const itemId = event.currentTarget.getAttribute('data-id');
+		props.onItemClick({ itemId });
+	}, [onClose, props.onItemClick]);
+
+	const renderMenuItems = () => {
+		const output:React.JSX.Element[] = [];
+		for (const menuItem of props.menuItems) {
+			if (menuItem.isDivider) {
+				output.push(<Divider/>);
+			} else {
+				output.push(<MenuItem data-id={menuItem.id} key={menuItem.id} onClick={onMenuItemClick}>{menuItem.label}</MenuItem>);
+			}
+		}
+		return output;
+	}
 
 	return (
 		<ThemeProvider theme={theme}>
-			<div>
-				<button onClick={onClick} className="kebab-button">
-					<i className="fas fa-ellipsis-v"></i>
-				</button>
-				<Menu
-					className="context-menu"
-					anchorEl={anchorEl}
-					open={open}
-					onClose={handleClose}
-					MenuListProps={{
-						'aria-labelledby': 'basic-button',
-					}}
-				>
-					<MenuItem className="menuitem" onClick={handleClose}>Profile</MenuItem>
-					<MenuItem className="menuitem" onClick={handleClose}>My account</MenuItem>
-					<Divider className="divider" />
-					<MenuItem className="menuitem" onClick={handleClose}>Logout</MenuItem>
-				</Menu>
-			</div>
+			<button onClick={onClick} className="kebab-button">
+				<i className="fas fa-ellipsis-v"></i>
+			</button>
+			<Menu
+				className="context-menu"
+				anchorEl={anchorEl}
+				open={open}
+				onClose={onClose}
+				MenuListProps={{
+					'aria-labelledby': 'basic-button',
+				}}
+			>
+				{renderMenuItems()}
+			</Menu>
 		</ThemeProvider>
 	);
 }
