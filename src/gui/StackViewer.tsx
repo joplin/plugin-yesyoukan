@@ -5,6 +5,7 @@ import CardViewer, { ChangeEventHandler as CardChangeEventHandler } from "./Card
 import { Draggable, DraggableProvided, Droppable } from "@hello-pangea/dnd";
 import ConfirmButtons from "./ConfirmButtons";
 import useOnEditorKeyDown from "./hooks/useOnEditorKeyDown";
+import KebabButton from "./KebabButton";
 
 export interface TitleChangeEvent {
 	stackId: string;
@@ -56,6 +57,14 @@ export default (props:Props) => {
 		}
 	}
 
+	const renderHeadingButtons = () => {
+		return (
+			<div className="heading-buttons">
+				<KebabButton/>
+			</div>
+		);
+	}
+
 	const renderCards = () => {
 		const output:React.JSX.Element[] = [];
 		for (let [index, card] of props.value.cards.entries()) {
@@ -71,6 +80,7 @@ export default (props:Props) => {
 					<div className="stack" {...provided.draggableProps} ref={provided.innerRef}>
 						<div onDoubleClick={onTitleDoubleClick} className="title-box" {...provided.dragHandleProps}>
 							{renderTitle()}
+							{renderHeadingButtons()}
 						</div>
 						<Droppable droppableId={props.value.id} type="card">
 							{(provided, snapshot) => {

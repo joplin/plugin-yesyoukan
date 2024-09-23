@@ -171,3 +171,17 @@ body {
 	}
 
 }
+
+.heading-buttons {
+	display: flex;
+	justify-content: flex-end;
+	flex: 1;
+}
+
+.kebab-button {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	border: none;
+	background: none;
+}
