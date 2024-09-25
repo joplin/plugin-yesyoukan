@@ -6,6 +6,7 @@ import { Draggable, DraggableProvided, Droppable } from "@hello-pangea/dnd";
 import ConfirmButtons from "./ConfirmButtons";
 import useOnEditorKeyDown from "./hooks/useOnEditorKeyDown";
 import KebabButton, { ItemClickEventHandler } from "./KebabButton";
+import Button from "./Button";
 
 export interface TitleChangeEvent {
 	stackId: string;
@@ -16,8 +17,13 @@ export interface DeleteEvent {
 	stackId: string;
 }
 
+export interface AddCardEvent {
+	stackId: string;
+}
+
 export type TitleChangeEventHandler = (event:TitleChangeEvent) => void;
 export type DeleteEventHandler = (event:DeleteEvent) => void;
+export type AddCardEventHandler = (event:AddCardEvent) => void;
 
 interface Props {
 	value: Stack;
@@ -25,6 +31,7 @@ interface Props {
 	onCardChange: CardChangeEventHandler;
 	onTitleChange: TitleChangeEventHandler;
 	onDelete: DeleteEventHandler;
+	onAddCard: AddCardEventHandler;
 }
 
 export default (props:Props) => {
@@ -64,6 +71,10 @@ export default (props:Props) => {
 		}
 	}, [onStartEditing, props.value.id]);
 
+	const onAddCard = useCallback(() => {
+		props.onAddCard({ stackId: props.value.id });
+	}, [props.onAddCard, props.value.id]);
+
 	const renderTitle = () => {
 		if (!isEditing) {
 			return (
@@ -84,6 +95,7 @@ export default (props:Props) => {
 	const renderHeadingButtons = () => {
 		return (
 			<div className="buttons">
+				<Button title="Add card" icon="fas fa-plus" onClick={onAddCard} />
 				<KebabButton
 					menuItems={[
 						{

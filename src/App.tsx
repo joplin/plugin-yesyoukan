@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useCallback, useState, useEffect, useMemo } from "react";
 import { Board, WebviewApi } from "./utils/types";
-import StackViewer, { DeleteEventHandler, TitleChangeEventHandler } from "./gui/StackViewer";
+import StackViewer, { AddCardEventHandler, DeleteEventHandler, TitleChangeEventHandler } from "./gui/StackViewer";
 import { DragDropContext, Droppable, OnDragEndResponder } from "@hello-pangea/dnd";
 import { produce} from "immer"
 import { boardsEqual, parseNote, serializeBoard } from "./utils/noteParser";
@@ -99,6 +99,21 @@ export const App = () => {
 		setBoard(newBoard);
 	}, [board]);
 
+	const onAddCard = useCallback<AddCardEventHandler>((event) => {
+		pushUndo(board);
+
+		const newBoard = produce(board, draft => {
+			const stackIndex = findStackIndex(board, event.stackId);
+			draft.stacks[stackIndex].cards.push({
+				id: uuid(),
+				title: 'New card',
+				body: '',
+			});
+		});
+
+		setBoard(newBoard);
+	}, [board]);
+
 	const onStackTitleChange = useCallback<TitleChangeEventHandler>((event) => {
 		pushUndo(board);
 
@@ -137,6 +152,7 @@ export const App = () => {
 				onDelete={onStackDelete}
 				onTitleChange={onStackTitleChange}
 				onCardChange={onCardChange}
+				onAddCard={onAddCard}
 				key={stack.id}
 				value={stack}
 				index={index}
@@ -215,7 +231,7 @@ export const App = () => {
 			const newBoard = produce(current, draft => {
 				draft.stacks.push({
 					cards: [],
-					title: 'Untitled',
+					title: 'New stack',
 					id: uuid(),
 				});
 			});

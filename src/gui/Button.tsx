@@ -7,7 +7,6 @@ export interface Props {
 	onClick: React.MouseEventHandler;
 	disabled?: boolean;
 	title?: string;
-	className?: string;
 }
 
 export default (props:Props) => {
