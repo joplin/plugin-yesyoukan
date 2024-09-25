@@ -29,48 +29,6 @@ interface Props {
 	onItemClick: ItemClickEventHandler;
 }
 
-let computedStyle_:CSSStyleDeclaration|null = null;
-const getCssVariable = (variableName: string) => {
-	if (!computedStyle_) computedStyle_ = getComputedStyle(document.documentElement);
-	return computedStyle_.getPropertyValue(variableName).trim();
-}
-
-const theme = createTheme({
-	palette: {
-		background: {
-			default: getCssVariable('--joplin-background-color'),
-		},
-		primary: {
-			main: getCssVariable('--joplin-color'), 
-		},
-		text: {
-			primary: getCssVariable('--joplin-color'), 
-		},
-		divider: getCssVariable('--joplin-divider-color') ,
-	},
-
-	components: {
-		MuiMenuItem: {
-			styleOverrides: {
-				root: {
-					color: getCssVariable('--joplin-color'),
-					'&:hover': {
-						backgroundColor: getCssVariable('--joplin-selected-color'),
-						color: getCssVariable('--joplin-color'),
-					},
-				},
-			},
-		},
-		MuiPopover: {
-			styleOverrides: {
-				paper: {
-					backgroundColor: getCssVariable('--joplin-background-color'),
-				},
-			},
-		},
-	  },
-});  
-
 export default (props:Props) => {
 	const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
 	const open = Boolean(anchorEl);
@@ -102,7 +60,7 @@ export default (props:Props) => {
 	}
 
 	return (
-		<ThemeProvider theme={theme}>
+		<>
 			<button onClick={onClick} className="kebab-button">
 				<i className="fas fa-ellipsis-v"></i>
 			</button>
@@ -117,6 +75,6 @@ export default (props:Props) => {
 			>
 				{renderMenuItems()}
 			</Menu>
-		</ThemeProvider>
+		</>
 	);
 }

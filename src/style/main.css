@@ -26,12 +26,14 @@ body {
 	color: var(--joplin-color);
 	font-family: var(--joplin-font-family);
 	font-size: var(--joplin-font-size);
+	flex-direction: column;
 }
 
 .stacks {
 	display: flex;
 	flex-direction: row;
 	flex: 1;
+	height: 100%;
 
 	> .stacks-inner {
 		display: flex;
@@ -193,4 +195,18 @@ body {
 	background: none;
 	width: 22px;
     height: 22px;
+}
+
+.alert-box {
+	position: absolute;
+	bottom: 20px;
+	right: 20px;
+}
+
+.main-toolbar {
+	display: flex;
+	background-color: var(--joplin-background-color3);
+	min-height: 38px;
+	align-items: center;
+    padding-left: 6px;
 }

@@ -1,22 +1,83 @@
 import * as React from "react";
-import { useCallback, useState, useEffect } from "react";
+import { useCallback, useState, useEffect, useMemo } from "react";
 import { Board, WebviewApi } from "./utils/types";
-import StackViewer, { TitleChangeEventHandler } from "./gui/StackViewer";
+import StackViewer, { DeleteEventHandler, TitleChangeEventHandler } from "./gui/StackViewer";
 import { DragDropContext, Droppable, OnDragEndResponder } from "@hello-pangea/dnd";
 import { produce} from "immer"
 import { boardsEqual, parseNote, serializeBoard } from "./utils/noteParser";
 import AsyncActionQueue from "./utils/AsyncActionQueue";
 import { ChangeEventHandler as CardChangeEventHandler } from "./gui/CardViewer";
 import { findCardIndex, findStackIndex } from "./utils/board";
+import { ThemeProvider, createTheme } from "@mui/material";
+import Toolbar, { ButtonProps } from './gui/Toolbar';
+import uuid from "./utils/uuid";
 
 declare var webviewApi: WebviewApi;
 
 const updateNoteQueue = new AsyncActionQueue(100);
 
+let computedStyle_:CSSStyleDeclaration|null = null;
+const getCssVariable = (variableName: string) => {
+	if (!computedStyle_) computedStyle_ = getComputedStyle(document.documentElement);
+	return computedStyle_.getPropertyValue(variableName).trim();
+}
+
+const theme = createTheme({
+	palette: {
+		background: {
+			default: getCssVariable('--joplin-background-color'),
+		},
+		primary: {
+			main: getCssVariable('--joplin-color'), 
+		},
+		text: {
+			primary: getCssVariable('--joplin-color'), 
+		},
+		divider: getCssVariable('--joplin-divider-color') ,
+	},
+
+	components: {
+		MuiMenuItem: {
+			styleOverrides: {
+				root: {
+					color: getCssVariable('--joplin-color'),
+					'&:hover': {
+						backgroundColor: getCssVariable('--joplin-selected-color'),
+						color: getCssVariable('--joplin-color'),
+					},
+				},
+			},
+		},
+		MuiPopover: {
+			styleOverrides: {
+				paper: {
+					backgroundColor: getCssVariable('--joplin-background-color'),
+				},
+			},
+		},
+	  },
+});
+
+interface HistoryItem {
+	board: Board;
+}
+
+interface History {
+	undo: HistoryItem[];
+	redo: HistoryItem[];
+}
+
 export const App = () => {
 	const [board, setBoard] = useState<Board>({ stacks: [] });
-
+	// const [undoBoard, setUndoBoard] = useState<Board|null>(null);
+	const [history, setHistory] = useState<History>({
+		undo: [],
+		redo: [],
+	});
+	
 	const onCardChange = useCallback<CardChangeEventHandler>((event) => {
+		pushUndo(board);
+
 		const newBoard = produce(board, draft => {
 			const [stackIndex, cardIndex] = findCardIndex(draft, event.card.id);
 			const newCard = draft.stacks[stackIndex].cards[cardIndex];
@@ -28,6 +89,8 @@ export const App = () => {
 	}, [board]);
 
 	const onStackTitleChange = useCallback<TitleChangeEventHandler>((event) => {
+		pushUndo(board);
+
 		const newBoard = produce(board, draft => {
 			const stackIndex = findStackIndex(board, event.stackId);
 			draft.stacks[stackIndex].title = event.title;
@@ -36,10 +99,37 @@ export const App = () => {
 		setBoard(newBoard);
 	}, [board]);
 
+	const pushUndo = (board:Board) => {
+		setHistory(current => {
+			return produce(current, draft => {
+				draft.undo.push({ board });
+				draft.redo = [];
+			}); 
+		});
+	}
+
+	const onStackDelete = useCallback<DeleteEventHandler>((event) => {
+		pushUndo(board);
+
+		const newBoard = produce(board, draft => {
+			const stackIndex = findStackIndex(board, event.stackId);
+			draft.stacks.splice(stackIndex, 1);
+		});
+
+		setBoard(newBoard);
+	}, [board]);
+
 	const renderStacks = () => {
 		const output:React.JSX.Element[] = [];
 		for (let [index, stack] of board.stacks.entries()) {
-			output.push(<StackViewer onTitleChange={onStackTitleChange} onCardChange={onCardChange} key={stack.id} value={stack} index={index}/>);
+			output.push(<StackViewer
+				onDelete={onStackDelete}
+				onTitleChange={onStackTitleChange}
+				onCardChange={onCardChange}
+				key={stack.id}
+				value={stack}
+				index={index}
+			/>);
 		}
 		return output;
 	}
@@ -80,11 +170,55 @@ export const App = () => {
 		});
 	}, [board]);
 
+	const onUndoBoard = useCallback(() => {
+		if (history.undo.length) {
+			const undoItem = history.undo[history.undo.length - 1];
+			setHistory(current => {
+				return produce(current, draft => {
+					draft.redo.push({ board });
+					draft.undo.pop();
+				});
+			});
+			setBoard(undoItem.board);
+		}
+	}, [history, board]);
+
+	const onRedoBoard = useCallback(() => {
+		if (history.redo.length) {
+			const redoItem = history.redo[history.redo.length - 1];
+			setHistory(current => {
+				const newHistory = produce(current, draft => {
+					draft.undo.push({ board });
+					draft.redo.pop();
+				});
+				return newHistory;
+			});
+			setBoard(redoItem.board);
+		}
+	}, [history, board]);
+
+	const onAddStack = useCallback(() => {
+		pushUndo(board);
+
+		setBoard(current => {
+			const newBoard = produce(current, draft => {
+				draft.stacks.push({
+					cards: [],
+					title: 'Untitled',
+					id: uuid(),
+				});
+			});
+			return newBoard;
+		});
+	}, [board]);
+
 	const onDragEnd:OnDragEndResponder = useCallback((result) => {
 		const { destination, source, type } = result;
 
 		if (!destination) return;
 		if (destination.droppableId === source.droppableId && destination.index === source.index) return
+
+		pushUndo(board);
 
 		if (type === 'card') {
 			const newBoard = produce(board, draft => {
@@ -107,22 +241,60 @@ export const App = () => {
 		}
 	}, [board]);
 
+	const toolbarButtons = useMemo(() => {
+		const output:ButtonProps[] = [
+			{
+				name: 'undo',
+				icon: 'fas fa-undo',
+				enabled: !!history.undo.length,
+				title: 'Undo',
+				onClick: () => {
+					onUndoBoard();
+				},
+			},
+
+			{
+				name: 'redo',
+				icon: 'fas fa-redo',
+				enabled: !!history.redo.length,
+				title: 'Redo',
+				onClick: () => {
+					onRedoBoard();
+				},
+			},
+
+			{
+				name: 'newStack',
+				icon: 'fas fa-plus',
+				enabled: true,
+				title: 'New stack',
+				onClick: () => {
+					onAddStack();
+				},
+			},
+		];		
+		return output;
+	}, [onUndoBoard, onRedoBoard, history.undo.length, history.redo.length, onAddStack]);
+
 	return (
-		<div className="app">
-			<div className="stacks">
-				<DragDropContext onDragEnd={onDragEnd}>
-					<Droppable droppableId="all" direction="horizontal" type="column">
-						{(provided) => {
-							return (
-								<div className="stacks-inner" ref={provided.innerRef}>
-									{renderStacks()}
-									{provided.placeholder}
-								</div>
-							);
-						}}
-					</Droppable>
-				</DragDropContext>
+		<ThemeProvider theme={theme}>
+			<div className="app">
+				<Toolbar buttons={toolbarButtons}/>
+				<div className="stacks">
+					<DragDropContext onDragEnd={onDragEnd}>
+						<Droppable droppableId="all" direction="horizontal" type="column">
+							{(provided) => {
+								return (
+									<div className="stacks-inner" ref={provided.innerRef}>
+										{renderStacks()}
+										{provided.placeholder}
+									</div>
+								);
+							}}
+						</Droppable>
+					</DragDropContext>
+				</div>
 			</div>
-		</div>		
+		</ThemeProvider>
 	);
 }

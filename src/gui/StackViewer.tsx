@@ -12,13 +12,19 @@ export interface TitleChangeEvent {
 	title: string;
 }
 
+export interface DeleteEvent {
+	stackId: string;
+}
+
 export type TitleChangeEventHandler = (event:TitleChangeEvent) => void;
+export type DeleteEventHandler = (event:DeleteEvent) => void;
 
 interface Props {
 	value: Stack;
 	index: number;
 	onCardChange: CardChangeEventHandler;
 	onTitleChange: TitleChangeEventHandler;
+	onDelete: DeleteEventHandler;
 }
 
 export default (props:Props) => {
@@ -52,11 +58,11 @@ export default (props:Props) => {
 		if (event.itemId === 'edit') {
 			onStartEditing();
 		} else if (event.itemId === 'delete') {
-
+			props.onDelete({ stackId: props.value.id });
 		} else {
 			throw new Error('Unknown item ID: ' + event.itemId);
 		}
-	}, [onStartEditing]);
+	}, [onStartEditing, props.value.id]);
 
 	const renderTitle = () => {
 		if (!isEditing) {
