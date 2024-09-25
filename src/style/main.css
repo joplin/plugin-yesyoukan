@@ -9,6 +9,10 @@ body {
     height: 100%;
 }
 
+#joplin-plugin-content-root {
+	width: 100%
+}
+
 #joplin-plugin-content {
 	display: flex;
     flex-direction: column;
@@ -27,6 +31,7 @@ body {
 	font-family: var(--joplin-font-family);
 	font-size: var(--joplin-font-size);
 	flex-direction: column;
+	width: 100%;
 }
 
 .stacks {
@@ -47,6 +52,7 @@ body {
 	background-color: var(--joplin-background-color3);
 	flex: 1 1 0;
 	width: 270px;
+	max-width: 270px;
 	margin-top: 10px;
 	margin-left: 10px;
 	margin-bottom: 10px;
@@ -186,7 +192,7 @@ body {
 	}
 
 }
-
+/* 
 .kebab-button {
 	display: flex;
 	justify-content: center;
@@ -195,7 +201,11 @@ body {
 	background: none;
 	width: 22px;
     height: 22px;
-}
+
+	> .icon {
+		color: var(--joplin-color);
+	}
+} */
 
 .alert-box {
 	position: absolute;

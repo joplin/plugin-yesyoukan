@@ -9,7 +9,8 @@ import AsyncActionQueue from "./utils/AsyncActionQueue";
 import { ChangeEventHandler as CardChangeEventHandler } from "./gui/CardViewer";
 import { findCardIndex, findStackIndex } from "./utils/board";
 import { ThemeProvider, createTheme } from "@mui/material";
-import Toolbar, { ButtonProps } from './gui/Toolbar';
+import Toolbar from './gui/Toolbar';
+import { Props as ButtonProps } from './gui/Button';
 import uuid from "./utils/uuid";
 
 declare var webviewApi: WebviewApi;
@@ -55,7 +56,17 @@ const theme = createTheme({
 				},
 			},
 		},
-	  },
+		MuiButton: {
+			styleOverrides: {
+				root: {
+					'&.Mui-disabled': {
+						color: getCssVariable('--joplin-color'),
+						opacity: 0.4,
+					},
+				},
+			},
+		},
+	},
 });
 
 interface HistoryItem {
@@ -246,7 +257,7 @@ export const App = () => {
 			{
 				name: 'undo',
 				icon: 'fas fa-undo',
-				enabled: !!history.undo.length,
+				disabled: !history.undo.length,
 				title: 'Undo',
 				onClick: () => {
 					onUndoBoard();
@@ -256,7 +267,7 @@ export const App = () => {
 			{
 				name: 'redo',
 				icon: 'fas fa-redo',
-				enabled: !!history.redo.length,
+				disabled: !history.redo.length,
 				title: 'Redo',
 				onClick: () => {
 					onRedoBoard();
@@ -266,7 +277,6 @@ export const App = () => {
 			{
 				name: 'newStack',
 				icon: 'fas fa-plus',
-				enabled: true,
 				title: 'New stack',
 				onClick: () => {
 					onAddStack();

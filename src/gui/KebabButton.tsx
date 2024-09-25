@@ -2,7 +2,8 @@ import * as React from "react";
 import { useCallback } from "react";
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
-import { ThemeProvider, createTheme, CssBaseline, Divider } from '@mui/material';
+import { Divider } from '@mui/material';
+import Button from "./Button";
 
 interface MenuItemBase {
 	id: string;
@@ -61,9 +62,7 @@ export default (props:Props) => {
 
 	return (
 		<>
-			<button onClick={onClick} className="kebab-button">
-				<i className="fas fa-ellipsis-v"></i>
-			</button>
+			<Button icon="icon fas fa-ellipsis-v" onClick={onClick} />
 			<Menu
 				className="context-menu"
 				anchorEl={anchorEl}
