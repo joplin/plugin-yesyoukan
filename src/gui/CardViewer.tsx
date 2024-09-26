@@ -5,6 +5,7 @@ import { Card, Stack } from "src/utils/types";
 import * as MarkdownIt from 'markdown-it';
 import ConfirmButtons from "./ConfirmButtons";
 import useOnEditorKeyDown from "./hooks/useOnEditorKeyDown";
+import KebabButton, { ItemClickEventHandler } from "./KebabButton";
 
 export interface ChangeEvent {
 	card: Card;
@@ -12,11 +13,18 @@ export interface ChangeEvent {
 
 export type ChangeEventHandler = (event:ChangeEvent) => void;
 
+export interface DeleteEvent {
+	cardId: string;
+}
+
+export type DeleteEventHandler = (event:DeleteEvent) => void;
+
 export interface Props {
 	value: Card;
 	index: number;
 	isLast: boolean;
 	onChange:ChangeEventHandler;
+	onDelete: DeleteEventHandler;
 }
 
 const markdownIt = new MarkdownIt();
@@ -44,15 +52,15 @@ export default (props:Props) => {
 	const editorRef = useRef<HTMLTextAreaElement>(null);
 
 	const bodyHtml = useMemo(() => {
-		return markdownIt.render(props.value.body);
-	}, [props.value.body]);
+		return markdownIt.render(card.body);
+	}, [card.body]);
 
 	const onEditorSubmit = useCallback(() => {
 		props.onChange({
-			card: stringToCard(props.value, editorRef.current.value),
+			card: stringToCard(card, editorRef.current.value),
 		});
 		setIsEditing(false);
-	}, [props.onChange, props.value]);
+	}, [props.onChange, card]);
 
 	const onEditorCancel = useCallback(() => {
 		setIsEditing(false);
@@ -67,24 +75,57 @@ export default (props:Props) => {
 
 	const onEditorKeyDown = useOnEditorKeyDown({ onEditorSubmit, onEditorCancel });
 
+	const onKebabItemClick = useCallback<ItemClickEventHandler>((event) => {
+		if (event.itemId === 'edit') {
+			onDoubleClick();
+		} else if (event.itemId === 'delete') {
+			props.onDelete({ cardId: card.id });
+		} else {
+			throw new Error('Unknown item ID: ' + event.itemId);
+		}
+	}, [onDoubleClick, props.onDelete, card.id]);
+
+	const renderKebabButton = () => {
+		return (
+			<KebabButton
+				menuItems={[
+					{
+						id: 'edit',
+						label: 'Edit',
+					},
+					{
+						id: 'delete',
+						label: 'Delete',
+					},
+				]}
+				onItemClick={onKebabItemClick}
+			/>
+		);
+	}
+
 	const renderContent = () => {
 		if (!isEditing) {
 			return (
-				<>
-					<h3 className="title">{card.title}</h3>
+				<div className="content">
+					<div className="header">
+						<h3 className="title">{card.title}</h3>{renderKebabButton()}
+					</div>
 					<p className="body" dangerouslySetInnerHTML={{ __html: bodyHtml} }></p>
-				</>
+				</div>
 			);
 		} else { // EDIT
 			return (
-				<div className="editor">
-					<textarea
-						ref={editorRef}
-						className="note-editor"
-						onKeyDown={onEditorKeyDown}
-						defaultValue={card.title + '\n\n' + card.body}
-					></textarea>
-					<ConfirmButtons onConfirm={onEditorSubmit} onCancel={onEditorCancel} />
+				<div className="content -editing">
+					<div className="editor">
+						<textarea
+							ref={editorRef}
+							className="note-editor"
+							onKeyDown={onEditorKeyDown}
+							defaultValue={card.title + '\n\n' + card.body}
+						></textarea>
+						<ConfirmButtons onConfirm={onEditorSubmit} onCancel={onEditorCancel} />
+					</div>
+					{renderKebabButton()}
 				</div>
 			);
 		}

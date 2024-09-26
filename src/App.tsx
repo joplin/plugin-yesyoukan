@@ -6,7 +6,7 @@ import { DragDropContext, Droppable, OnDragEndResponder } from "@hello-pangea/dn
 import { produce} from "immer"
 import { boardsEqual, parseNote, serializeBoard } from "./utils/noteParser";
 import AsyncActionQueue from "./utils/AsyncActionQueue";
-import { ChangeEventHandler as CardChangeEventHandler } from "./gui/CardViewer";
+import { ChangeEventHandler as CardChangeEventHandler, DeleteEventHandler as CardDeleteEventHandler } from "./gui/CardViewer";
 import { findCardIndex, findStackIndex } from "./utils/board";
 import { ThemeProvider, createTheme } from "@mui/material";
 import Toolbar from './gui/Toolbar';
@@ -114,6 +114,17 @@ export const App = () => {
 		setBoard(newBoard);
 	}, [board]);
 
+	const onDeleteCard = useCallback<CardDeleteEventHandler>((event) => {
+		pushUndo(board);
+
+		const newBoard = produce(board, draft => {
+			const [stackIndex, cardIndex] = findCardIndex(draft, event.cardId);
+			draft.stacks[stackIndex].cards.splice(cardIndex, 1);
+		});
+
+		setBoard(newBoard);
+	}, [board]);
+
 	const onStackTitleChange = useCallback<TitleChangeEventHandler>((event) => {
 		pushUndo(board);
 
@@ -153,6 +164,7 @@ export const App = () => {
 				onTitleChange={onStackTitleChange}
 				onCardChange={onCardChange}
 				onAddCard={onAddCard}
+				onDeleteCard={onDeleteCard}
 				key={stack.id}
 				value={stack}
 				index={index}

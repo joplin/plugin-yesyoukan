@@ -142,22 +142,42 @@ body {
 	overflow-x: hidden;
 	overflow-y: auto;
 
-	> .title {
-		font-weight: bold;
-		margin-bottom: 10px;
-	}
+	> .content {
+		display: flex;
+		flex-direction: column;
 
-	> .body {
-		p {
-			margin-bottom: 10px;
+		> .header {
+			display: flex;
+			flex-direction: row;
+
+			> .title {
+				display: flex;
+				flex: 1;
+				font-weight: bold;
+				margin-bottom: 10px;
+			}
 		}
-	}
 
-	> .editor {
-		> .note-editor {
-			height: 10em;
-			width: 100%;
-			border: 1px solid var(--joplin-divider-color);
+		> .body {
+			p {
+				margin-bottom: 10px;
+			}
+		}
+
+		> .editor {
+			display: flex;
+			flex: 1;
+			flex-direction: column;
+
+			> .note-editor {
+				height: 10em;
+				width: 100%;
+				border: 1px solid var(--joplin-divider-color);
+			}
+		}
+
+		&.-editing {
+			flex-direction: row;
 		}
 	}
 
@@ -169,6 +189,7 @@ body {
 .confirm-buttons {
 	display: flex;
 	justify-content: flex-end;
+	margin-top: 4px;
 
 	> .button {
 		display: flex;
@@ -192,20 +213,6 @@ body {
 	}
 
 }
-/* 
-.kebab-button {
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	border: none;
-	background: none;
-	width: 22px;
-    height: 22px;
-
-	> .icon {
-		color: var(--joplin-color);
-	}
-} */
 
 .alert-box {
 	position: absolute;

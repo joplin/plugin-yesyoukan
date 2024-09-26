@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useCallback, useState, useRef } from "react";
 import { Stack } from "src/utils/types";
-import CardViewer, { ChangeEventHandler as CardChangeEventHandler } from "./CardViewer";
+import CardViewer, { ChangeEventHandler as CardChangeEventHandler, DeleteEventHandler as CardDeleteEventHandler } from "./CardViewer";
 import { Draggable, DraggableProvided, Droppable } from "@hello-pangea/dnd";
 import ConfirmButtons from "./ConfirmButtons";
 import useOnEditorKeyDown from "./hooks/useOnEditorKeyDown";
@@ -32,6 +32,7 @@ interface Props {
 	onTitleChange: TitleChangeEventHandler;
 	onDelete: DeleteEventHandler;
 	onAddCard: AddCardEventHandler;
+	onDeleteCard: CardDeleteEventHandler;
 }
 
 export default (props:Props) => {
@@ -116,7 +117,14 @@ export default (props:Props) => {
 	const renderCards = () => {
 		const output:React.JSX.Element[] = [];
 		for (let [index, card] of props.value.cards.entries()) {
-			output.push(<CardViewer onChange={props.onCardChange} isLast={index === props.value.cards.length - 1} index={index} key={card.id} value={card}/>);
+			output.push(<CardViewer
+				onChange={props.onCardChange}
+				onDelete={props.onDeleteCard}
+				isLast={index === props.value.cards.length - 1}
+				index={index}
+				key={card.id}
+				value={card}
+			/>);
 		}
 		return output;
 	}
