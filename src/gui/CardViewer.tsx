@@ -1,6 +1,6 @@
 import { Draggable } from "@hello-pangea/dnd";
 import * as React from "react";
-import { useMemo, useCallback, useState, useRef } from "react";
+import { useMemo, useCallback, useState, useRef, useEffect } from "react";
 import { Card, Stack } from "src/utils/types";
 import * as MarkdownIt from 'markdown-it';
 import ConfirmButtons from "./ConfirmButtons";
@@ -12,7 +12,9 @@ export interface ChangeEvent {
 	card: Card;
 }
 
-export type ChangeEventHandler = (event:ChangeEvent) => void;
+export type EditorStartHandler = (event:ChangeEvent) => void;
+export type EditorSubmitHandler = (event:ChangeEvent) => void;
+export type EditorCancelHandler = (event:ChangeEvent) => void;
 
 export interface DeleteEvent {
 	cardId: string;
@@ -24,8 +26,11 @@ export interface Props {
 	value: Card;
 	index: number;
 	isLast: boolean;
-	onChange:ChangeEventHandler;
+	onEditorStart:EditorStartHandler;
+	onEditorSubmit:EditorSubmitHandler;
+	onEditorCancel: EditorCancelHandler;
 	onDelete: DeleteEventHandler;
+	isEditing: boolean;
 }
 
 const markdownIt = new MarkdownIt();
@@ -51,7 +56,6 @@ const stringToCard = (originalCard:Card, newContent:string):Card => {
 export default (props:Props) => {
 	const card = props.value;
 
-	const [isEditing, setIsEditing] = useState<boolean>(false);
 	const editorRef = useRef<HTMLTextAreaElement>(null);
 
 	const bodyHtml = useMemo(() => {
@@ -59,25 +63,29 @@ export default (props:Props) => {
 	}, [card.body]);
 
 	const onEditorSubmit = useCallback(() => {
-		props.onChange({
+		props.onEditorSubmit({
 			card: stringToCard(card, editorRef.current.value),
 		});
-		setIsEditing(false);
-	}, [props.onChange, card]);
+	}, [props.onEditorSubmit, card]);
 
 	const onEditorCancel = useCallback(() => {
-		setIsEditing(false);
+		props.onEditorCancel({ card })
 	}, []);
 
 	const onDoubleClick = useCallback(() => {
-		if (!isEditing) {
-			setIsEditing(true);
+		if (!props.isEditing) {
+			props.onEditorStart({ card });
+		}
+	}, [props.isEditing, card]);
+
+	useEffect(() => {
+		if (props.isEditing) {
 			requestAnimationFrame(() => {
 				editorRef.current.focus();
 				moveCaretToEnd(editorRef.current);
 			});
 		}
-	}, [isEditing]);
+	}, [props.isEditing]);
 
 	const onEditorKeyDown = useOnEditorKeyDown({ onEditorSubmit, onEditorCancel });
 
@@ -112,7 +120,7 @@ export default (props:Props) => {
 	}
 
 	const renderContent = () => {
-		if (!isEditing) {
+		if (!props.isEditing) {
 			return (
 				<div className="content">
 					<div className="header">
@@ -145,7 +153,7 @@ export default (props:Props) => {
 				const classes = ['card'];
 				if (snapshot.isDragging) classes.push('-dragging');
 				if (props.isLast) classes.push('-last');
-				if (isEditing) classes.push('-editing');
+				if (props.isEditing) classes.push('-editing');
 				return (
 					<div className={classes.join(' ')} {...provided.draggableProps} {...provided.dragHandleProps} ref={provided.innerRef} onDoubleClick={onDoubleClick}>
 						{renderContent()}

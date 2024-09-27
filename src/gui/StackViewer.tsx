@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useCallback, useState, useRef } from "react";
 import { Stack } from "src/utils/types";
-import CardViewer, { ChangeEventHandler as CardChangeEventHandler, DeleteEventHandler as CardDeleteEventHandler } from "./CardViewer";
+import CardViewer, { EditorSubmitHandler as CardEditorSubmitEventHandler, DeleteEventHandler as CardDeleteEventHandler, EditorCancelHandler as CardEditorCancelHandler, EditorStartHandler as CardEditorStartEventHandler } from "./CardViewer";
 import { Draggable, DraggableProvided, Droppable } from "@hello-pangea/dnd";
 import ConfirmButtons from "./ConfirmButtons";
 import useOnEditorKeyDown from "./hooks/useOnEditorKeyDown";
@@ -28,7 +28,10 @@ export type AddCardEventHandler = (event:AddCardEvent) => void;
 interface Props {
 	value: Stack;
 	index: number;
-	onCardChange: CardChangeEventHandler;
+	editedCardIds: string[];
+	onCardEditorStart: CardEditorStartEventHandler;
+	onCardEditorSubmit: CardEditorSubmitEventHandler;
+	onCardEditorCancel: CardEditorCancelHandler;
 	onTitleChange: TitleChangeEventHandler;
 	onDelete: DeleteEventHandler;
 	onAddCard: AddCardEventHandler;
@@ -118,12 +121,15 @@ export default (props:Props) => {
 		const output:React.JSX.Element[] = [];
 		for (let [index, card] of props.value.cards.entries()) {
 			output.push(<CardViewer
-				onChange={props.onCardChange}
+				onEditorStart={props.onCardEditorStart}
+				onEditorSubmit={props.onCardEditorSubmit}
+				onEditorCancel={props.onCardEditorCancel}
 				onDelete={props.onDeleteCard}
 				isLast={index === props.value.cards.length - 1}
 				index={index}
 				key={card.id}
 				value={card}
+				isEditing={props.editedCardIds.includes(card.id)}
 			/>);
 		}
 		return output;

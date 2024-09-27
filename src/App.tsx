@@ -6,7 +6,7 @@ import { DragDropContext, Droppable, OnDragEndResponder } from "@hello-pangea/dn
 import { produce} from "immer"
 import { boardsEqual, parseNote, serializeBoard } from "./utils/noteParser";
 import AsyncActionQueue from "./utils/AsyncActionQueue";
-import { ChangeEventHandler as CardChangeEventHandler, DeleteEventHandler as CardDeleteEventHandler } from "./gui/CardViewer";
+import { EditorSubmitHandler as CardChangeEventHandler, DeleteEventHandler as CardDeleteEventHandler, EditorCancelHandler, EditorStartHandler } from "./gui/CardViewer";
 import { findCardIndex, findStackIndex } from "./utils/board";
 import { ThemeProvider, createTheme } from "@mui/material";
 import Toolbar from './gui/Toolbar';
@@ -85,19 +85,51 @@ export const App = () => {
 		redo: [],
 	});
 	const ignoreNextBoardUpdate = useRef<boolean>(false);
+	const [editedCardIds, setEditedCardIds] = useState<string[]>([]);
+
+	const startCardEditing = (cardId:string) => {
+		setEditedCardIds(current => {
+			return produce(current, draft => {
+				const index = draft.findIndex(id => id === cardId);
+				if (index >= 0) return;
+				draft.push(cardId);
+			});
+		});
+	}
+
+	const stopCardEditing = (cardId:string) => {
+		setEditedCardIds(current => {
+			return produce(current, draft => {
+				const index = draft.findIndex(id => id === cardId);
+				if (index >= 0) draft.splice(index, 1);
+			});
+		});
+	}
+
+	const onCardEditorStart = useCallback<EditorStartHandler>((event) => {
+		startCardEditing(event.card.id);
+	}, []);
 	
 	const onCardChange = useCallback<CardChangeEventHandler>((event) => {
 		pushUndo(board);
 
+		const cardId = event.card.id;
+
 		const newBoard = produce(board, draft => {
-			const [stackIndex, cardIndex] = findCardIndex(draft, event.card.id);
+			const [stackIndex, cardIndex] = findCardIndex(draft, cardId);
 			const newCard = draft.stacks[stackIndex].cards[cardIndex];
 			newCard.title = event.card.title;
 			newCard.body = event.card.body;
 		});
 
 		setBoard(newBoard);
+
+		stopCardEditing(cardId);
 	}, [board]);
+
+	const onCardEditorCancel = useCallback<EditorCancelHandler>((event) => {
+		stopCardEditing(event.card.id);
+	}, []);
 
 	const onAddCard = useCallback<AddCardEventHandler>((event) => {
 		pushUndo(board);
@@ -162,12 +194,15 @@ export const App = () => {
 			output.push(<StackViewer
 				onDelete={onStackDelete}
 				onTitleChange={onStackTitleChange}
-				onCardChange={onCardChange}
+				onCardEditorStart={onCardEditorStart}
+				onCardEditorSubmit={onCardChange}
+				onCardEditorCancel={onCardEditorCancel}
 				onAddCard={onAddCard}
 				onDeleteCard={onDeleteCard}
 				key={stack.id}
 				value={stack}
 				index={index}
+				editedCardIds={editedCardIds}
 			/>);
 		}
 		return output;
