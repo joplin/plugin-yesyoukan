@@ -135,17 +135,18 @@ body {
 	flex-direction: column;
 	margin: 0 10px 10px 10px;
 	padding: 1em;
+	padding-bottom: 0.2em;
 	background-color: var(--joplin-background-color);
 	border: 1px solid var(--joplin-divider-color);
 	border-radius: 8px;
 	box-shadow: 0 0 4px rgba(38,50,56,.04);	
 	max-height: 20em;
-	overflow-x: hidden;
-	overflow-y: auto;
+	overflow: hidden;
 
 	> .content {
 		display: flex;
 		flex-direction: column;
+		max-height: 100%;
 
 		> .header {
 			display: flex;
@@ -160,10 +161,12 @@ body {
 		}
 
 		> .body {
+			overflow-y: auto;
+
 			p {
 				margin-bottom: 10px;
 			}
-		}
+		}		
 
 		> .editor {
 			display: flex;
@@ -232,4 +235,30 @@ body {
 	min-height: 38px;
 	align-items: center;
     padding-left: 6px;
+}
+
+::-webkit-scrollbar {
+	width: 7px;
+	height: 7px;
+}
+
+::-webkit-scrollbar-corner {
+	background: none;
+}
+
+::-webkit-scrollbar-track {
+	border: none;
+}
+
+::-webkit-scrollbar-thumb {
+	background: rgba(100, 100, 100, 0.3);
+	border-radius: 5px;
+}
+
+::-webkit-scrollbar-track:hover {
+	background: rgba(0, 0, 0, 0.1);
+}
+
+::-webkit-scrollbar-thumb:hover {
+	background: rgba(100, 100, 100, 0.7);
 }

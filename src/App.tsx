@@ -59,6 +59,7 @@ const theme = createTheme({
 		MuiButton: {
 			styleOverrides: {
 				root: {
+					color: getCssVariable('--joplin-color'),
 					'&.Mui-disabled': {
 						color: getCssVariable('--joplin-color'),
 						opacity: 0.4,
@@ -78,12 +79,16 @@ interface History {
 	redo: HistoryItem[];
 }
 
-export const App = () => {
-	const [board, setBoard] = useState<Board>({ stacks: [] });
-	const [history, setHistory] = useState<History>({
+const emptyHistory = ():History => {
+	return {
 		undo: [],
 		redo: [],
-	});
+	}
+}
+
+export const App = () => {
+	const [board, setBoard] = useState<Board>({ stacks: [] });
+	const [history, setHistory] = useState<History>(emptyHistory);
 	const ignoreNextBoardUpdate = useRef<boolean>(false);
 	const [editedCardIds, setEditedCardIds] = useState<string[]>([]);
 
@@ -134,16 +139,20 @@ export const App = () => {
 	const onAddCard = useCallback<AddCardEventHandler>((event) => {
 		pushUndo(board);
 
+		const newCardId = uuid();
+
 		const newBoard = produce(board, draft => {
 			const stackIndex = findStackIndex(board, event.stackId);
 			draft.stacks[stackIndex].cards.push({
-				id: uuid(),
+				id: newCardId,
 				title: 'New card',
 				body: '',
 			});
 		});
 
 		setBoard(newBoard);
+
+		startCardEditing(newCardId);
 	}, [board]);
 
 	const onDeleteCard = useCallback<CardDeleteEventHandler>((event) => {
@@ -175,6 +184,10 @@ export const App = () => {
 				draft.redo = [];
 			}); 
 		});
+	}
+
+	const clearUndo = () => {
+		setHistory(emptyHistory());
 	}
 
 	const onStackDelete = useCallback<DeleteEventHandler>((event) => {
@@ -229,6 +242,7 @@ export const App = () => {
 						return current;
 					}
 					console.info('Boad has changed - updating');
+					clearUndo();
 					ignoreNextBoardUpdate.current = true;
 					return newBoard;
 				});

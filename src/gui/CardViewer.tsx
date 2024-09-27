@@ -57,10 +57,12 @@ export default (props:Props) => {
 	const card = props.value;
 
 	const editorRef = useRef<HTMLTextAreaElement>(null);
+	const hasBody = useMemo(() => !!card.body.trim(), [card.body]);
 
 	const bodyHtml = useMemo(() => {
+		if (!hasBody) return '';
 		return markdownIt.render(card.body);
-	}, [card.body]);
+	}, [card.body, hasBody]);
 
 	const onEditorSubmit = useCallback(() => {
 		props.onEditorSubmit({
