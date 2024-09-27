@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useCallback, useState, useEffect, useMemo } from "react";
+import { useCallback, useState, useEffect, useMemo, useRef } from "react";
 import { Board, WebviewApi } from "./utils/types";
 import StackViewer, { AddCardEventHandler, DeleteEventHandler, TitleChangeEventHandler } from "./gui/StackViewer";
 import { DragDropContext, Droppable, OnDragEndResponder } from "@hello-pangea/dnd";
@@ -80,11 +80,11 @@ interface History {
 
 export const App = () => {
 	const [board, setBoard] = useState<Board>({ stacks: [] });
-	// const [undoBoard, setUndoBoard] = useState<Board|null>(null);
 	const [history, setHistory] = useState<History>({
 		undo: [],
 		redo: [],
 	});
+	const ignoreNextBoardUpdate = useRef<boolean>(false);
 	
 	const onCardChange = useCallback<CardChangeEventHandler>((event) => {
 		pushUndo(board);
@@ -194,6 +194,7 @@ export const App = () => {
 						return current;
 					}
 					console.info('Boad has changed - updating');
+					ignoreNextBoardUpdate.current = true;
 					return newBoard;
 				});
 			} else {
@@ -203,10 +204,13 @@ export const App = () => {
 	}, []);
 
 	useEffect(() => {
-		updateNoteQueue.push(async () => {
-			const noteBody = serializeBoard(board);
-			await webviewApi.postMessage({ type: 'setNoteBody', value: noteBody });	
-		});
+		if (!ignoreNextBoardUpdate.current) {
+			updateNoteQueue.push(async () => {
+				const noteBody = serializeBoard(board);
+				await webviewApi.postMessage({ type: 'setNoteBody', value: noteBody });	
+			});
+		}
+		ignoreNextBoardUpdate.current = false;
 	}, [board]);
 
 	const onUndoBoard = useCallback(() => {

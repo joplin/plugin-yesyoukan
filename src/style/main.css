@@ -98,6 +98,7 @@ body {
 				position: absolute;
 				right: 2px;
 				align-items: center;
+				top: 6px;
 			}
 		}
 
@@ -184,6 +185,11 @@ body {
 	&.-editing {
 		padding-bottom: 5px;
 	}
+}
+
+.kebab-button-wrapper {
+	margin-right: -0.6em;
+    margin-top: -0.3em;
 }
 
 .confirm-buttons {

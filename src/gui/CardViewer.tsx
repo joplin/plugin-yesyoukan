@@ -6,6 +6,7 @@ import * as MarkdownIt from 'markdown-it';
 import ConfirmButtons from "./ConfirmButtons";
 import useOnEditorKeyDown from "./hooks/useOnEditorKeyDown";
 import KebabButton, { ItemClickEventHandler } from "./KebabButton";
+import moveCaretToEnd from "../utils/moveCaretToEnd";
 
 export interface ChangeEvent {
 	card: Card;
@@ -38,6 +39,8 @@ const stringToCard = (originalCard:Card, newContent:string):Card => {
 		body = lines.join('\n').trim();
 	}
 
+	if (!title.trim()) title = 'Untitled';
+
 	return {
 		...originalCard,
 		title,
@@ -69,7 +72,10 @@ export default (props:Props) => {
 	const onDoubleClick = useCallback(() => {
 		if (!isEditing) {
 			setIsEditing(true);
-			requestAnimationFrame(() => editorRef.current.focus());
+			requestAnimationFrame(() => {
+				editorRef.current.focus();
+				moveCaretToEnd(editorRef.current);
+			});
 		}
 	}, [isEditing]);
 
@@ -87,19 +93,21 @@ export default (props:Props) => {
 
 	const renderKebabButton = () => {
 		return (
-			<KebabButton
-				menuItems={[
-					{
-						id: 'edit',
-						label: 'Edit',
-					},
-					{
-						id: 'delete',
-						label: 'Delete',
-					},
-				]}
-				onItemClick={onKebabItemClick}
-			/>
+			<div className="kebab-button-wrapper">
+				<KebabButton
+					menuItems={[
+						{
+							id: 'edit',
+							label: 'Edit',
+						},
+						{
+							id: 'delete',
+							label: 'Delete',
+						},
+					]}
+					onItemClick={onKebabItemClick}
+				/>
+			</div>
 		);
 	}
 
