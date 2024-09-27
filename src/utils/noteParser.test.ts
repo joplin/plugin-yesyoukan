@@ -1,5 +1,5 @@
 import { parseNote, serializeBoard } from "./noteParser";
-import { Board, State } from "./types";
+import { Board } from "./types";
 
 const noteBody1 = `# Draft
 
@@ -27,6 +27,11 @@ Content 4
 Some empty lines above
 
 # Completed
+
+\`\`\`kanban-settings
+confirmKey: Shift+Enter
+stackWidth: 100
+\`\`\`
 `
 
 describe('noteParser', () => {
@@ -84,10 +89,14 @@ describe('noteParser', () => {
 						cards: []
 					},
 				],
+				settings: {
+					stackWidth: 100,
+					confirmKey: 'Shift+Enter',
+				}
 			},
 		],
-	])('should parse a note', (noteBody, board) => {
-		const actual = parseNote(noteBody)
+	])('should parse a note', async (noteBody, board) => {
+		const actual = await parseNote(noteBody)
 		
 		actual.stacks = actual.stacks.map(s => {
 			s.id = ''

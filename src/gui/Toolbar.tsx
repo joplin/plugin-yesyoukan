@@ -9,8 +9,8 @@ interface Props {
 export default (props:Props) => {
 	const renderButtons = () => {
 		const output:React.JSX.Element[] = []
-		for (const button of props.buttons) {
-			output.push(<Button {...button}/>);
+		for (const [index, button] of props.buttons.entries()) {
+			output.push(<Button key={'button-' + index} {...button}/>);
 		}
 		return output;
 	}

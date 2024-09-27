@@ -12,6 +12,7 @@ export interface Stack {
 
 export interface Board {
 	stacks: Stack[];
+	settings: Settings;
 }
 
 export interface State {
@@ -33,3 +34,20 @@ export interface WebviewApi {
 	postMessage<T>(message:IpcMessage): Promise<T>;
 	onMessage(handler:WebviewApiOnMessageHandler);
 }
+
+export const emptyBoard = ():Board => {
+	return {
+		settings: {},
+		stacks: [],
+	}
+}
+
+export interface Settings {
+	stackWidth?: number;
+	confirmKey?: 'Enter' | 'Shift+Enter';
+}
+
+export const defaultSettings:Settings = Object.freeze({
+	stackWidth: 270,
+	confirmKey: "Enter",
+});

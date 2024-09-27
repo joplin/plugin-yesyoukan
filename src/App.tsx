@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useCallback, useState, useEffect, useMemo, useRef } from "react";
-import { Board, WebviewApi } from "./utils/types";
+import { Board, WebviewApi, emptyBoard } from "./utils/types";
 import StackViewer, { AddCardEventHandler, DeleteEventHandler, TitleChangeEventHandler } from "./gui/StackViewer";
 import { DragDropContext, Droppable, OnDragEndResponder } from "@hello-pangea/dnd";
 import { produce} from "immer"
@@ -87,7 +87,7 @@ const emptyHistory = ():History => {
 }
 
 export const App = () => {
-	const [board, setBoard] = useState<Board>({ stacks: [] });
+	const [board, setBoard] = useState<Board>(emptyBoard());
 	const [history, setHistory] = useState<History>(emptyHistory);
 	const ignoreNextBoardUpdate = useRef<boolean>(false);
 	const [editedCardIds, setEditedCardIds] = useState<string[]>([]);
@@ -224,7 +224,7 @@ export const App = () => {
 	useEffect(() => {
 		const fn = async() => {
 			const noteBody = await webviewApi.postMessage<string>({ type: 'getNoteBody' });
-			const newBoard = parseNote(noteBody);
+			const newBoard = await parseNote(noteBody);
 			setBoard(newBoard);
 		}
 
@@ -232,10 +232,10 @@ export const App = () => {
 	}, []);
 
 	useEffect(() => {
-		webviewApi.onMessage((event) => {
+		webviewApi.onMessage(async (event) => {
 			const message = event.message;
 			if (message.type === 'setNoteBody') {
-				const newBoard = parseNote(message.value);
+				const newBoard = await parseNote(message.value);
 				setBoard(current => {
 					if (boardsEqual(current, newBoard)) {
 						console.info('Board has not changed - skipping update');
