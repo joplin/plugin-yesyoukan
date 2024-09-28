@@ -4,7 +4,7 @@
 
 YesYouKan is a Kanban plugin for Joplin. To begin, install the plugin, then go to the menu and select **Tools** => **Create Kanban Board**.
 
-YesYouKan converts a note into a Kanban board format. An H1 heading represents a column (or stack), while an H2 heading serves as a card within that column. Any text below the H2 heading acts as the card's description.
+YesYouKan converts a note into a Kanban board format. An H1 heading represents a stack (or column), while an H2 heading serves as a card within that stack. Any text below the H2 heading acts as the card's description.
 
 To identify a note as a Kanban board, it must include a `kanban-settings` code block at the end. This block is required, even if left empty, to ensure the note is recognised as a Kanban board.
 
