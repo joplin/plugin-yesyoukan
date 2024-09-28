@@ -29,6 +29,7 @@ Some empty lines above
 # Completed
 
 \`\`\`kanban-settings
+# Do not remove this block
 confirmKey: Shift+Enter
 stackWidth: 100
 \`\`\`

@@ -228,8 +228,6 @@ export const App = () => {
 	useEffect(() => {
 		const fn = async() => {
 			const noteBody = await webviewApi.postMessage<string>({ type: 'getNoteBody' });
-			logger.info('NOTE IS BOARD', noteBody);
-			logger.info('NOTE IS BOARD', noteIsBoard(noteBody));
 			if (!noteIsBoard(noteBody)) {
 				setEnabled(false);
 				return;
@@ -245,8 +243,6 @@ export const App = () => {
 	useEffect(() => {
 		webviewApi.onMessage(async (event) => {
 			const message = event.message;
-
-			logger.info('ZEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE',enabled);
 
 			if (!enabled) return;
 

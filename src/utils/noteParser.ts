@@ -34,6 +34,7 @@ export const parseNote = async (noteBody:string) => {
 		} else if (state === 'inSettings' && line === '```') {
 			state = previousState as any;
 		} else if (state === 'inSettings') {
+			if (line.startsWith('#')) continue;
 			const [key, value] = parseSettingLine(line);
 			rawSettings[key] = value;
 		} else if (line.startsWith('# ')) {
@@ -96,6 +97,7 @@ export const serializeBoard = (board:Board) => {
 	const sortedKeys = Object.keys(board.settings).sort();
 
 	output.push('```kanban-settings');
+	output.push('# Do not remove this block');
 	for (const key of sortedKeys) {
 		const value = board.settings[key];
 		let sValue = '';
