@@ -1,5 +1,7 @@
 # YesYouKan - Kanban plugin for Joplin
 
+<img style="float:left; margin-right: 15px; margin-bottom:15px;" src="doc/images/icon48.png"/>
+
 YesYouKan is a Kanban plugin for Joplin. To begin, install the plugin, then go to the menu and select **Tools** => **Create Kanban Board**.
 
 YesYouKan converts a note into a Kanban board format. An H1 heading represents a column (or stack), while an H2 heading serves as a card within that column. Any text below the H2 heading acts as the card's description.
@@ -60,6 +62,10 @@ Draft a comprehensive plan outlining business strategy, target market, and finan
 - Implement support for a few options
 - Create an option dialog to change the options	
 
-# Credits
+## Credits
 
 - Kanban icon created by [Muhammad_Usman](https://www.flaticon.com/authors/muhammad-usman)
+
+## License 
+
+MIT
