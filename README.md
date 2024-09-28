@@ -1,5 +1,3 @@
-# Joplin Plugin
+# YesYouKan
 
-This is your new Joplin plugin. It is suggested that you use this README file to document your plugin.
-
-For information on how to build or publish the plugin, please see [GENERATOR_DOC.md](./GENERATOR_DOC.md)
+YesYouKan is a kanban plugin for Joplin. To get started, install the plugin, and in the menu click **Tools** => **Create kanban board**.
