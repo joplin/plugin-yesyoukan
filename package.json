@@ -1,5 +1,5 @@
 {
-  "name": "joplin-plugin-kanban",
+  "name": "joplin-plugin-yesyoukan",
   "version": "1.0.0",
   "scripts": {
     "dist": "webpack --env joplin-plugin-config=buildMain && webpack --env joplin-plugin-config=buildExtraScripts && webpack --env joplin-plugin-config=createArchive",
