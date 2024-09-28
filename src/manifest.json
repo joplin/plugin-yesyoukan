@@ -4,12 +4,26 @@
 	"app_min_version": "2.13",
 	"version": "1.0.0",
 	"name": "Kanban",
-	"description": "",
+	"description": "Create and manage Kanban boards from Joplin",
 	"author": "Laurent Cozic",
 	"homepage_url": "",
-	"repository_url": "",
-	"keywords": [],
-	"categories": [],
-	"screenshots": [],
-	"icons": {}
+	"repository_url": "https://github.com/joplin/plugin-yesyoukan",
+	"keywords": ["kanban", "boards"],
+	"categories": ["productivity"],
+	"screenshots": [
+		{
+			"src": "doc/images/ExampleBoardAndNote.png",
+			"label": "Kanban board example"
+		}
+	],
+	"promo_tile": {
+		"src": "doc/images/PromoTile.png",
+		"label": "A handwritten Kanban board"
+	},
+	"icons": {
+		"16": "doc/images/icon16.png",
+		"32": "doc/images/icon32.png",
+		"48": "doc/images/icon48.png",
+		"128": "doc/images/icon128.png"
+	}
 }

@@ -10,7 +10,7 @@ To identify a note as a Kanban board, it must include a `kanban-settings` code b
 
 This is how a board would look like:
 
-![Example kanban board](./doc/ExampleBoard.png)
+![Example kanban board](./doc/images/ExampleBoard.png)
 
 For a note like this:
 
@@ -59,3 +59,7 @@ Draft a comprehensive plan outlining business strategy, target market, and finan
 - Allow using an existing note as a card
 - Implement support for a few options
 - Create an option dialog to change the options	
+
+# Credits
+
+- Kanban icon created by [Muhammad_Usman](https://www.flaticon.com/authors/muhammad-usman)
