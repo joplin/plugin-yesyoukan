@@ -39,6 +39,7 @@ body {
 	flex-direction: row;
 	flex: 1;
 	height: 100%;
+	overflow-x: auto;
 
 	> .stacks-inner {
 		display: flex;
@@ -50,6 +51,7 @@ body {
 	display: flex;
 	flex-direction: column;
 	background-color: var(--joplin-background-color3);
+	border: 1px solid var(--joplin-divider-color);
 	flex: 1 1 0;
 	width: 270px;
 	max-width: 270px;
@@ -110,6 +112,10 @@ body {
 			padding-right: 4px;
 		}
 	}
+
+	&.-dragging {
+		box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
+	}
 }
 
 .stack:has(.cards.-dragging-over) {
@@ -139,7 +145,7 @@ body {
 	background-color: var(--joplin-background-color);
 	border: 1px solid var(--joplin-divider-color);
 	border-radius: 8px;
-	box-shadow: 0 0 4px rgba(38,50,56,.04);	
+	box-shadow: rgba(0, 0, 0, 0.1) 0px 1px 2px;
 	max-height: 20em;
 	overflow: hidden;
 

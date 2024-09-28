@@ -137,9 +137,11 @@ export default (props:Props) => {
 
 	return (
 		<Draggable draggableId={props.value.id} index={props.index}>
-			{(provided) => {
+			{(provided, snapshot) => {
+				const classes = ['stack'];
+				if (snapshot.isDragging) classes.push('-dragging');
 				return (
-					<div className="stack" {...provided.draggableProps} ref={provided.innerRef}>
+					<div className={classes.join(' ')} {...provided.draggableProps} ref={provided.innerRef}>
 						<div onDoubleClick={onTitleDoubleClick} className="stack-header" {...provided.dragHandleProps}>
 							{renderTitle()}
 							{renderHeadingButtons()}
