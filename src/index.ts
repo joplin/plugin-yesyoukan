@@ -3,6 +3,7 @@ import { IpcMessage } from './utils/types';
 import AsyncActionQueue from './utils/AsyncActionQueue';
 import { noteIsBoard } from './utils/noteParser';
 import Logger, { TargetType } from '@joplin/utils/Logger';
+import { MenuItemLocation } from 'api/types';
 
 const globalLogger = new Logger();
 globalLogger.addTarget(TargetType.Console);
@@ -12,18 +13,29 @@ const logger = Logger.create('YesYouCan: Index');
 
 const noteUpdateQueue = new AsyncActionQueue(10);
 
+const newNoteBody = `# Backlog
+
+# In progress
+
+# Done
+
+\`\`\`kanban-settings
+# Do not remove this block
+\`\`\``;
+
 joplin.plugins.register({
 	onStart: async function() {
 		const panels = joplin.views.panels;
 
-		const view = await panels.create("panel_1");
+		const view = await panels.create("kanbanBoard");
 		
 		await panels.setHtml(view, '<div id="root"></div>');
 		await panels.addScript(view, './panel.js');
 		await panels.addScript(view, './style/reset.css');
 		await panels.addScript(view, './style/main.css');
 
-		let panelEnabled = false;
+		let panelEnabled = true;
+		let panelReady = false;
 
 		const makeNoteUpdateAction = () => {
 			return async () => {
@@ -32,20 +44,46 @@ joplin.plugins.register({
 					logger.info('Note is not a Kanban board - hiding panel');
 					await panels.hide(view);
 					panelEnabled = false;
+					panelReady = false;
 					return;
 				}
 
+				logger.info('Note was updated - notifying panel...');
+
 				panelEnabled = true;
 				await panels.show(view);
-				panels.postMessage(view, { type: 'setNoteBody', value: note.body });
+
+				if (panelReady) {
+					await panels.postMessage(view, { type: 'setNoteBody', value: note.body });
+				} else {
+					logger.info('Panel is not ready - will retry...');
+					noteUpdateQueue.push(makeNoteUpdateAction());
+				}
 			};
 		};
+
+		await joplin.commands.register({
+			name: 'createKanbanBoard',
+			label: 'Create Kanban board',
+			execute: async () => {
+				logger.info('Creating new Kanban note...');
+				await joplin.commands.execute('newNote', newNoteBody);
+				noteUpdateQueue.push(makeNoteUpdateAction());
+			},
+		});
+
+		await joplin.views.menuItems.create('createKanbanBoardMenuItem', 'createKanbanBoard', MenuItemLocation.Tools, { accelerator: 'CmdOrCtrl+Alt+Shift+K' });
 
 		panels.onMessage(view, async (message:IpcMessage) => {
 			logger.info('PostMessagePlugin (Webview): Got message from webview:', message);
 
 			if (!panelEnabled) {
 				logger.info('Skipping message - panel is disabled');
+				return;
+			}
+
+			if (message.type === 'isReady') {
+				panelReady = true;
 				return;
 			}
 

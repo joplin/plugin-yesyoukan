@@ -95,6 +95,7 @@ export const App = () => {
 	const ignoreNextBoardUpdate = useRef<boolean>(false);
 	const [editedCardIds, setEditedCardIds] = useState<string[]>([]);
 	const [enabled, setEnabled] = useState<boolean>(false);
+	const [isReadySent, setIsReadySent] = useState<boolean>(false);
 
 	const startCardEditing = (cardId:string) => {
 		setEditedCardIds(current => {
@@ -239,6 +240,16 @@ export const App = () => {
 
 		void fn();
 	}, []);
+
+	useEffect(() => {
+		const fn = async() => {
+			if (isReadySent) return;
+			setIsReadySent(true);
+			await webviewApi.postMessage<string>({ type: 'isReady' });
+		}
+
+		void fn();
+	}, [isReadySent]);
 
 	useEffect(() => {
 		webviewApi.onMessage(async (event) => {

@@ -20,7 +20,7 @@ export interface State {
 }
 
 export interface IpcMessage {
-	type: 'getNoteBody' | 'setNoteBody';
+	type: 'getNoteBody' | 'setNoteBody' | 'isReady';
 	value?: any;
 }
 
