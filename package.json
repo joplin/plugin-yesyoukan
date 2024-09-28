@@ -38,6 +38,7 @@
   },
   "dependencies": {
     "@hello-pangea/dnd": "^17.0.0",
+    "@joplin/utils": "^3.0.1",
     "@mui/joy": "^5.0.0-beta.48",
     "@mui/material": "^6.1.1",
     "immer": "^10.1.1",

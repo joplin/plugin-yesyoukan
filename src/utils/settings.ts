@@ -1,4 +1,5 @@
 import { Settings, defaultSettings } from "./types";
+import { LoggerWrapper } from '@joplin/utils/Logger';
 
 const parseBoolean = (s: string): boolean => {
 	if (s === 'true' || s === '1') return true;
@@ -6,7 +7,7 @@ const parseBoolean = (s: string): boolean => {
 	throw new Error(`Invalid boolean value: "${s}" (Must be one of "true", "false", "0, "1")`);
 };
 
-export function parseSettings(rawSettings:Record<string, string>, logger:typeof console = null): Settings {
+export function parseSettings(rawSettings:Record<string, string>, logger:LoggerWrapper = null): Settings {
 	const output: Settings = {};
 
 	for (const [key, rawValue] of Object.entries(rawSettings)) {

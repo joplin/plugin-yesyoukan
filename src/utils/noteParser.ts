@@ -1,10 +1,18 @@
 import { parseSettings } from "./settings";
 import { Board, Card, Stack, emptyBoard } from "./types";
 import uuid from "./uuid";
+import Logger from '@joplin/utils/Logger';
+
+const logger = Logger.create('YesYouKan: noteParser');
 
 const parseSettingLine = (line:string) => {
 	const index = line.indexOf(':');
 	return [line.substring(0, index), line.substring(index + 1).trim()];
+}
+
+export const noteIsBoard = (noteBody:string) => {
+	if (!noteBody) return false;
+	return noteBody.includes('```kanban-settings');
 }
 
 export const parseNote = async (noteBody:string) => {
@@ -65,8 +73,8 @@ export const parseNote = async (noteBody:string) => {
 		}
 	}
 
-	board.settings = parseSettings(rawSettings, console);
-	
+	board.settings = parseSettings(rawSettings, logger);
+
 	return board;
 }
 

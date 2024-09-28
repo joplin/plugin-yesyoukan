@@ -4,7 +4,7 @@ import { Board, WebviewApi, emptyBoard } from "./utils/types";
 import StackViewer, { AddCardEventHandler, DeleteEventHandler, TitleChangeEventHandler } from "./gui/StackViewer";
 import { DragDropContext, Droppable, OnDragEndResponder } from "@hello-pangea/dnd";
 import { produce} from "immer"
-import { boardsEqual, parseNote, serializeBoard } from "./utils/noteParser";
+import { boardsEqual, noteIsBoard, parseNote, serializeBoard } from "./utils/noteParser";
 import AsyncActionQueue from "./utils/AsyncActionQueue";
 import { EditorSubmitHandler as CardChangeEventHandler, DeleteEventHandler as CardDeleteEventHandler, EditorCancelHandler, EditorStartHandler } from "./gui/CardViewer";
 import { findCardIndex, findStackIndex } from "./utils/board";
@@ -12,6 +12,9 @@ import { ThemeProvider, createTheme } from "@mui/material";
 import Toolbar from './gui/Toolbar';
 import { Props as ButtonProps } from './gui/Button';
 import uuid from "./utils/uuid";
+import Logger from '@joplin/utils/Logger';
+
+const logger = Logger.create('YesYouKan: App');
 
 declare var webviewApi: WebviewApi;
 
@@ -91,6 +94,7 @@ export const App = () => {
 	const [history, setHistory] = useState<History>(emptyHistory);
 	const ignoreNextBoardUpdate = useRef<boolean>(false);
 	const [editedCardIds, setEditedCardIds] = useState<string[]>([]);
+	const [enabled, setEnabled] = useState<boolean>(false);
 
 	const startCardEditing = (cardId:string) => {
 		setEditedCardIds(current => {
@@ -224,7 +228,14 @@ export const App = () => {
 	useEffect(() => {
 		const fn = async() => {
 			const noteBody = await webviewApi.postMessage<string>({ type: 'getNoteBody' });
+			logger.info('NOTE IS BOARD', noteBody);
+			logger.info('NOTE IS BOARD', noteIsBoard(noteBody));
+			if (!noteIsBoard(noteBody)) {
+				setEnabled(false);
+				return;
+			}
 			const newBoard = await parseNote(noteBody);
+			setEnabled(true);
 			setBoard(newBoard);
 		}
 
@@ -234,14 +245,19 @@ export const App = () => {
 	useEffect(() => {
 		webviewApi.onMessage(async (event) => {
 			const message = event.message;
+
+			logger.info('ZEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE',enabled);
+
+			if (!enabled) return;
+
 			if (message.type === 'setNoteBody') {
 				const newBoard = await parseNote(message.value);
 				setBoard(current => {
 					if (boardsEqual(current, newBoard)) {
-						console.info('Board has not changed - skipping update');
+						logger.info('Board has not changed - skipping update');
 						return current;
 					}
-					console.info('Boad has changed - updating');
+					logger.info('Boad has changed - updating');
 					clearUndo();
 					ignoreNextBoardUpdate.current = true;
 					return newBoard;
@@ -250,7 +266,7 @@ export const App = () => {
 				throw new Error('Unknown message:' + JSON.stringify(message));
 			}
 		});
-	}, []);
+	}, [enabled]);
 
 	useEffect(() => {
 		if (!ignoreNextBoardUpdate.current) {
