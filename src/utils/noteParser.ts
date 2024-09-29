@@ -1,5 +1,5 @@
 import { parseSettings } from "./settings";
-import { Board, Card, Stack, emptyBoard } from "./types";
+import { Board, Card, Settings, Stack, emptyBoard } from "./types";
 import uuid from "./uuid";
 import Logger from '@joplin/utils/Logger';
 

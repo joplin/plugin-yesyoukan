@@ -1,12 +1,15 @@
 import * as React from "react";
-import { useCallback, useState, useRef } from "react";
-import { Stack } from "src/utils/types";
+import { useCallback, useState, useRef, useMemo } from "react";
+import { ConfirmKey, Stack } from "src/utils/types";
 import CardViewer, { EditorSubmitHandler as CardEditorSubmitEventHandler, DeleteEventHandler as CardDeleteEventHandler, EditorCancelHandler as CardEditorCancelHandler, EditorStartHandler as CardEditorStartEventHandler } from "./CardViewer";
 import { Draggable, DraggableProvided, Droppable } from "@hello-pangea/dnd";
 import ConfirmButtons from "./ConfirmButtons";
 import useOnEditorKeyDown from "./hooks/useOnEditorKeyDown";
 import KebabButton, { ItemClickEventHandler } from "./KebabButton";
 import Button from "./Button";
+import Logger from "@joplin/utils/Logger";
+
+const logger = Logger.create('YesYouKan: StackViewer');
 
 export interface TitleChangeEvent {
 	stackId: string;
@@ -28,6 +31,8 @@ export type AddCardEventHandler = (event:AddCardEvent) => void;
 interface Props {
 	value: Stack;
 	index: number;
+	width: number;
+	confirmKey: ConfirmKey;
 	editedCardIds: string[];
 	onCardEditorStart: CardEditorStartEventHandler;
 	onCardEditorSubmit: CardEditorSubmitEventHandler;
@@ -41,6 +46,13 @@ interface Props {
 export default (props:Props) => {
 	const [isEditing, setIsEditing] = useState<boolean>(false);
 	const editorRef = useRef<HTMLInputElement>(null);
+
+	const rootStyle = useMemo<React.CSSProperties>(() => {
+		return {
+			width: props.width,
+			maxWidth: props.width,
+		};
+	}, [props.width]);
 
 	const onStartEditing = useCallback(() => {
 		setIsEditing(true);
@@ -63,7 +75,7 @@ export default (props:Props) => {
 		setIsEditing(false);
 	}, []);
 
-	const onEditorKeyDown = useOnEditorKeyDown({ onEditorSubmit, onEditorCancel });
+	const onEditorKeyDown = useOnEditorKeyDown({ onEditorSubmit, onEditorCancel, confirmKey: props.confirmKey });
 
 	const onKebabItemClick = useCallback<ItemClickEventHandler>((event) => {
 		if (event.itemId === 'edit') {
@@ -129,6 +141,7 @@ export default (props:Props) => {
 				index={index}
 				key={card.id}
 				value={card}
+				confirmKey={props.confirmKey}
 				isEditing={props.editedCardIds.includes(card.id)}
 			/>);
 		}
@@ -141,7 +154,7 @@ export default (props:Props) => {
 				const classes = ['stack'];
 				if (snapshot.isDragging) classes.push('-dragging');
 				return (
-					<div className={classes.join(' ')} {...provided.draggableProps} ref={provided.innerRef}>
+					<div className={classes.join(' ')} {...provided.draggableProps} ref={provided.innerRef} style={rootStyle}>
 						<div onDoubleClick={onTitleDoubleClick} className="stack-header" {...provided.dragHandleProps}>
 							{renderTitle()}
 							{renderHeadingButtons()}

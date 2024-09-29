@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useCallback, useState, useEffect, useMemo, useRef } from "react";
-import { Board, WebviewApi, emptyBoard } from "./utils/types";
+import { Board, Settings, WebviewApi, emptyBoard } from "./utils/types";
 import StackViewer, { AddCardEventHandler, DeleteEventHandler, TitleChangeEventHandler } from "./gui/StackViewer";
 import { DragDropContext, Droppable, OnDragEndResponder } from "@hello-pangea/dnd";
 import { produce} from "immer"
@@ -26,6 +26,22 @@ const getCssVariable = (variableName: string) => {
 	return computedStyle_.getPropertyValue(variableName).trim();
 }
 
+const sharedControlStyle:any = {
+	styleOverrides: {
+		root: {
+			'& .MuiOutlinedInput-notchedOutline': {
+				borderColor: getCssVariable('--joplin-divider-color'), // Set default border color
+			},
+			'&:hover .MuiOutlinedInput-notchedOutline': {
+				borderColor: getCssVariable('--joplin-color'), // Set hover color
+			},
+			'&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+				borderColor: getCssVariable('--joplin-color'), // Set focused color
+			},
+		},
+	},
+};
+
 const theme = createTheme({
 	palette: {
 		background: {
@@ -37,7 +53,7 @@ const theme = createTheme({
 		text: {
 			primary: getCssVariable('--joplin-color'), 
 		},
-		divider: getCssVariable('--joplin-divider-color') ,
+		divider: getCssVariable('--joplin-divider-color'),
 	},
 
 	components: {
@@ -70,6 +86,39 @@ const theme = createTheme({
 				},
 			},
 		},
+		MuiDialog: {
+			styleOverrides: {
+				paper: {
+					backgroundColor: getCssVariable('--joplin-background-color'),
+					color: getCssVariable('--joplin-color'),
+				},
+			},
+		},
+		MuiDialogContent: {
+			styleOverrides: {
+				root: {
+					backgroundColor: getCssVariable('--joplin-background-color'),
+					paddingTop: '10px !important',
+				},
+			},
+		},
+		MuiOutlinedInput: sharedControlStyle,
+		MuiTextField: sharedControlStyle,
+		MuiSelect: sharedControlStyle,
+		MuiInputBase: sharedControlStyle,
+		MuiFormLabel: {
+			styleOverrides: {
+				root: {
+					color: getCssVariable('--joplin-color'), // Set default label color
+					'&.Mui-focused': {
+						color: getCssVariable('--joplin-color'), // Set color when focused
+					},
+					'&.MuiFormLabel-filled': {
+						color: getCssVariable('--joplin-color'), // Set color when filled
+					},
+				},
+			},
+		},
 	},
 });
 
@@ -91,11 +140,19 @@ const emptyHistory = ():History => {
 
 export const App = () => {
 	const [board, setBoard] = useState<Board>(emptyBoard());
+	const [baseSettings, setBaseSettings] = useState<Settings>({});
 	const [history, setHistory] = useState<History>(emptyHistory);
 	const ignoreNextBoardUpdate = useRef<boolean>(false);
 	const [editedCardIds, setEditedCardIds] = useState<string[]>([]);
 	const [enabled, setEnabled] = useState<boolean>(false);
 	const [isReadySent, setIsReadySent] = useState<boolean>(false);
+
+	const effectiveBoardSettings = useMemo(() => {
+		return {
+			...baseSettings,
+			...board.settings,
+		}
+	}, [board.settings, baseSettings]);
 
 	const startCardEditing = (cardId:string) => {
 		setEditedCardIds(current => {
@@ -220,6 +277,8 @@ export const App = () => {
 				key={stack.id}
 				value={stack}
 				index={index}
+				width={effectiveBoardSettings.stackWidth}
+				confirmKey={effectiveBoardSettings.confirmKey}
 				editedCardIds={editedCardIds}
 			/>);
 		}
@@ -240,6 +299,18 @@ export const App = () => {
 
 		void fn();
 	}, []);
+
+	useEffect(() => {
+		const fn = async() => {
+			const settings = await webviewApi.postMessage<Settings>({ type: 'getSettings' });
+			logger.info('Loading settings:', settings);
+			setBaseSettings(settings);
+		}
+
+		void fn();
+	}, []);
+
+	logger.info('BOARD SETTINGS', board.settings);
 
 	useEffect(() => {
 		const fn = async() => {

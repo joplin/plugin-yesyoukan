@@ -1,3 +1,5 @@
+import { SettingItem, SettingItemType } from "api/types";
+
 export interface Card {
 	id: string;
 	title: string;
@@ -20,7 +22,7 @@ export interface State {
 }
 
 export interface IpcMessage {
-	type: 'getNoteBody' | 'setNoteBody' | 'isReady';
+	type: 'getNoteBody' | 'setNoteBody' | 'isReady' | 'getSettings';
 	value?: any;
 }
 
@@ -42,12 +44,36 @@ export const emptyBoard = ():Board => {
 	}
 }
 
+export type SettingItems = Record<string, SettingItem> ;
+
+export const settingSectionName = 'yesYouKan';
+
+export type ConfirmKey = 'Enter' | 'Shift+Enter';
+
 export interface Settings {
 	stackWidth?: number;
-	confirmKey?: 'Enter' | 'Shift+Enter';
+	confirmKey?: ConfirmKey;
 }
 
-export const defaultSettings:Settings = Object.freeze({
-	stackWidth: 270,
-	confirmKey: "Enter",
-});
+export const settingItems:SettingItems = {
+	stackWidth: {
+		label: 'Stack width',
+		type: SettingItemType.Int,
+		public: true,
+		value: 270,
+		section: settingSectionName,
+	},
+	confirmKey: {
+		label: 'Confirm key',
+		description: 'Press this key to confirm the text you just entered. The other option will be used to enter a newline in the card body.',
+		type: SettingItemType.String,
+		isEnum: true,
+		public: true,
+		value: 'Enter',
+		options: {
+			'Enter': 'Enter',
+			'Shift+Enter': 'Shift+Enter',
+		},
+		section: settingSectionName,
+	},
+};

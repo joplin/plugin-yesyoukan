@@ -1,19 +1,47 @@
 import * as React from "react";
 import { useCallback } from "react";
+import { ConfirmKey } from "src/utils/types";
 
 interface Props {
 	onEditorSubmit():void;
 	onEditorCancel():void;
+	confirmKey: ConfirmKey;
+}
+
+enum Action {
+	Newline,
+	Confirm,
+	Cancel,
+}
+
+const keyToAction = (event:React.KeyboardEvent<unknown>, confirmKey:ConfirmKey):Action => {
+	if (event.key === 'Escape') return Action.Cancel;
+
+	const handlers:Record<ConfirmKey, Function> = {
+		"Shift+Enter": () => {
+			if (event.shiftKey && event.key === 'Enter') return Action.Confirm;
+			if (event.key === 'Enter') return Action.Newline;
+		},
+
+		"Enter": () => {
+			if (event.shiftKey && event.key === 'Enter') return Action.Newline;
+			if (event.key === 'Enter') return Action.Confirm;
+		},
+	};
+
+	return handlers[confirmKey]();
 }
 
 export default (props:Props) => {
 	return useCallback<React.KeyboardEventHandler<unknown>>((event) => {
-		if (event.shiftKey && event.key === 'Enter') {
+		const action = keyToAction(event, props.confirmKey);
+
+		if (action === Action.Newline) {
 			// Just enter a newline
-		} else if (event.key === 'Enter') {
+		} else if (action === Action.Confirm) {
 			event.preventDefault()
 			props.onEditorSubmit();
-		} else if (event.key === 'Escape') {
+		} else if (action === Action.Cancel) {
 			event.preventDefault()
 			props.onEditorCancel();
 		}

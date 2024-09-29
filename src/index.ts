@@ -1,9 +1,9 @@
 import joplin from 'api';
-import { IpcMessage } from './utils/types';
+import { IpcMessage, settingItems, settingSectionName } from './utils/types';
 import AsyncActionQueue from './utils/AsyncActionQueue';
 import { noteIsBoard } from './utils/noteParser';
 import Logger, { TargetType } from '@joplin/utils/Logger';
-import { MenuItemLocation } from 'api/types';
+import { MenuItemLocation, SettingItem, SettingItemType } from 'api/types';
 
 const globalLogger = new Logger();
 globalLogger.addTarget(TargetType.Console);
@@ -25,6 +25,12 @@ const newNoteBody = `# Backlog
 
 joplin.plugins.register({
 	onStart: async function() {
+		await joplin.settings.registerSection(settingSectionName, {
+			label: 'YesYouKan',
+			iconName: 'fas fa-th-list',
+		});
+		await joplin.settings.registerSettings(settingItems);
+
 		const panels = joplin.views.panels;
 
 		const view = await panels.create("kanbanBoard");
@@ -96,6 +102,10 @@ joplin.plugins.register({
 			if (message.type === 'setNoteBody') {
 				await joplin.commands.execute('editor.setText', message.value);
 				return;
+			}
+
+			if (message.type === 'getSettings') {
+				return await (joplin.settings as any).values(Object.keys(settingItems));
 			}
 
 			throw new Error('Unknown message: ' + JSON.stringify(message));

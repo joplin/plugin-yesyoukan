@@ -1,4 +1,4 @@
-import { Settings, defaultSettings } from "./types";
+import { Settings, settingItems } from "./types";
 import { LoggerWrapper } from '@joplin/utils/Logger';
 
 const parseBoolean = (s: string): boolean => {
@@ -11,12 +11,12 @@ export function parseSettings(rawSettings:Record<string, string>, logger:LoggerW
 	const output: Settings = {};
 
 	for (const [key, rawValue] of Object.entries(rawSettings)) {
-		if (!(key in defaultSettings)) {
+		if (!(key in settingItems)) {
 			if (logger) logger.warn('Unknown setting key: ' + key);
 			continue;
 		}
 
-		const value = defaultSettings[key];
+		const value = settingItems[key].value;
 		
 		try {
 			if (typeof value === 'number') {

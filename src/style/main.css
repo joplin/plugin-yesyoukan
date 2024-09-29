@@ -53,8 +53,6 @@ body {
 	background-color: var(--joplin-background-color3);
 	border: 1px solid var(--joplin-divider-color);
 	flex: 1 1 0;
-	width: 270px;
-	max-width: 270px;
 	margin-top: 10px;
 	margin-left: 10px;
 	margin-bottom: 10px;

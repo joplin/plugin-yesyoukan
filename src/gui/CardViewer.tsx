@@ -1,7 +1,7 @@
 import { Draggable } from "@hello-pangea/dnd";
 import * as React from "react";
 import { useMemo, useCallback, useState, useRef, useEffect } from "react";
-import { Card, Stack } from "src/utils/types";
+import { Card, ConfirmKey, Stack } from "src/utils/types";
 import * as MarkdownIt from 'markdown-it';
 import ConfirmButtons from "./ConfirmButtons";
 import useOnEditorKeyDown from "./hooks/useOnEditorKeyDown";
@@ -26,6 +26,7 @@ export interface Props {
 	value: Card;
 	index: number;
 	isLast: boolean;
+	confirmKey: ConfirmKey;
 	onEditorStart:EditorStartHandler;
 	onEditorSubmit:EditorSubmitHandler;
 	onEditorCancel: EditorCancelHandler;
@@ -89,7 +90,7 @@ export default (props:Props) => {
 		}
 	}, [props.isEditing]);
 
-	const onEditorKeyDown = useOnEditorKeyDown({ onEditorSubmit, onEditorCancel });
+	const onEditorKeyDown = useOnEditorKeyDown({ onEditorSubmit, onEditorCancel, confirmKey: props.confirmKey });
 
 	const onKebabItemClick = useCallback<ItemClickEventHandler>((event) => {
 		if (event.itemId === 'edit') {
