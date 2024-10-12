@@ -277,7 +277,6 @@ export const App = () => {
 				key={stack.id}
 				value={stack}
 				index={index}
-				width={effectiveBoardSettings.stackWidth}
 				confirmKey={effectiveBoardSettings.confirmKey}
 				editedCardIds={editedCardIds}
 			/>);
@@ -461,9 +460,20 @@ export const App = () => {
 		return output;
 	}, [onUndoBoard, onRedoBoard, history.undo.length, history.redo.length, onAddStack]);
 
+	// A more natural way to do this would be to set the `style` prop on the stack element. However
+	// doing this interfers with Beautiful DND and makes the stacks no longer draggable. It seems to
+	// be fine with CSS being set via stylesheet though, so we do that here.
+	const appStyle = `
+		.stack {
+			width: ${effectiveBoardSettings.stackWidth}px;
+			max-width: ${effectiveBoardSettings.stackWidth}px;
+		}
+	`;
+
 	return (
 		<ThemeProvider theme={theme}>
 			<div className="app">
+				<style>{appStyle}</style>
 				<Toolbar buttons={toolbarButtons}/>
 				<div className="stacks">
 					<DragDropContext onDragEnd={onDragEnd}>

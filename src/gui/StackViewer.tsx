@@ -31,7 +31,6 @@ export type AddCardEventHandler = (event:AddCardEvent) => void;
 interface Props {
 	value: Stack;
 	index: number;
-	width: number;
 	confirmKey: ConfirmKey;
 	editedCardIds: string[];
 	onCardEditorStart: CardEditorStartEventHandler;
@@ -46,13 +45,6 @@ interface Props {
 export default (props:Props) => {
 	const [isEditing, setIsEditing] = useState<boolean>(false);
 	const editorRef = useRef<HTMLInputElement>(null);
-
-	const rootStyle = useMemo<React.CSSProperties>(() => {
-		return {
-			width: props.width,
-			maxWidth: props.width,
-		};
-	}, [props.width]);
 
 	const onStartEditing = useCallback(() => {
 		setIsEditing(true);
@@ -154,7 +146,7 @@ export default (props:Props) => {
 				const classes = ['stack'];
 				if (snapshot.isDragging) classes.push('-dragging');
 				return (
-					<div className={classes.join(' ')} {...provided.draggableProps} ref={provided.innerRef} style={rootStyle}>
+					<div className={classes.join(' ')} {...provided.draggableProps} ref={provided.innerRef}>
 						<div onDoubleClick={onTitleDoubleClick} className="stack-header" {...provided.dragHandleProps}>
 							{renderTitle()}
 							{renderHeadingButtons()}
