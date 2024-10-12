@@ -68,9 +68,14 @@ ul, ol {
 
 	> .stack-header {
 		display: flex;
+		width: 100%;
 
 		> .title-wrapper {
 			display: flex;
+			flex-grow: 1;
+			overflow: hidden;
+			white-space: nowrap;
+			text-overflow: ellipsis;
 			position: relative;
 			height: 40px;
 			align-items: center;
