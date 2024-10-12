@@ -9,6 +9,10 @@ body {
     height: 100%;
 }
 
+ul, ol {
+	padding-left: 1em;
+}
+
 #joplin-plugin-content-root {
 	width: 100%
 }
