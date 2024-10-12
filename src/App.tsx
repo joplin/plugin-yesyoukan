@@ -308,9 +308,7 @@ export const App = () => {
 
 		void fn();
 	}, []);
-
-	logger.info('BOARD SETTINGS', board.settings);
-
+	
 	useEffect(() => {
 		const fn = async() => {
 			if (isReadySent) return;
@@ -348,6 +346,7 @@ export const App = () => {
 	useEffect(() => {
 		if (!ignoreNextBoardUpdate.current) {
 			updateNoteQueue.push(async () => {
+				logger.info('Boad has changed - updating note body...');
 				const noteBody = serializeBoard(board);
 				await webviewApi.postMessage({ type: 'setNoteBody', value: noteBody });	
 			});

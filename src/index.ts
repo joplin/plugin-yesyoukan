@@ -1,7 +1,7 @@
 import joplin from 'api';
 import { IpcMessage, settingItems, settingSectionName } from './utils/types';
 import AsyncActionQueue from './utils/AsyncActionQueue';
-import { noteIsBoard } from './utils/noteParser';
+import { boardsEqual, noteIsBoard, parseNote } from './utils/noteParser';
 import Logger, { TargetType } from '@joplin/utils/Logger';
 import { MenuItemLocation, SettingItem, SettingItemType } from 'api/types';
 
@@ -100,7 +100,16 @@ joplin.plugins.register({
 			}
 
 			if (message.type === 'setNoteBody') {
-				await joplin.commands.execute('editor.setText', message.value);
+				const selectedNote = await joplin.workspace.selectedNote();
+				const newBoard = await parseNote(message.value);
+				const currentBoard = await parseNote(selectedNote.body);
+
+				if (boardsEqual(newBoard, currentBoard)) {
+					logger.info('NOT updating note - board has not changed');
+				} else {
+					logger.info('Updating note - board has changed');
+					await joplin.commands.execute('editor.setText', message.value);
+				}
 				return;
 			}
 
