@@ -1,4 +1,4 @@
-import { SettingItem, SettingItemType } from "api/types";
+import { SettingItem, SettingItemType } from "../../api/types";
 
 export interface Note {
 	id: string;
@@ -8,7 +8,9 @@ export interface Note {
 export interface Card {
 	id: string;
 	title: string;
-	body: string;
+	body?: string;
+	bodyHtml?: string;
+	bodyRendered?: boolean;
 }
 
 export interface Stack {
@@ -28,7 +30,7 @@ export interface State {
 }
 
 export interface IpcMessage {
-	type: 'getNote' | 'setNote' | 'isReady' | 'getSettings';
+	type: 'getNote' | 'setNote' | 'isReady' | 'getSettings' | 'renderBodies';
 	value?: any;
 }
 
@@ -84,3 +86,23 @@ export const settingItems:SettingItems = {
 		section: settingSectionName,
 	},
 };
+
+export interface RenderResultPluginAsset {
+	source: string;
+	name: string;
+	mime: string;
+	path: string;
+
+	// For built-in Mardown-it plugins, the asset path is relative (and can be
+	// found inside the @joplin/renderer package), while for external plugins
+	// (content scripts), the path is absolute. We use this property to tell if
+	// it's relative or absolute, as that will inform how it's loaded in various
+	// places.
+	pathIsAbsolute: boolean;
+}
+
+export interface RenderResult {
+	html: string;
+	pluginAssets: RenderResultPluginAsset[];
+	cssStrings: string[];
+}

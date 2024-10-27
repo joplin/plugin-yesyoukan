@@ -58,12 +58,6 @@ export default (props:Props) => {
 	const card = props.value;
 
 	const editorRef = useRef<HTMLTextAreaElement>(null);
-	const hasBody = useMemo(() => !!card.body.trim(), [card.body]);
-
-	const bodyHtml = useMemo(() => {
-		if (!hasBody) return '';
-		return markdownIt.render(card.body);
-	}, [card.body, hasBody]);
 
 	const onEditorSubmit = useCallback(() => {
 		props.onEditorSubmit({
@@ -129,7 +123,7 @@ export default (props:Props) => {
 					<div className="header">
 						<h3 className="title">{card.title}</h3>{renderKebabButton()}
 					</div>
-					<p className="body" dangerouslySetInnerHTML={{ __html: bodyHtml} }></p>
+					<p className="body" dangerouslySetInnerHTML={{ __html: card.bodyHtml} }></p>
 				</div>
 			);
 		} else { // EDIT

@@ -99,6 +99,17 @@ joplin.plugins.register({
 				return { id: response.id, body: response.body };
 			}
 
+			if (message.type === 'renderBodies') {
+				const toRender = JSON.parse(message.value);
+				const rendered:Record<string, string> = {};
+				for (const [id, body] of Object.entries(toRender)) {
+					const result = await joplin.commands.execute('renderMarkup', 1, body);
+					rendered[id] = result;
+				}
+
+				return rendered;
+			}
+
 			if (message.type === 'setNote') {
 				const selectedNote = await joplin.workspace.selectedNote();
 				const messageNote = message.value as Note;

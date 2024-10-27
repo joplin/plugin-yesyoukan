@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useCallback, useState, useEffect, useMemo, useRef } from "react";
-import { Board, Note, Settings, WebviewApi, emptyBoard } from "./utils/types";
+import { Board, Note, RenderResult, Settings, WebviewApi, emptyBoard } from "./utils/types";
 import StackViewer, { AddCardEventHandler, DeleteEventHandler, TitleChangeEventHandler } from "./gui/StackViewer";
 import { DragDropContext, Droppable, OnDragEndResponder } from "@hello-pangea/dnd";
 import { produce} from "immer"
@@ -146,6 +146,7 @@ export const App = () => {
 	const [editedCardIds, setEditedCardIds] = useState<string[]>([]);
 	const [enabled, setEnabled] = useState<boolean>(false);
 	const [isReadySent, setIsReadySent] = useState<boolean>(false);
+	const [cssStrings, setCssStrings] = useState([]);
 
 	const effectiveBoardSettings = useMemo(() => {
 		return {
@@ -355,6 +356,50 @@ export const App = () => {
 		ignoreNextBoardUpdate.current = false;
 	}, [board]);
 
+	useEffect(() => {
+		let cancelled = false;
+		const fn = async () => {
+			const toRenderBodies:Record<string, string> = {};
+			for (const stack of board.stacks) {
+				for (const card of stack.cards) {
+					if (card.bodyRendered) continue;
+					toRenderBodies[card.id] = card.body;
+				}
+			}
+
+			const rendered = await webviewApi.postMessage<Record<string, RenderResult>>({ type: 'renderBodies', value: JSON.stringify(toRenderBodies) });
+			if (cancelled) return;
+
+			setBoard(current => {
+				return produce(current, draft => {
+					for (const [cardId, result] of Object.entries(rendered)) {
+						const [stackIndex, cardIndex] = findCardIndex(board, cardId);
+						draft.stacks[stackIndex].cards[cardIndex].bodyRendered = true;
+						draft.stacks[stackIndex].cards[cardIndex].bodyHtml = result.html;
+					}
+				});
+			});
+
+			setCssStrings(current => {
+				return produce(current, draft => {
+					for (const [, result] of Object.entries(rendered)) {
+						for (const cssString of result.cssStrings) {
+							if (!draft.includes(cssString)) {
+								draft.push(cssString);
+							}
+						}
+					}
+				});
+			});
+		}
+
+		void fn();
+
+		return () => {
+			cancelled = true;
+		}
+	}, [board]);
+
 	const onUndoBoard = useCallback(() => {
 		if (history.undo.length) {
 			const undoItem = history.undo[history.undo.length - 1];
@@ -468,6 +513,8 @@ export const App = () => {
 			width: ${effectiveBoardSettings.stackWidth}px;
 			max-width: ${effectiveBoardSettings.stackWidth}px;
 		}
+
+		${cssStrings.join('\n')}
 	`;
 
 	return (
