@@ -41,6 +41,7 @@ describe('noteParser', () => {
 		[
 			noteBody1,
 			{
+				noteId: '',
 				stacks: [
 					{
 						id: '',
@@ -97,7 +98,7 @@ describe('noteParser', () => {
 			},
 		],
 	])('should parse a note', async (noteBody, board) => {
-		const actual = await parseNote(noteBody)
+		const actual = await parseNote('', noteBody)
 		
 		actual.stacks = actual.stacks.map(s => {
 			s.id = ''

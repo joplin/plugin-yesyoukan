@@ -15,10 +15,12 @@ export const noteIsBoard = (noteBody:string) => {
 	return noteBody.includes('```kanban-settings');
 }
 
-export const parseNote = async (noteBody:string) => {
+export const parseNote = async (noteId:string, noteBody:string) => {
 	const lines = noteBody.split('\n').map(l => l.trim());
 
 	const board:Board = emptyBoard();
+
+	board.noteId = noteId;
 
 	let state:'idle'|'inStack'|'inCard'|'inBody'|'inSettings' = 'idle';
 	let previousState:string = '';
@@ -116,6 +118,7 @@ export const serializeBoard = (board:Board) => {
 
 export const boardsEqual = (board1:Board, board2:Board) => {
 	if (board1.stacks.length !== board2.stacks.length) return false;
+	if (board1.noteId !== board2.noteId) return false;
 
 	const settingKeys = Object.keys(board1.settings).sort();
 	if (settingKeys.length !== Object.keys(board2.settings).length) return false;

@@ -1,5 +1,10 @@
 import { SettingItem, SettingItemType } from "api/types";
 
+export interface Note {
+	id: string;
+	body: string;
+}
+
 export interface Card {
 	id: string;
 	title: string;
@@ -13,6 +18,7 @@ export interface Stack {
 }
 
 export interface Board {
+	noteId: string;
 	stacks: Stack[];
 	settings: Settings;
 }
@@ -22,7 +28,7 @@ export interface State {
 }
 
 export interface IpcMessage {
-	type: 'getNoteBody' | 'setNoteBody' | 'isReady' | 'getSettings';
+	type: 'getNote' | 'setNote' | 'isReady' | 'getSettings';
 	value?: any;
 }
 
@@ -39,6 +45,7 @@ export interface WebviewApi {
 
 export const emptyBoard = ():Board => {
 	return {
+		noteId: '',
 		settings: {},
 		stacks: [],
 	}

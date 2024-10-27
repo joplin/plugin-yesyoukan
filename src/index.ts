@@ -1,5 +1,5 @@
 import joplin from 'api';
-import { IpcMessage, settingItems, settingSectionName } from './utils/types';
+import { IpcMessage, Note, settingItems, settingSectionName } from './utils/types';
 import AsyncActionQueue from './utils/AsyncActionQueue';
 import { boardsEqual, noteIsBoard, parseNote } from './utils/noteParser';
 import Logger, { TargetType } from '@joplin/utils/Logger';
@@ -11,7 +11,7 @@ Logger.initializeGlobalLogger(globalLogger);
 
 const logger = Logger.create('YesYouCan: Index');
 
-const noteUpdateQueue = new AsyncActionQueue(10);
+const noteUpdateQueue = new AsyncActionQueue(200);
 
 const newNoteBody = `# Backlog
 
@@ -60,7 +60,7 @@ joplin.plugins.register({
 				await panels.show(view);
 
 				if (panelReady) {
-					await panels.postMessage(view, { type: 'setNoteBody', value: note.body });
+					await panels.postMessage(view, { type: 'setNote', value: { id: note.id, body: note.body }});
 				} else {
 					logger.info('Panel is not ready - will retry...');
 					noteUpdateQueue.push(makeNoteUpdateAction());
@@ -93,22 +93,28 @@ joplin.plugins.register({
 				return;
 			}
 
-			if (message.type === 'getNoteBody') {
+			if (message.type === 'getNote') {
 				const response = await joplin.workspace.selectedNote();
 				logger.info('PostMessagePlugin (Webview): Responding with:', response);
-				return response.body;
+				return { id: response.id, body: response.body };
 			}
 
-			if (message.type === 'setNoteBody') {
+			if (message.type === 'setNote') {
 				const selectedNote = await joplin.workspace.selectedNote();
-				const newBoard = await parseNote(message.value);
-				const currentBoard = await parseNote(selectedNote.body);
+				const messageNote = message.value as Note;
+				const newBoard = await parseNote(messageNote.id, messageNote.body);
+				const currentBoard = await parseNote(selectedNote.id, selectedNote.body);
+
+				if (messageNote.id !== selectedNote.id) {
+					logger.info('NOT updating note - current note has changed while the board was being updated');
+					return;
+				}
 
 				if (boardsEqual(newBoard, currentBoard)) {
 					logger.info('NOT updating note - board has not changed');
 				} else {
 					logger.info('Updating note - board has changed');
-					await joplin.commands.execute('editor.setText', message.value);
+					await joplin.commands.execute('editor.setText', messageNote.body);
 				}
 				return;
 			}

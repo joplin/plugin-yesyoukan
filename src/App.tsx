@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useCallback, useState, useEffect, useMemo, useRef } from "react";
-import { Board, Settings, WebviewApi, emptyBoard } from "./utils/types";
+import { Board, Note, Settings, WebviewApi, emptyBoard } from "./utils/types";
 import StackViewer, { AddCardEventHandler, DeleteEventHandler, TitleChangeEventHandler } from "./gui/StackViewer";
 import { DragDropContext, Droppable, OnDragEndResponder } from "@hello-pangea/dnd";
 import { produce} from "immer"
@@ -286,12 +286,12 @@ export const App = () => {
 
 	useEffect(() => {
 		const fn = async() => {
-			const noteBody = await webviewApi.postMessage<string>({ type: 'getNoteBody' });
-			if (!noteIsBoard(noteBody)) {
+			const note = await webviewApi.postMessage<Note>({ type: 'getNote' });
+			if (!noteIsBoard(note.body)) {
 				setEnabled(false);
 				return;
 			}
-			const newBoard = await parseNote(noteBody);
+			const newBoard = await parseNote(note.id, note.body);
 			setEnabled(true);
 			setBoard(newBoard);
 		}
@@ -325,8 +325,9 @@ export const App = () => {
 
 			if (!enabled) return;
 
-			if (message.type === 'setNoteBody') {
-				const newBoard = await parseNote(message.value);
+			if (message.type === 'setNote') {
+				const note = message.value as Note;
+				const newBoard = await parseNote(note.id, note.body);
 				setBoard(current => {
 					if (boardsEqual(current, newBoard)) {
 						logger.info('Board has not changed - skipping update');
@@ -348,7 +349,7 @@ export const App = () => {
 			updateNoteQueue.push(async () => {
 				logger.info('Boad has changed - updating note body...');
 				const noteBody = serializeBoard(board);
-				await webviewApi.postMessage({ type: 'setNoteBody', value: noteBody });	
+				await webviewApi.postMessage({ type: 'setNote', value: { id: board.noteId, body: noteBody }});	
 			});
 		}
 		ignoreNextBoardUpdate.current = false;
