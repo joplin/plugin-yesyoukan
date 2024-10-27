@@ -1,3 +1,9 @@
+# v1.0.6
+
+- Render card content as Markdown
+- Make note and board two-way sync more robust and safer
+- Do not update note if board has not changed
+
 # v1.0.4
 
 - Fixed horizontal scrolling
