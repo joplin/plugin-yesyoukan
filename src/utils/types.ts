@@ -10,7 +10,7 @@ export interface Card {
 	title: string;
 	body?: string;
 	bodyHtml?: string;
-	bodyRendered?: boolean;
+	bodyHtmlHash?: string;
 }
 
 export interface Stack {

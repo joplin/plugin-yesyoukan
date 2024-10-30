@@ -13,6 +13,7 @@ import Toolbar from './gui/Toolbar';
 import { Props as ButtonProps } from './gui/Button';
 import uuid from "./utils/uuid";
 import Logger from '@joplin/utils/Logger';
+import getHash from "./utils/getHash";
 
 const logger = Logger.create('YesYouKan: App');
 
@@ -360,9 +361,12 @@ export const App = () => {
 		let cancelled = false;
 		const fn = async () => {
 			const toRenderBodies:Record<string, string> = {};
+			const bodyHtmlHashes:Record<string, string> = {};
 			for (const stack of board.stacks) {
 				for (const card of stack.cards) {
-					if (card.bodyRendered) continue;
+					const hash = await getHash(card.body)
+					if (card.bodyHtmlHash === hash) continue;
+					bodyHtmlHashes[card.id] = hash;
 					toRenderBodies[card.id] = card.body;
 				}
 			}
@@ -374,7 +378,7 @@ export const App = () => {
 				return produce(current, draft => {
 					for (const [cardId, result] of Object.entries(rendered)) {
 						const [stackIndex, cardIndex] = findCardIndex(board, cardId);
-						draft.stacks[stackIndex].cards[cardIndex].bodyRendered = true;
+						draft.stacks[stackIndex].cards[cardIndex].bodyHtmlHash = bodyHtmlHashes[cardId];
 						draft.stacks[stackIndex].cards[cardIndex].bodyHtml = result.html;
 					}
 				});

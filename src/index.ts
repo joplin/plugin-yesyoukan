@@ -4,6 +4,7 @@ import AsyncActionQueue from './utils/AsyncActionQueue';
 import { boardsEqual, noteIsBoard, parseNote } from './utils/noteParser';
 import Logger, { TargetType } from '@joplin/utils/Logger';
 import { MenuItemLocation, SettingItem, SettingItemType } from 'api/types';
+import JoplinViewsPanels from 'api/JoplinViewsPanels';
 
 const globalLogger = new Logger();
 globalLogger.addTarget(TargetType.Console);
@@ -31,7 +32,7 @@ joplin.plugins.register({
 		});
 		await joplin.settings.registerSettings(settingItems);
 
-		const panels = joplin.views.panels;
+		const panels = (joplin.views as any).editors as JoplinViewsPanels;
 
 		const view = await panels.create("kanbanBoard");
 		
@@ -126,6 +127,7 @@ joplin.plugins.register({
 				} else {
 					logger.info('Updating note - board has changed');
 					await joplin.commands.execute('editor.setText', messageNote.body);
+					await joplin.data.put(['notes', messageNote.id], null, { body: messageNote.body });
 				}
 				return;
 			}
