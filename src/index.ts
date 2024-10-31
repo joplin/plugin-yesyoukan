@@ -32,7 +32,7 @@ joplin.plugins.register({
 		});
 		await joplin.settings.registerSettings(settingItems);
 
-		const panels = (joplin.views as any).editors as JoplinViewsPanels;
+		const panels = (joplin.views as any).editors as any;
 
 		const view = await panels.create("kanbanBoard");
 		
@@ -49,7 +49,7 @@ joplin.plugins.register({
 				const note = await joplin.workspace.selectedNote();
 				if (!noteIsBoard(note ? note.body : '')) {
 					logger.info('Note is not a Kanban board - hiding panel');
-					await panels.hide(view);
+					await panels.setActive(view, false);
 					panelEnabled = false;
 					panelReady = false;
 					return;
@@ -58,7 +58,7 @@ joplin.plugins.register({
 				logger.info('Note was updated - notifying panel...');
 
 				panelEnabled = true;
-				await panels.show(view);
+				await panels.setActive(view, true);
 
 				if (panelReady) {
 					await panels.postMessage(view, { type: 'setNote', value: { id: note.id, body: note.body }});
