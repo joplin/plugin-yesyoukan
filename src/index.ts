@@ -12,7 +12,7 @@ Logger.initializeGlobalLogger(globalLogger);
 
 const logger = Logger.create('YesYouCan: Index');
 
-const noteUpdateQueue = new AsyncActionQueue(200);
+const noteUpdateQueue = new AsyncActionQueue(100);
 
 const newNoteBody = `# Backlog
 
@@ -47,15 +47,17 @@ joplin.plugins.register({
 		const makeNoteUpdateAction = () => {
 			return async () => {
 				const note = await joplin.workspace.selectedNote();
+
+				logger.info('makeNoteUpdateAction: Handling note: ' + note.id);
+
 				if (!noteIsBoard(note ? note.body : '')) {
-					logger.info('Note is not a Kanban board - hiding panel');
+					logger.info('Note is not a Kanban board - disactivating editor...');
 					await panels.setActive(view, false);
 					panelEnabled = false;
-					panelReady = false;
 					return;
 				}
 
-				logger.info('Note was updated - notifying panel...');
+				logger.info('makeNoteUpdateAction: Note is a Kanban board - notifying panel and activating editor...');
 
 				panelEnabled = true;
 				await panels.setActive(view, true);
@@ -63,7 +65,7 @@ joplin.plugins.register({
 				if (panelReady) {
 					await panels.postMessage(view, { type: 'setNote', value: { id: note.id, body: note.body }});
 				} else {
-					logger.info('Panel is not ready - will retry...');
+					logger.info('makeNoteUpdateAction: Editor is not ready - will retry...');
 					noteUpdateQueue.push(makeNoteUpdateAction());
 				}
 			};
@@ -137,10 +139,6 @@ joplin.plugins.register({
 			}
 
 			throw new Error('Unknown message: ' + JSON.stringify(message));
-		});
-
-		joplin.workspace.onNoteChange(async () => {
-			noteUpdateQueue.push(makeNoteUpdateAction());
 		});
 
 		joplin.workspace.onNoteSelectionChange(async () => {
