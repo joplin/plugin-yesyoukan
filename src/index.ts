@@ -62,6 +62,11 @@ joplin.plugins.register({
 				panelEnabled = true;
 				await panels.setActive(view, true);
 
+				if (!(await panels.isVisible(view))) {
+					logger.info('makeNoteUpdateAction: User has not displayed the panel - NOT loading note in board');
+					return;
+				}
+
 				if (panelReady) {
 					await panels.postMessage(view, { type: 'setNote', value: { id: note.id, body: note.body }});
 				} else {

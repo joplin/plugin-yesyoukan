@@ -315,6 +315,7 @@ export const App = () => {
 		const fn = async() => {
 			if (isReadySent) return;
 			setIsReadySent(true);
+			logger.info('Sending isReady message...');
 			await webviewApi.postMessage<string>({ type: 'isReady' });
 		}
 
