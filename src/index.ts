@@ -3,16 +3,13 @@ import { IpcMessage, Note, settingItems, settingSectionName } from './utils/type
 import AsyncActionQueue from './utils/AsyncActionQueue';
 import { boardsEqual, noteIsBoard, parseNote } from './utils/noteParser';
 import Logger, { TargetType } from '@joplin/utils/Logger';
-import { MenuItemLocation, SettingItem, SettingItemType } from 'api/types';
-import JoplinViewsPanels from 'api/JoplinViewsPanels';
+import { MenuItemLocation } from 'api/types';
 
 const globalLogger = new Logger();
 globalLogger.addTarget(TargetType.Console);
 Logger.initializeGlobalLogger(globalLogger);
 
 const logger = Logger.create('YesYouCan: Index');
-
-const noteUpdateQueue = new AsyncActionQueue(100);
 
 const newNoteBody = `# Backlog
 
@@ -43,11 +40,14 @@ joplin.plugins.register({
 
 		const updateFromSelectedNote = async () => {
 			const note = await joplin.workspace.selectedNote();
+			if (!note) return;
+			
 			await panels.postMessage(view, { type: 'setNote', value: { id: note.id, body: note.body }});
 		}
 
 		await panels.onActivationCheck(view, async () => {
 			const note = await joplin.workspace.selectedNote();
+			if (!note) return false;
 
 			logger.info('onActivationCheck: Handling note: ' + note.id);
 			return noteIsBoard(note ? note.body : '');
@@ -63,6 +63,7 @@ joplin.plugins.register({
 			execute: async () => {
 				logger.info('Creating new Kanban note...');
 				await joplin.commands.execute('newNote', newNoteBody);
+				await joplin.commands.execute('showEditorPlugin');
 				await updateFromSelectedNote();
 			},
 		});
