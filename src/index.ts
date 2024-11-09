@@ -41,7 +41,7 @@ joplin.plugins.register({
 		const updateFromSelectedNote = async () => {
 			const note = await joplin.workspace.selectedNote();
 			if (!note) return;
-			
+
 			await panels.postMessage(view, { type: 'setNote', value: { id: note.id, body: note.body }});
 		}
 
@@ -54,6 +54,7 @@ joplin.plugins.register({
 		});
 
 		await panels.onUpdate(view, async () => {
+			logger.info('onUpdate');
 			await updateFromSelectedNote();
 		});
 
@@ -63,8 +64,13 @@ joplin.plugins.register({
 			execute: async () => {
 				logger.info('Creating new Kanban note...');
 				await joplin.commands.execute('newNote', newNoteBody);
-				await joplin.commands.execute('showEditorPlugin');
-				await updateFromSelectedNote();
+
+				// Wait for the note to be created and the UI to be updated before showing the
+				// editor
+				setTimeout(async () => {
+					await joplin.commands.execute('showEditorPlugin');
+					await updateFromSelectedNote();
+				}, 200);				
 			},
 		});
 
