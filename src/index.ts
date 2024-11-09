@@ -41,40 +41,21 @@ joplin.plugins.register({
 		await panels.addScript(view, './style/reset.css');
 		await panels.addScript(view, './style/main.css');
 
-		let panelEnabled = true;
-		let panelReady = false;
+		const updateFromSelectedNote = async () => {
+			const note = await joplin.workspace.selectedNote();
+			await panels.postMessage(view, { type: 'setNote', value: { id: note.id, body: note.body }});
+		}
 
-		const makeNoteUpdateAction = () => {
-			return async () => {
-				const note = await joplin.workspace.selectedNote();
+		await panels.onActivationCheck(view, async () => {
+			const note = await joplin.workspace.selectedNote();
 
-				logger.info('makeNoteUpdateAction: Handling note: ' + note.id);
+			logger.info('onActivationCheck: Handling note: ' + note.id);
+			return noteIsBoard(note ? note.body : '');
+		});
 
-				if (!noteIsBoard(note ? note.body : '')) {
-					logger.info('Note is not a Kanban board - disactivating editor...');
-					await panels.setActive(view, false);
-					panelEnabled = false;
-					return;
-				}
-
-				logger.info('makeNoteUpdateAction: Note is a Kanban board - notifying panel and activating editor...');
-
-				panelEnabled = true;
-				await panels.setActive(view, true);
-
-				if (!(await panels.isVisible(view))) {
-					logger.info('makeNoteUpdateAction: User has not displayed the panel - NOT loading note in board');
-					return;
-				}
-
-				if (panelReady) {
-					await panels.postMessage(view, { type: 'setNote', value: { id: note.id, body: note.body }});
-				} else {
-					logger.info('makeNoteUpdateAction: Editor is not ready - will retry...');
-					noteUpdateQueue.push(makeNoteUpdateAction());
-				}
-			};
-		};
+		await panels.onUpdate(view, async () => {
+			await updateFromSelectedNote();
+		});
 
 		await joplin.commands.register({
 			name: 'createKanbanBoard',
@@ -82,7 +63,7 @@ joplin.plugins.register({
 			execute: async () => {
 				logger.info('Creating new Kanban note...');
 				await joplin.commands.execute('newNote', newNoteBody);
-				noteUpdateQueue.push(makeNoteUpdateAction());
+				await updateFromSelectedNote();
 			},
 		});
 
@@ -91,13 +72,8 @@ joplin.plugins.register({
 		panels.onMessage(view, async (message:IpcMessage) => {
 			logger.info('PostMessagePlugin (Webview): Got message from webview:', message);
 
-			if (!panelEnabled) {
-				logger.info('Skipping message - panel is disabled');
-				return;
-			}
-
 			if (message.type === 'isReady') {
-				panelReady = true;
+				await updateFromSelectedNote();
 				return;
 			}
 
@@ -144,10 +120,6 @@ joplin.plugins.register({
 			}
 
 			throw new Error('Unknown message: ' + JSON.stringify(message));
-		});
-
-		joplin.workspace.onNoteSelectionChange(async () => {
-			noteUpdateQueue.push(makeNoteUpdateAction());
 		});
 	},
 });
