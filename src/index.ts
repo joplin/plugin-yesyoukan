@@ -1,6 +1,5 @@
 import joplin from 'api';
 import { IpcMessage, Note, settingItems, settingSectionName } from './utils/types';
-import AsyncActionQueue from './utils/AsyncActionQueue';
 import { boardsEqual, noteIsBoard, parseNote } from './utils/noteParser';
 import Logger, { TargetType } from '@joplin/utils/Logger';
 import { MenuItemLocation } from 'api/types';
