@@ -67,7 +67,12 @@ export default (props:Props) => {
 		setIsEditing(false);
 	}, []);
 
-	const onEditorKeyDown = useOnEditorKeyDown({ onEditorSubmit, onEditorCancel, confirmKey: props.confirmKey });
+	const onEditorKeyDown = useOnEditorKeyDown({
+		onEditorSubmit,
+		onEditorCancel,
+		confirmKey: props.confirmKey,
+		tabKeyEnabled: false,
+	});
 
 	const onKebabItemClick = useCallback<ItemClickEventHandler>((event) => {
 		if (event.itemId === 'edit') {

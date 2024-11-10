@@ -6,6 +6,7 @@ interface Props {
 	onEditorSubmit():void;
 	onEditorCancel():void;
 	confirmKey: ConfirmKey;
+	tabKeyEnabled: boolean;
 }
 
 enum Action {
@@ -44,6 +45,13 @@ export default (props:Props) => {
 		} else if (action === Action.Cancel) {
 			event.preventDefault()
 			props.onEditorCancel();
+		} else if (event.key === 'Tab' && props.tabKeyEnabled) {
+			event.preventDefault();
+			const textarea = event.currentTarget as HTMLTextAreaElement;
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            textarea.value = textarea.value.substring(0, start) + "\t" + textarea.value.substring(end);
+			textarea.selectionStart = textarea.selectionEnd = start + 1;
 		}
 	}, [props.onEditorSubmit, props.onEditorCancel]);
 }

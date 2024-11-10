@@ -1,12 +1,14 @@
 import { Draggable } from "@hello-pangea/dnd";
 import * as React from "react";
-import { useMemo, useCallback, useState, useRef, useEffect } from "react";
-import { Card, ConfirmKey, Stack } from "src/utils/types";
-import * as MarkdownIt from 'markdown-it';
+import { useCallback, useRef, useEffect } from "react";
+import { Card, ConfirmKey } from "src/utils/types";
 import ConfirmButtons from "./ConfirmButtons";
 import useOnEditorKeyDown from "./hooks/useOnEditorKeyDown";
 import KebabButton, { ItemClickEventHandler } from "./KebabButton";
 import moveCaretToEnd from "../utils/moveCaretToEnd";
+import Logger from "@joplin/utils/Logger";
+
+const logger = Logger.create('CardViewer');
 
 export interface ChangeEvent {
 	card: Card;
@@ -34,7 +36,49 @@ export interface Props {
 	isEditing: boolean;
 }
 
-const markdownIt = new MarkdownIt();
+function toggleCheckboxLine(ipcMessage: string, noteBody: string) {
+	const newBody = noteBody.split('\n');
+	const p = ipcMessage.split(':');
+	const lineIndex = Number(p[p.length - 1]);
+	if (lineIndex >= newBody.length) {
+		logger.warn('Checkbox line out of bounds: ', ipcMessage);
+		return newBody.join('\n');
+	}
+
+	let line = newBody[lineIndex];
+
+	const noCrossIndex = line.trim().indexOf('- [ ] ');
+	let crossIndex = line.trim().indexOf('- [x] ');
+	if (crossIndex < 0) crossIndex = line.trim().indexOf('- [X] ');
+
+	if (noCrossIndex < 0 && crossIndex < 0) {
+		logger.warn('Could not find matching checkbox for message: ', ipcMessage);
+		return newBody.join('\n');
+	}
+
+	let isCrossLine = false;
+
+	if (noCrossIndex >= 0 && crossIndex >= 0) {
+		isCrossLine = crossIndex < noCrossIndex;
+	} else {
+		isCrossLine = crossIndex >= 0;
+	}
+
+	if (!isCrossLine) {
+		line = line.replace(/- \[ \] /, '- [x] ');
+	} else {
+		line = line.replace(/- \[x\] /i, '- [ ] ');
+	}
+	return [newBody, lineIndex, line];
+}
+
+const toggleCheckbox = function(ipcMessage: string, noteBody: string) {
+	const [newBody, lineIndex, line] = toggleCheckboxLine(ipcMessage, noteBody);
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Old code before rule was applied
+	(newBody as any)[lineIndex as any] = line;
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Old code before rule was applied
+	return (newBody as any).join('\n');
+};
 
 const stringToCard = (originalCard:Card, newContent:string):Card => {
 	const lines = newContent.trim().split('\n');
@@ -84,7 +128,31 @@ export default (props:Props) => {
 		}
 	}, [props.isEditing]);
 
-	const onEditorKeyDown = useOnEditorKeyDown({ onEditorSubmit, onEditorCancel, confirmKey: props.confirmKey });
+	const onWindowMessage = useCallback((event: MessageEvent<any>) => {
+		const message = event.data;
+
+		if (typeof message === 'string' && message.startsWith('checkboxclick:')) {
+			const newBody = toggleCheckbox(event.data, card.body);
+			props.onEditorSubmit({
+				card: stringToCard(card, card.title + '\n\n' + newBody),
+			});
+		}
+	}, [card, props.onEditorSubmit]);
+
+	useEffect(() => {
+		window.addEventListener("message", onWindowMessage);
+		
+		return () => {
+			window.removeEventListener('message', onWindowMessage);
+		}
+	}, [onWindowMessage]);
+
+	const onEditorKeyDown = useOnEditorKeyDown({
+		onEditorSubmit,
+		onEditorCancel,
+		confirmKey: props.confirmKey,
+		tabKeyEnabled: true,
+	});
 
 	const onKebabItemClick = useCallback<ItemClickEventHandler>((event) => {
 		if (event.itemId === 'edit') {

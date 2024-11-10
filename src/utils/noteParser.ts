@@ -16,7 +16,7 @@ export const noteIsBoard = (noteBody:string) => {
 }
 
 export const parseNote = async (noteId:string, noteBody:string) => {
-	const lines = noteBody.split('\n').map(l => l.trim());
+	const lines = noteBody.split('\n').map(l => l.trimEnd());
 
 	const board:Board = emptyBoard();
 
