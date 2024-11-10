@@ -2,13 +2,15 @@
 	"manifest_version": 1,
 	"id": "org.joplinapp.plugins.YesYouKan",
 	"app_min_version": "3.2.0",
-	"version": "1.0.6",
+	"version": "1.0.7",
 	"name": "YesYouKan",
 	"description": "Create and manage Kanban boards from Joplin",
 	"author": "Laurent Cozic",
 	"homepage_url": "",
 	"repository_url": "https://github.com/joplin/plugin-yesyoukan",
-	"platforms": ["desktop"],
+	"platforms": [
+		"desktop"
+	],
 	"keywords": [
 		"kanban",
 		"boards"

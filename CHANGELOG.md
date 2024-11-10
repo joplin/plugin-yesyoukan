@@ -1,3 +1,11 @@
+# v1.0.7
+
+- Allow running the Kanban board as an alternative editor
+- Fixed logic of hidding/showing the panel while browsing notes
+- Fixed styling
+- Allow pressing the tab key on the mini-note editor
+- Support checkboxes in kanban board
+
 # v1.0.6
 
 - Render card content as Markdown
