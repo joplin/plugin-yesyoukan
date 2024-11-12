@@ -1,3 +1,8 @@
+# v1.0.8
+
+- Added more option to set validation of text and newlines
+- Support links inside cards
+
 # v1.0.7
 
 - Allow running the Kanban board as an alternative editor
