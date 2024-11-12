@@ -132,6 +132,12 @@ interface History {
 	redo: HistoryItem[];
 }
 
+// We support anything that looks like a URL - we just want to send it back to the app via the
+// `openItem` command.
+const isSupportedUrl = (text:string) => {
+	return !!text.match(/^[a-zA-Z\-]+:.+/);
+}
+
 const emptyHistory = ():History => {
 	return {
 		undo: [],
@@ -324,6 +330,24 @@ export const App = () => {
 	}, [isReadySent]);
 
 	useEffect(() => {
+		const onMessage = async (event: MessageEvent<any>) => {
+			const message = event.data;
+
+			if (typeof message === 'string') {
+				if (isSupportedUrl(message)) {
+					await webviewApi.postMessage<string>({ type: 'openItem', value: message });
+				}
+			}
+		}
+
+		window.addEventListener("message", onMessage);
+		
+		return () => {
+			window.removeEventListener('message', onMessage);
+		}
+	}, []);
+
+	useEffect(() => {
 		webviewApi.onMessage(async (event) => {
 			const message = event.message;
 
@@ -343,7 +367,7 @@ export const App = () => {
 					return newBoard;
 				});
 			} else {
-				throw new Error('Unknown message:' + JSON.stringify(message));
+				logger.warn('Unknown message:' + JSON.stringify(message));
 			}
 		});
 	}, [enabled]);

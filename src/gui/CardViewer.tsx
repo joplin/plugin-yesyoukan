@@ -129,24 +129,26 @@ export default (props:Props) => {
 		}
 	}, [props.isEditing]);
 
-	const onWindowMessage = useCallback((event: MessageEvent<any>) => {
-		const message = event.data;
-
-		if (typeof message === 'string' && message.startsWith('checkboxclick:')) {
-			const newBody = toggleCheckbox(event.data, card.body);
-			props.onEditorSubmit({
-				card: stringToCard(card, card.title + '\n\n' + newBody),
-			});
-		}
-	}, [card, props.onEditorSubmit]);
-
 	useEffect(() => {
-		window.addEventListener("message", onWindowMessage);
+		const onMessage = (event: MessageEvent<any>) => {
+			const message = event.data;
+
+			if (typeof message === 'string') {
+				if (message.startsWith('checkboxclick:')) {
+					const newBody = toggleCheckbox(event.data, card.body);
+					props.onEditorSubmit({
+						card: stringToCard(card, card.title + '\n\n' + newBody),
+					});
+				}
+			}
+		}
+
+		window.addEventListener("message", onMessage);
 		
 		return () => {
-			window.removeEventListener('message', onWindowMessage);
+			window.removeEventListener('message', onMessage);
 		}
-	}, [onWindowMessage]);
+	}, [card, props.onEditorSubmit]);
 
 	const onEditorKeyDown = useOnEditorKeyDown({
 		onEditorSubmit,

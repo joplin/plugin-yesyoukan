@@ -121,11 +121,16 @@ joplin.plugins.register({
 				return;
 			}
 
+			if (message.type === 'openItem') {
+				await joplin.commands.execute('openItem', message.value);
+				return;
+			}
+
 			if (message.type === 'getSettings') {
 				return await (joplin.settings as any).values(Object.keys(settingItems));
 			}
 
-			throw new Error('Unknown message: ' + JSON.stringify(message));
+			logger.warn('Unknown message: ' + JSON.stringify(message));
 		});
 	},
 });
