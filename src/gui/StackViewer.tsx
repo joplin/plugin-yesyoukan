@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useCallback, useState, useRef, useMemo } from "react";
-import { ConfirmKey, Stack } from "src/utils/types";
+import { ConfirmKey, NewlineKey, Stack } from "src/utils/types";
 import CardViewer, { EditorSubmitHandler as CardEditorSubmitEventHandler, DeleteEventHandler as CardDeleteEventHandler, EditorCancelHandler as CardEditorCancelHandler, EditorStartHandler as CardEditorStartEventHandler } from "./CardViewer";
 import { Draggable, DraggableProvided, Droppable } from "@hello-pangea/dnd";
 import ConfirmButtons from "./ConfirmButtons";
@@ -32,6 +32,7 @@ interface Props {
 	value: Stack;
 	index: number;
 	confirmKey: ConfirmKey;
+	newlineKey: NewlineKey;
 	editedCardIds: string[];
 	onCardEditorStart: CardEditorStartEventHandler;
 	onCardEditorSubmit: CardEditorSubmitEventHandler;
@@ -71,6 +72,7 @@ export default (props:Props) => {
 		onEditorSubmit,
 		onEditorCancel,
 		confirmKey: props.confirmKey,
+		newlineKey: props.newlineKey,
 		tabKeyEnabled: false,
 	});
 
@@ -139,6 +141,7 @@ export default (props:Props) => {
 				key={card.id}
 				value={card}
 				confirmKey={props.confirmKey}
+				newlineKey={props.newlineKey}
 				isEditing={props.editedCardIds.includes(card.id)}
 			/>);
 		}

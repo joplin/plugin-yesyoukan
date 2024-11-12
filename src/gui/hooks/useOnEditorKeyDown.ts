@@ -1,11 +1,12 @@
 import * as React from "react";
 import { useCallback } from "react";
-import { ConfirmKey } from "src/utils/types";
+import { ConfirmKey, NewlineKey, ValidationKey } from "src/utils/types";
 
 interface Props {
 	onEditorSubmit():void;
 	onEditorCancel():void;
 	confirmKey: ConfirmKey;
+	newlineKey: NewlineKey;
 	tabKeyEnabled: boolean;
 }
 
@@ -15,27 +16,28 @@ enum Action {
 	Cancel,
 }
 
-const keyToAction = (event:React.KeyboardEvent<unknown>, confirmKey:ConfirmKey):Action => {
+const keyToValidationKey = (event:React.KeyboardEvent<unknown>):ValidationKey|null => {
+	if (event.shiftKey && event.key === 'Enter') return "Shift+Enter";
+	if (event.ctrlKey && event.key === 'Enter') return "Ctrl+Enter";
+	if (event.metaKey && event.key === 'Enter') return "Cmd+Enter";
+	if (event.key === 'Enter') return 'Enter';
+	return null;
+}
+
+const keyToAction = (event:React.KeyboardEvent<unknown>, confirmKey:ConfirmKey, newlineKey:NewlineKey):Action => {
 	if (event.key === 'Escape') return Action.Cancel;
 
-	const handlers:Record<ConfirmKey, Function> = {
-		"Shift+Enter": () => {
-			if (event.shiftKey && event.key === 'Enter') return Action.Confirm;
-			if (event.key === 'Enter') return Action.Newline;
-		},
+	const validationKey = keyToValidationKey(event);
 
-		"Enter": () => {
-			if (event.shiftKey && event.key === 'Enter') return Action.Newline;
-			if (event.key === 'Enter') return Action.Confirm;
-		},
-	};
+	if (confirmKey === validationKey) return Action.Confirm;
+	if (newlineKey === validationKey) return Action.Newline;
 
-	return handlers[confirmKey]();
+	return null;
 }
 
 export default (props:Props) => {
 	return useCallback<React.KeyboardEventHandler<unknown>>((event) => {
-		const action = keyToAction(event, props.confirmKey);
+		const action = keyToAction(event, props.confirmKey, props.newlineKey);
 
 		if (action === Action.Newline) {
 			// Just enter a newline

@@ -57,11 +57,14 @@ export type SettingItems = Record<string, SettingItem> ;
 
 export const settingSectionName = 'yesYouKan';
 
-export type ConfirmKey = 'Enter' | 'Shift+Enter';
+export type ValidationKey = 'Enter' | 'Shift+Enter' | 'Ctrl+Enter' | 'Cmd+Enter';
+export type ConfirmKey = ValidationKey;
+export type NewlineKey = ValidationKey;
 
 export interface Settings {
 	stackWidth?: number;
 	confirmKey?: ConfirmKey;
+	newlineKey?: NewlineKey;
 }
 
 export const settingItems:SettingItems = {
@@ -74,7 +77,7 @@ export const settingItems:SettingItems = {
 	},
 	confirmKey: {
 		label: 'Confirm key',
-		description: 'Press this key to confirm the text you just entered. The other option will be used to enter a newline in the card body.',
+		description: 'Press this key to confirm the text you just entered in the card title or body.',
 		type: SettingItemType.String,
 		isEnum: true,
 		public: true,
@@ -82,6 +85,23 @@ export const settingItems:SettingItems = {
 		options: {
 			'Enter': 'Enter',
 			'Shift+Enter': 'Shift+Enter',
+			'Ctrl+Enter': 'Ctrl+Enter',
+			'Cmd+Enter': 'Cmd+Enter',
+		},
+		section: settingSectionName,
+	},
+	newlineKey: {
+		label: 'Newline key',
+		description: 'Press this key to enter a newline in the card body.',
+		type: SettingItemType.String,
+		isEnum: true,
+		public: true,
+		value: 'Shift+Enter',
+		options: {
+			'Enter': 'Enter',
+			'Shift+Enter': 'Shift+Enter',
+			'Ctrl+Enter': 'Ctrl+Enter',
+			'Cmd+Enter': 'Cmd+Enter',
 		},
 		section: settingSectionName,
 	},

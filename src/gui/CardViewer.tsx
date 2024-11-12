@@ -1,7 +1,7 @@
 import { Draggable } from "@hello-pangea/dnd";
 import * as React from "react";
 import { useCallback, useRef, useEffect } from "react";
-import { Card, ConfirmKey } from "src/utils/types";
+import { Card, ConfirmKey, NewlineKey } from "src/utils/types";
 import ConfirmButtons from "./ConfirmButtons";
 import useOnEditorKeyDown from "./hooks/useOnEditorKeyDown";
 import KebabButton, { ItemClickEventHandler } from "./KebabButton";
@@ -29,6 +29,7 @@ export interface Props {
 	index: number;
 	isLast: boolean;
 	confirmKey: ConfirmKey;
+	newlineKey: NewlineKey;
 	onEditorStart:EditorStartHandler;
 	onEditorSubmit:EditorSubmitHandler;
 	onEditorCancel: EditorCancelHandler;
@@ -151,6 +152,7 @@ export default (props:Props) => {
 		onEditorSubmit,
 		onEditorCancel,
 		confirmKey: props.confirmKey,
+		newlineKey: props.newlineKey,
 		tabKeyEnabled: true,
 	});
 

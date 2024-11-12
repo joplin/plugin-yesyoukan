@@ -280,6 +280,7 @@ export const App = () => {
 				value={stack}
 				index={index}
 				confirmKey={effectiveBoardSettings.confirmKey}
+				newlineKey={effectiveBoardSettings.newlineKey}
 				editedCardIds={editedCardIds}
 			/>);
 		}
