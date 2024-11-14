@@ -37,50 +37,6 @@ export interface Props {
 	isEditing: boolean;
 }
 
-function toggleCheckboxLine(ipcMessage: string, noteBody: string) {
-	const newBody = noteBody.split('\n');
-	const p = ipcMessage.split(':');
-	const lineIndex = Number(p[p.length - 1]);
-	if (lineIndex >= newBody.length) {
-		logger.warn('Checkbox line out of bounds: ', ipcMessage);
-		return newBody.join('\n');
-	}
-
-	let line = newBody[lineIndex];
-
-	const noCrossIndex = line.trim().indexOf('- [ ] ');
-	let crossIndex = line.trim().indexOf('- [x] ');
-	if (crossIndex < 0) crossIndex = line.trim().indexOf('- [X] ');
-
-	if (noCrossIndex < 0 && crossIndex < 0) {
-		logger.warn('Could not find matching checkbox for message: ', ipcMessage);
-		return newBody.join('\n');
-	}
-
-	let isCrossLine = false;
-
-	if (noCrossIndex >= 0 && crossIndex >= 0) {
-		isCrossLine = crossIndex < noCrossIndex;
-	} else {
-		isCrossLine = crossIndex >= 0;
-	}
-
-	if (!isCrossLine) {
-		line = line.replace(/- \[ \] /, '- [x] ');
-	} else {
-		line = line.replace(/- \[x\] /i, '- [ ] ');
-	}
-	return [newBody, lineIndex, line];
-}
-
-const toggleCheckbox = function(ipcMessage: string, noteBody: string) {
-	const [newBody, lineIndex, line] = toggleCheckboxLine(ipcMessage, noteBody);
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Old code before rule was applied
-	(newBody as any)[lineIndex as any] = line;
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Old code before rule was applied
-	return (newBody as any).join('\n');
-};
-
 const stringToCard = (originalCard:Card, newContent:string):Card => {
 	const lines = newContent.trim().split('\n');
 	let title = '';
@@ -128,27 +84,6 @@ export default (props:Props) => {
 			});
 		}
 	}, [props.isEditing]);
-
-	useEffect(() => {
-		const onMessage = (event: MessageEvent<any>) => {
-			const message = event.data;
-
-			if (typeof message === 'string') {
-				if (message.startsWith('checkboxclick:')) {
-					const newBody = toggleCheckbox(event.data, card.body);
-					props.onEditorSubmit({
-						card: stringToCard(card, card.title + '\n\n' + newBody),
-					});
-				}
-			}
-		}
-
-		window.addEventListener("message", onMessage);
-		
-		return () => {
-			window.removeEventListener('message', onMessage);
-		}
-	}, [card, props.onEditorSubmit]);
 
 	const onEditorKeyDown = useOnEditorKeyDown({
 		onEditorSubmit,
@@ -215,6 +150,32 @@ export default (props:Props) => {
 			);
 		}
 	}
+
+	useEffect(() => {
+		// "cardPostMessage_" is defined when calling the `renderMarkup` command. The checkbox
+		// rendered by this command will post a message in the form `checkboxclick:<line_index>`. We
+		// capture this message and send it back - it will then be processed at the app level.
+
+		const script = document.createElement('script');
+		script.textContent =  `
+			const cardPostMessage_${card.id} = (message) => {
+				postMessage({
+					type: "cardCheckboxClick",
+					value: {
+						cardId: "${card.id}",
+						message,
+					},
+				});
+			}
+		`;
+	  	  
+		document.body.appendChild(script);
+	  
+		return () => {
+		  document.body.removeChild(script);
+		}
+	  }, [card.id]);
+	  
 
 	return (
 		<Draggable draggableId={card.id} index={props.index}>

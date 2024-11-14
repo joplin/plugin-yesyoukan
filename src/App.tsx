@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useCallback, useState, useEffect, useMemo, useRef } from "react";
-import { Board, Note, RenderResult, Settings, WebviewApi, emptyBoard } from "./utils/types";
+import { Board, IpcMessage, Note, RenderResult, Settings, WebviewApi, emptyBoard } from "./utils/types";
 import StackViewer, { AddCardEventHandler, DeleteEventHandler, TitleChangeEventHandler } from "./gui/StackViewer";
 import { DragDropContext, Droppable, OnDragEndResponder } from "@hello-pangea/dnd";
 import { produce} from "immer"
@@ -14,6 +14,7 @@ import { Props as ButtonProps } from './gui/Button';
 import uuid from "./utils/uuid";
 import Logger from '@joplin/utils/Logger';
 import getHash from "./utils/getHash";
+import { toggleCheckbox } from "./utils/renderMarkupUtils";
 
 const logger = Logger.create('YesYouKan: App');
 
@@ -337,6 +338,19 @@ export const App = () => {
 				if (isSupportedUrl(message)) {
 					await webviewApi.postMessage<string>({ type: 'openItem', value: message });
 				}
+			}
+
+			const asIpcMessage = message as IpcMessage;
+			if (asIpcMessage && asIpcMessage.type === "cardCheckboxClick") {
+				const cardId = asIpcMessage.value.cardId;
+				const cbMessage = asIpcMessage.value.message;
+
+				setBoard(current => produce(current, draft => {
+					const [stackIndex, cardIndex] = findCardIndex(current, cardId);
+					const cardBody = current.stacks[stackIndex].cards[cardIndex].body;
+					const newBody = toggleCheckbox(cbMessage, cardBody);
+					draft.stacks[stackIndex].cards[cardIndex].body = newBody;
+				}));
 			}
 		}
 

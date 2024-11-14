@@ -30,7 +30,7 @@ export interface State {
 }
 
 export interface IpcMessage {
-	type: 'getNote' | 'setNote' | 'isReady' | 'getSettings' | 'renderBodies' | 'openItem';
+	type: 'getNote' | 'setNote' | 'isReady' | 'getSettings' | 'renderBodies' | 'openItem' | 'cardCheckboxClick';
 	value?: any;
 }
 
