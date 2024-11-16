@@ -14,9 +14,14 @@ export interface ChangeEvent {
 	card: Card;
 }
 
+export interface ScrollToCardEvent {
+	cardId: string;
+}
+
 export type EditorStartHandler = (event:ChangeEvent) => void;
 export type EditorSubmitHandler = (event:ChangeEvent) => void;
 export type EditorCancelHandler = (event:ChangeEvent) => void;
+export type ScrollToCardHandler = (event:ScrollToCardEvent) => void;
 
 export interface DeleteEvent {
 	cardId: string;
@@ -34,6 +39,7 @@ export interface Props {
 	onEditorSubmit:EditorSubmitHandler;
 	onEditorCancel: EditorCancelHandler;
 	onDelete: DeleteEventHandler;
+	onScrollToCard: ScrollToCardHandler;
 	isEditing: boolean;
 }
 
@@ -98,6 +104,8 @@ export default (props:Props) => {
 			onDoubleClick();
 		} else if (event.itemId === 'delete') {
 			props.onDelete({ cardId: card.id });
+		} else if (event.itemId === 'scrollToCard') {
+			props.onScrollToCard({ cardId: card.id });
 		} else {
 			throw new Error('Unknown item ID: ' + event.itemId);
 		}
@@ -108,6 +116,10 @@ export default (props:Props) => {
 			<div className="kebab-button-wrapper">
 				<KebabButton
 					menuItems={[
+						{
+							id: 'scrollToCard',
+							label: 'Open in note',
+						},
 						{
 							id: 'edit',
 							label: 'Edit',

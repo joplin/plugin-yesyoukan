@@ -3,6 +3,7 @@ import { IpcMessage, Note, settingItems, settingSectionName } from './utils/type
 import { boardsEqual, noteIsBoard, parseNote } from './utils/noteParser';
 import Logger, { TargetType } from '@joplin/utils/Logger';
 import { MenuItemLocation } from 'api/types';
+import { msleep } from './utils/time';
 
 const globalLogger = new Logger();
 globalLogger.addTarget(TargetType.Console);
@@ -128,6 +129,13 @@ joplin.plugins.register({
 
 			if (message.type === 'getSettings') {
 				return await (joplin.settings as any).values(Object.keys(settingItems));
+			}
+
+			if (message.type === 'scrollToCard') {
+				await joplin.commands.execute('showEditorPlugin', null, false);
+				await msleep(500);
+				await joplin.commands.execute('editor.scrollToText', { text: message.value.cardTitle , element: 'h2' });
+				return;
 			}
 
 			logger.warn('Unknown message: ' + JSON.stringify(message));

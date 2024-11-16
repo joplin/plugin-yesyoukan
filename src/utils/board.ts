@@ -15,3 +15,8 @@ export const findStackIndex = (board:Board, stackId:string) => {
 	if (index < 0) throw new Error('Could not find stack: ' + stackId);
 	return index;
 }
+
+export const findCard = (board:Board, cardId:string) => {
+	const [stackIndex, cardIndex] = findCardIndex(board, cardId);
+	return board.stacks[stackIndex].cards[cardIndex];
+}

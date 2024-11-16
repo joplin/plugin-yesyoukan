@@ -6,8 +6,8 @@ import { DragDropContext, Droppable, OnDragEndResponder } from "@hello-pangea/dn
 import { produce} from "immer"
 import { boardsEqual, noteIsBoard, parseNote, serializeBoard } from "./utils/noteParser";
 import AsyncActionQueue from "./utils/AsyncActionQueue";
-import { EditorSubmitHandler as CardChangeEventHandler, DeleteEventHandler as CardDeleteEventHandler, EditorCancelHandler, EditorStartHandler } from "./gui/CardViewer";
-import { findCardIndex, findStackIndex } from "./utils/board";
+import { EditorSubmitHandler as CardChangeEventHandler, DeleteEventHandler as CardDeleteEventHandler, EditorCancelHandler, EditorStartHandler, ScrollToCardHandler } from "./gui/CardViewer";
+import { findCard, findCardIndex, findStackIndex } from "./utils/board";
 import { ThemeProvider, createTheme } from "@mui/material";
 import Toolbar from './gui/Toolbar';
 import { Props as ButtonProps } from './gui/Button';
@@ -207,6 +207,11 @@ export const App = () => {
 		stopCardEditing(event.card.id);
 	}, []);
 
+	const onScrollToCard = useCallback<ScrollToCardHandler>((event) => {
+		const card = findCard(board, event.cardId);
+		void webviewApi.postMessage<string>({ type: 'scrollToCard', value: { cardTitle: card.title }  });
+	}, [board]);
+
 	const onAddCard = useCallback<AddCardEventHandler>((event) => {
 		pushUndo(board);
 
@@ -281,6 +286,7 @@ export const App = () => {
 				onCardEditorStart={onCardEditorStart}
 				onCardEditorSubmit={onCardChange}
 				onCardEditorCancel={onCardEditorCancel}
+				onScrollToCard={onScrollToCard}
 				onAddCard={onAddCard}
 				onDeleteCard={onDeleteCard}
 				key={stack.id}

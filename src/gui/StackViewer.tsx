@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useCallback, useState, useRef, useMemo } from "react";
 import { ConfirmKey, NewlineKey, Stack } from "src/utils/types";
-import CardViewer, { EditorSubmitHandler as CardEditorSubmitEventHandler, DeleteEventHandler as CardDeleteEventHandler, EditorCancelHandler as CardEditorCancelHandler, EditorStartHandler as CardEditorStartEventHandler } from "./CardViewer";
+import CardViewer, { EditorSubmitHandler as CardEditorSubmitEventHandler, DeleteEventHandler as CardDeleteEventHandler, EditorCancelHandler as CardEditorCancelHandler, EditorStartHandler as CardEditorStartEventHandler, ScrollToCardHandler } from "./CardViewer";
 import { Draggable, DraggableProvided, Droppable } from "@hello-pangea/dnd";
 import ConfirmButtons from "./ConfirmButtons";
 import useOnEditorKeyDown from "./hooks/useOnEditorKeyDown";
@@ -37,6 +37,7 @@ interface Props {
 	onCardEditorStart: CardEditorStartEventHandler;
 	onCardEditorSubmit: CardEditorSubmitEventHandler;
 	onCardEditorCancel: CardEditorCancelHandler;
+	onScrollToCard: ScrollToCardHandler;
 	onTitleChange: TitleChangeEventHandler;
 	onDelete: DeleteEventHandler;
 	onAddCard: AddCardEventHandler;
@@ -136,6 +137,7 @@ export default (props:Props) => {
 				onEditorSubmit={props.onCardEditorSubmit}
 				onEditorCancel={props.onCardEditorCancel}
 				onDelete={props.onDeleteCard}
+				onScrollToCard={props.onScrollToCard}
 				isLast={index === props.value.cards.length - 1}
 				index={index}
 				key={card.id}
