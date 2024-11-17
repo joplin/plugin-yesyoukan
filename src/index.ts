@@ -29,23 +29,23 @@ joplin.plugins.register({
 		});
 		await joplin.settings.registerSettings(settingItems);
 
-		const panels = (joplin.views as any).editors as any;
+		const editors = joplin.views.editors;
 
-		const view = await panels.create("kanbanBoard");
+		const view = await editors.create("kanbanBoard");
 		
-		await panels.setHtml(view, '<div id="root"></div>');
-		await panels.addScript(view, './panel.js');
-		await panels.addScript(view, './style/reset.css');
-		await panels.addScript(view, './style/main.css');
+		await editors.setHtml(view, '<div id="root"></div>');
+		await editors.addScript(view, './panel.js');
+		await editors.addScript(view, './style/reset.css');
+		await editors.addScript(view, './style/main.css');
 
 		const updateFromSelectedNote = async () => {
 			const note = await joplin.workspace.selectedNote();
 			if (!note) return;
 
-			await panels.postMessage(view, { type: 'setNote', value: { id: note.id, body: note.body }});
+			await editors.postMessage(view, { type: 'setNote', value: { id: note.id, body: note.body }});
 		}
 
-		await panels.onActivationCheck(view, async () => {
+		await editors.onActivationCheck(view, async () => {
 			const note = await joplin.workspace.selectedNote();
 			if (!note) return false;
 
@@ -53,7 +53,7 @@ joplin.plugins.register({
 			return noteIsBoard(note ? note.body : '');
 		});
 
-		await panels.onUpdate(view, async () => {
+		await editors.onUpdate(view, async () => {
 			logger.info('onUpdate');
 			await updateFromSelectedNote();
 		});
@@ -76,7 +76,7 @@ joplin.plugins.register({
 
 		await joplin.views.menuItems.create('createKanbanBoardMenuItem', 'createKanbanBoard', MenuItemLocation.Tools, { accelerator: 'CmdOrCtrl+Alt+Shift+K' });
 
-		panels.onMessage(view, async (message:IpcMessage) => {
+		editors.onMessage(view, async (message:IpcMessage) => {
 			logger.info('PostMessagePlugin (Webview): Got message from webview:', message);
 
 			if (message.type === 'isReady') {
