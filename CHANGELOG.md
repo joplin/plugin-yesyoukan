@@ -1,3 +1,10 @@
+# v.1.0.10
+
+- Add support for "Open in note" menu item, to edit the card content inside the Markdown or RTE editor
+- Fixes #10: Clicking Checkbox affects multiple cards
+- Fixed issue that could cause cards to be associated with the wrong stack
+- Fixed issue with checkbox messaging
+
 # v1.0.8
 
 - Added more option to set validation of text and newlines
