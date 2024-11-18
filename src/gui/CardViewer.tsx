@@ -162,33 +162,7 @@ export default (props:Props) => {
 			);
 		}
 	}
-
-	useEffect(() => {
-		// "cardPostMessage_" is defined when calling the `renderMarkup` command. The checkbox
-		// rendered by this command will post a message in the form `checkboxclick:<line_index>`. We
-		// capture this message and send it back - it will then be processed at the app level.
-
-		const script = document.createElement('script');
-		script.textContent =  `
-			const cardPostMessage_${card.id} = (message) => {
-				postMessage({
-					type: "cardCheckboxClick",
-					value: {
-						cardId: "${card.id}",
-						message,
-					},
-				});
-			}
-		`;
-	  	  
-		document.body.appendChild(script);
-	  
-		return () => {
-		  document.body.removeChild(script);
-		}
-	  }, [card.id]);
-	  
-
+	
 	return (
 		<Draggable draggableId={card.id} index={props.index}>
 			{(provided, snapshot) => {

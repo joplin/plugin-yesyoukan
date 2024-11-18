@@ -301,6 +301,36 @@ export const App = () => {
 	}
 
 	useEffect(() => {
+		// "cardPostMessage" is defined when calling the `renderMarkup` command. The checkbox
+		// rendered by this command will post a message in the form `checkboxclick:<line_index>`. We
+		// capture this message and send it back - it will then be processed at the app level.
+		//
+		// We wrap it in a second function so that we can capture the card ID, which is needed to
+		// know which part of the note needs to be updated.
+
+		const script = document.createElement('script');
+		script.textContent =  `
+			const cardPostMessage = (cardId) => {
+				return (message) => {
+					postMessage({
+						type: "cardCheckboxClick",
+						value: {
+							cardId,
+							message,
+						},
+					});
+				};
+			}
+		`;
+	  	  
+		document.body.appendChild(script);
+	  
+		return () => {
+			document.body.removeChild(script);
+		}
+	}, []);
+
+	useEffect(() => {
 		const fn = async() => {
 			const note = await webviewApi.postMessage<Note>({ type: 'getNote' });
 			if (!noteIsBoard(note.body)) {

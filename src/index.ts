@@ -94,7 +94,7 @@ joplin.plugins.register({
 				const toRender = JSON.parse(message.value);
 				const rendered:Record<string, string> = {};
 				for (const [id, body] of Object.entries(toRender)) {
-					const result = await joplin.commands.execute('renderMarkup', 1, body, null, { postMessageSyntax: 'cardPostMessage_' + id });
+					const result = await joplin.commands.execute('renderMarkup', 1, body, null, { postMessageSyntax: 'cardPostMessage("' + id  + '")'});
 					rendered[id] = result;
 				}
 
