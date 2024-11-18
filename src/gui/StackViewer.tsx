@@ -85,7 +85,7 @@ export default (props:Props) => {
 		} else {
 			throw new Error('Unknown item ID: ' + event.itemId);
 		}
-	}, [onStartEditing, props.value.id]);
+	}, [onStartEditing, props.value.id, props.onDelete]);
 
 	const onAddCard = useCallback(() => {
 		props.onAddCard({ stackId: props.value.id });
