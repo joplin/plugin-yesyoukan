@@ -313,7 +313,7 @@ export const App = () => {
 			const cardPostMessage = (cardId) => {
 				return (message) => {
 					postMessage({
-						type: "cardCheckboxClick",
+						type: "cardMessage",
 						value: {
 							cardId,
 							message,
@@ -367,26 +367,36 @@ export const App = () => {
 	}, [isReadySent]);
 
 	useEffect(() => {
+		const handlUrl = async (message:string) => {
+			if (isSupportedUrl(message)) {
+				await webviewApi.postMessage<string>({ type: 'openItem', value: message });
+			}
+		}
+
 		const onMessage = async (event: MessageEvent<any>) => {
 			const message = event.data;
 
+			logger.info('Got message:', message);
+
 			if (typeof message === 'string') {
-				if (isSupportedUrl(message)) {
-					await webviewApi.postMessage<string>({ type: 'openItem', value: message });
+				await handlUrl(message);
+ 			} else {
+				const asIpcMessage = message as IpcMessage;
+				if (asIpcMessage && asIpcMessage.type === "cardMessage") {
+					const cardId = asIpcMessage.value.cardId;
+					const cardMessage = asIpcMessage.value.message as string;
+
+					if (cardMessage.startsWith('checkboxclick:')) {
+						setBoard(current => produce(current, draft => {
+							const [stackIndex, cardIndex] = findCardIndex(current, cardId);
+							const cardBody = current.stacks[stackIndex].cards[cardIndex].body;
+							const newBody = toggleCheckbox(cardMessage, cardBody);
+							draft.stacks[stackIndex].cards[cardIndex].body = newBody;
+						}));
+					} else {
+						await handlUrl(cardMessage);
+					}
 				}
-			}
-
-			const asIpcMessage = message as IpcMessage;
-			if (asIpcMessage && asIpcMessage.type === "cardCheckboxClick") {
-				const cardId = asIpcMessage.value.cardId;
-				const cbMessage = asIpcMessage.value.message;
-
-				setBoard(current => produce(current, draft => {
-					const [stackIndex, cardIndex] = findCardIndex(current, cardId);
-					const cardBody = current.stacks[stackIndex].cards[cardIndex].body;
-					const newBody = toggleCheckbox(cbMessage, cardBody);
-					draft.stacks[stackIndex].cards[cardIndex].body = newBody;
-				}));
 			}
 		}
 
