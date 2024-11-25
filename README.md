@@ -56,12 +56,6 @@ Draft a comprehensive plan outlining business strategy, target market, and finan
 ```
 ````
 
-## To do
-
-- Allow using an existing note as a card
-- Implement support for a few options
-- Create an option dialog to change the options	
-
 ## Credits
 
 - Kanban icon created by [Muhammad_Usman](https://www.flaticon.com/authors/muhammad-usman)
