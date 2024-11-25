@@ -1,4 +1,8 @@
-# v.1.0.10
+# v1.0.11
+
+- Fixes #13: Rendered links in cards are broken
+
+# v1.0.10
 
 - Add support for "Open in note" menu item, to edit the card content inside the Markdown or RTE editor
 - Fixes #10: Clicking Checkbox affects multiple cards
