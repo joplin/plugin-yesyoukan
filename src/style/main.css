@@ -176,6 +176,7 @@ ul, ol {
 
 		> .body {
 			overflow-y: auto;
+			margin-bottom: 0;
 
 			p {
 				margin-bottom: 10px;
