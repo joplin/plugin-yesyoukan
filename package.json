@@ -37,6 +37,10 @@
     "webpack-cli": "^4.10.0"
   },
   "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^6.7.2",
+    "@fortawesome/free-regular-svg-icons": "^6.7.2",
+    "@fortawesome/free-solid-svg-icons": "^6.7.2",
+    "@fortawesome/react-fontawesome": "^0.2.2",
     "@hello-pangea/dnd": "^17.0.0",
     "@joplin/utils": "^3.0.1",
     "@mui/joy": "^5.0.0-beta.48",

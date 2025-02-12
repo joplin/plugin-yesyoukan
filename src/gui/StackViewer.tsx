@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useCallback, useState, useRef, useMemo } from "react";
-import { ConfirmKey, NewlineKey, Stack } from "src/utils/types";
+import { ConfirmKey, NewlineKey, Platform, Stack } from "src/utils/types";
 import CardViewer, { EditorSubmitHandler as CardEditorSubmitEventHandler, DeleteEventHandler as CardDeleteEventHandler, EditorCancelHandler as CardEditorCancelHandler, EditorStartHandler as CardEditorStartEventHandler, ScrollToCardHandler } from "./CardViewer";
 import { Draggable, DraggableProvided, Droppable } from "@hello-pangea/dnd";
 import ConfirmButtons from "./ConfirmButtons";
@@ -34,6 +34,7 @@ interface Props {
 	confirmKey: ConfirmKey;
 	newlineKey: NewlineKey;
 	editedCardIds: string[];
+	platform: Platform;
 	onCardEditorStart: CardEditorStartEventHandler;
 	onCardEditorSubmit: CardEditorSubmitEventHandler;
 	onCardEditorCancel: CardEditorCancelHandler;
@@ -111,7 +112,7 @@ export default (props:Props) => {
 	const renderHeadingButtons = () => {
 		return (
 			<div className="buttons">
-				<Button title="Add card" icon="fas fa-plus" onClick={onAddCard} />
+				<Button title="Add card" icon="plus" onClick={onAddCard} />
 				<KebabButton
 					menuItems={[
 						{
@@ -139,6 +140,7 @@ export default (props:Props) => {
 				onDelete={props.onDeleteCard}
 				onScrollToCard={props.onScrollToCard}
 				isLast={index === props.value.cards.length - 1}
+				platform={props.platform}
 				index={index}
 				key={card.id}
 				value={card}

@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useCallback, useState, useEffect, useMemo, useRef } from "react";
-import { Board, IpcMessage, Note, RenderResult, Settings, WebviewApi, emptyBoard } from "./utils/types";
+import { Board, IpcMessage, Note, Platform, RenderResult, Settings, WebviewApi, emptyBoard } from "./utils/types";
 import StackViewer, { AddCardEventHandler, DeleteEventHandler, TitleChangeEventHandler } from "./gui/StackViewer";
 import { DragDropContext, Droppable, OnDragEndResponder } from "@hello-pangea/dnd";
 import { produce} from "immer"
@@ -15,10 +15,13 @@ import uuid from "./utils/uuid";
 import Logger from '@joplin/utils/Logger';
 import getHash from "./utils/getHash";
 import { toggleCheckbox } from "./utils/renderMarkupUtils";
+import setupFontAwesome from "./utils/setupFontAwesome";
 
 const logger = Logger.create('YesYouKan: App');
 
 declare var webviewApi: WebviewApi;
+
+setupFontAwesome();
 
 const updateNoteQueue = new AsyncActionQueue(100);
 
@@ -155,6 +158,7 @@ export const App = () => {
 	const [enabled, setEnabled] = useState<boolean>(false);
 	const [isReadySent, setIsReadySent] = useState<boolean>(false);
 	const [cssStrings, setCssStrings] = useState([]);
+	const [platform, setPlatform] = useState<Platform>('desktop');
 
 	const effectiveBoardSettings = useMemo(() => {
 		return {
@@ -291,6 +295,7 @@ export const App = () => {
 				onDeleteCard={onDeleteCard}
 				key={stack.id}
 				value={stack}
+				platform={platform}
 				index={index}
 				confirmKey={effectiveBoardSettings.confirmKey}
 				newlineKey={effectiveBoardSettings.newlineKey}
@@ -299,6 +304,20 @@ export const App = () => {
 		}
 		return output;
 	}
+
+	useEffect(() => {
+		const rootElement = document.getElementById('root');
+		if (rootElement) {
+			if (rootElement.classList.contains("platform-mobile")) {
+				logger.info('Detected platform: mobile');
+				setPlatform('mobile');
+			} else {
+				logger.info('Detected platform: desktop');
+			}
+		} else {
+			logger.warn('Cannot access the root element - cannot determine the current platform');
+		}
+	}, []);
 
 	useEffect(() => {
 		// "cardPostMessage" is defined when calling the `renderMarkup` command. The checkbox
@@ -376,7 +395,9 @@ export const App = () => {
 		const onMessage = async (event: MessageEvent<any>) => {
 			const message = event.data;
 
-			logger.info('Got message:', message);
+			// These messages are internal messages sent within the app webview and can be ignored
+			if ((message as any).kind === 'ReturnValueResponse') return;
+			if ((message as any).postMessage?.kind === 'ReturnValueResponse') return;
 
 			if (typeof message === 'string') {
 				await handlUrl(message);
@@ -565,7 +586,7 @@ export const App = () => {
 		const output:ButtonProps[] = [
 			{
 				name: 'undo',
-				icon: 'fas fa-undo',
+				icon: 'undo',
 				disabled: !history.undo.length,
 				title: 'Undo',
 				onClick: () => {
@@ -575,7 +596,7 @@ export const App = () => {
 
 			{
 				name: 'redo',
-				icon: 'fas fa-redo',
+				icon: 'redo',
 				disabled: !history.redo.length,
 				title: 'Redo',
 				onClick: () => {
@@ -585,7 +606,7 @@ export const App = () => {
 
 			{
 				name: 'newStack',
-				icon: 'fas fa-plus',
+				icon: 'plus',
 				title: 'New stack',
 				onClick: () => {
 					onAddStack();

@@ -1,10 +1,10 @@
 import { Draggable } from "@hello-pangea/dnd";
 import * as React from "react";
 import { useCallback, useRef, useEffect } from "react";
-import { Card, ConfirmKey, NewlineKey } from "src/utils/types";
+import { Card, ConfirmKey, NewlineKey, Platform } from "src/utils/types";
 import ConfirmButtons from "./ConfirmButtons";
 import useOnEditorKeyDown from "./hooks/useOnEditorKeyDown";
-import KebabButton, { ItemClickEventHandler } from "./KebabButton";
+import KebabButton, { ItemClickEventHandler, MenuItem } from "./KebabButton";
 import moveCaretToEnd from "../utils/moveCaretToEnd";
 import Logger from "@joplin/utils/Logger";
 
@@ -41,6 +41,7 @@ export interface Props {
 	onDelete: DeleteEventHandler;
 	onScrollToCard: ScrollToCardHandler;
 	isEditing: boolean;
+	platform: Platform;
 }
 
 const stringToCard = (originalCard:Card, newContent:string):Card => {
@@ -112,23 +113,29 @@ export default (props:Props) => {
 	}, [onDoubleClick, props.onDelete, card.id]);
 
 	const renderKebabButton = () => {
+		const menuItems:MenuItem[] = [];
+
+		if (props.platform === "desktop") {
+			menuItems.push({
+				id: 'scrollToCard',
+				label: 'Open in note',
+			});
+		}
+			
+		menuItems.push({
+			id: 'edit',
+			label: 'Edit',
+		});
+
+		menuItems.push({
+			id: 'delete',
+			label: 'Delete',
+		});
+
 		return (
 			<div className="kebab-button-wrapper">
 				<KebabButton
-					menuItems={[
-						{
-							id: 'scrollToCard',
-							label: 'Open in note',
-						},
-						{
-							id: 'edit',
-							label: 'Edit',
-						},
-						{
-							id: 'delete',
-							label: 'Delete',
-						},
-					]}
+					menuItems={menuItems}
 					onItemClick={onKebabItemClick}
 				/>
 			</div>

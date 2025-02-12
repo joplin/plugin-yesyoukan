@@ -23,6 +23,8 @@ const newNoteBody = `# Backlog
 
 joplin.plugins.register({
 	onStart: async function() {
+		const versionInfo = await joplin.versionInfo();
+
 		await joplin.settings.registerSection(settingSectionName, {
 			label: 'YesYouKan',
 			iconName: 'fas fa-th-list',
@@ -33,7 +35,7 @@ joplin.plugins.register({
 
 		const view = await editors.create("kanbanBoard");
 		
-		await editors.setHtml(view, '<div id="root"></div>');
+		await editors.setHtml(view, `<div id="root" class="platform-${versionInfo.platform}"></div>`);
 		await editors.addScript(view, './panel.js');
 		await editors.addScript(view, './style/reset.css');
 		await editors.addScript(view, './style/main.css');
@@ -50,7 +52,9 @@ joplin.plugins.register({
 			if (!note) return false;
 
 			logger.info('onActivationCheck: Handling note: ' + note.id);
-			return noteIsBoard(note ? note.body : '');
+			const isBoard = noteIsBoard(note ? note.body : '');
+			logger.info('onActivationCheck: Note is board:', isBoard);
+			return isBoard;
 		});
 
 		await editors.onUpdate(view, async () => {
@@ -77,6 +81,9 @@ joplin.plugins.register({
 		await joplin.views.menuItems.create('createKanbanBoardMenuItem', 'createKanbanBoard', MenuItemLocation.Tools, { accelerator: 'CmdOrCtrl+Alt+Shift+K' });
 
 		editors.onMessage(view, async (message:IpcMessage) => {
+			// These messages are internal messages sent within the app webview and can be ignored
+			if ((message as any).kind === 'ReturnValueResponse') return;
+
 			logger.info('PostMessagePlugin (Webview): Got message from webview:', message);
 
 			if (message.type === 'isReady') {
@@ -116,7 +123,6 @@ joplin.plugins.register({
 					logger.info('NOT updating note - board has not changed');
 				} else {
 					logger.info('Updating note - board has changed');
-					await joplin.commands.execute('editor.setText', messageNote.body);
 					await joplin.data.put(['notes', messageNote.id], null, { body: messageNote.body });
 				}
 				return;

@@ -4,6 +4,7 @@ import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import { Divider } from '@mui/material';
 import Button from "./Button";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 interface MenuItemBase {
 	id: string;
@@ -62,7 +63,7 @@ export default (props:Props) => {
 
 	return (
 		<>
-			<Button icon="icon fas fa-ellipsis-v" onClick={onClick} />
+			<Button icon="ellipsis-v" onClick={onClick} />
 			<Menu
 				className="context-menu"
 				anchorEl={anchorEl}

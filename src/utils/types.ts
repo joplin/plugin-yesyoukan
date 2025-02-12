@@ -126,3 +126,5 @@ export interface RenderResult {
 	pluginAssets: RenderResultPluginAsset[];
 	cssStrings: string[];
 }
+
+export type Platform = 'desktop' | 'mobile'; 

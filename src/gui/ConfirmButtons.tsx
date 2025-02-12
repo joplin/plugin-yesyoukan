@@ -1,4 +1,5 @@
 import * as React from "react";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 interface Props {
 	onConfirm(): void;
@@ -15,8 +16,8 @@ export default (props:Props) => {
 
 	return (
 		<div className={classes.join(' ')}>
-			{ showConfirm && <button title="Ctrl+Enter" onClick={props.onConfirm} className="button -confirm"><i className="far fa-check-circle"></i></button> }
-			<button title="Escape" onClick={props.onCancel} className="button -cancel"><i className="fas fa-times"></i></button>
+			{ showConfirm && <button title="Ctrl+Enter" onClick={props.onConfirm} className="button -confirm"><FontAwesomeIcon icon={['far', 'check-circle']} /></button> }
+			<button title="Escape" onClick={props.onCancel} className="button -cancel"><FontAwesomeIcon icon="times" /></button>
 		</div>
 	);
 }

@@ -9,7 +9,8 @@
 	"homepage_url": "",
 	"repository_url": "https://github.com/joplin/plugin-yesyoukan",
 	"platforms": [
-		"desktop"
+		"desktop",
+		"mobile"
 	],
 	"keywords": [
 		"kanban",
