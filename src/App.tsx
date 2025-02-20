@@ -149,6 +149,11 @@ const emptyHistory = ():History => {
 	}
 }
 
+interface AfterSetNoteAction {
+	type: string;
+	noteId: string;
+}
+
 export const App = () => {
 	const [board, setBoard] = useState<Board>(emptyBoard());
 	const [baseSettings, setBaseSettings] = useState<Settings>({});
@@ -159,6 +164,7 @@ export const App = () => {
 	const [isReadySent, setIsReadySent] = useState<boolean>(false);
 	const [cssStrings, setCssStrings] = useState([]);
 	const [platform, setPlatform] = useState<Platform>('desktop');
+	const afterSetNoteAction = useRef<AfterSetNoteAction|null>(null);
 
 	const effectiveBoardSettings = useMemo(() => {
 		return {
@@ -237,7 +243,25 @@ export const App = () => {
 			newCard.body = '';
 		});
 
+		afterSetNoteAction.current = {
+			type: 'openNote',
+			noteId: newNote.id,
+		};
+
 		setBoard(newBoard);
+	}, [board]);
+
+	const onOpenAssociatedNote = useCallback<CardHandler>(async (event) => {
+		const card = findCard(board, event.cardId);
+		const parsedTitle = parseAsNoteLink(card.title);
+		if (!parsedTitle) {
+			logger.warn('Card has not associated note:', card);
+		} else {
+			await webviewApi.postMessage({
+				type: 'openNote',
+				value: parsedTitle.id
+			});
+		}
 	}, [board]);
 
 	const onAddCard = useCallback<AddCardEventHandler>((event) => {
@@ -259,8 +283,21 @@ export const App = () => {
 		startCardEditing(newCardId);
 	}, [board]);
 
-	const onDeleteCard = useCallback<CardDeleteEventHandler>((event) => {
-		pushUndo(board);
+	const onDeleteCard = useCallback<CardDeleteEventHandler>(async (event) => {
+		const card = findCard(board, event.cardId);
+		const parsedTitle = parseAsNoteLink(card.title);
+
+		if (parsedTitle) {
+			const answer = confirm('This will also delete the associated note. Continue?');
+			if (!answer) return;
+
+			await webviewApi.postMessage({
+				type: 'deleteNote',
+				value: parsedTitle.id
+			});
+		} else {
+			pushUndo(board);
+		}
 
 		const newBoard = produce(board, draft => {
 			const [stackIndex, cardIndex] = findCardIndex(draft, event.cardId);
@@ -316,6 +353,7 @@ export const App = () => {
 				onCardEditorCancel={onCardEditorCancel}
 				onScrollToCard={onScrollToCard}
 				onCreateNoteFromCard={onCreateNoteFromCard}
+				onOpenAssociatedNote={onOpenAssociatedNote}
 				onAddCard={onAddCard}
 				onDeleteCard={onDeleteCard}
 				key={stack.id}
@@ -483,7 +521,15 @@ export const App = () => {
 			updateNoteQueue.push(async () => {
 				logger.info('Boad has changed - updating note body...');
 				const noteBody = serializeBoard(board);
-				await webviewApi.postMessage({ type: 'setNote', value: { id: board.noteId, body: noteBody }});	
+				await webviewApi.postMessage({ type: 'setNote', value: { id: board.noteId, body: noteBody }});
+
+				if (afterSetNoteAction.current) {
+					const action = afterSetNoteAction.current;
+					afterSetNoteAction.current = null;
+					if (action.type === 'openNote') {
+						await webviewApi.postMessage({ type: 'openNote', value: action.noteId });
+					}
+				}
 			});
 		}
 		ignoreNextBoardUpdate.current = false;

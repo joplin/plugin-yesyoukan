@@ -48,6 +48,8 @@ const messageHandlers:Record<IpcMessageType, MessageHandler> = {
 				// TODO: also update note title, if it has changed
 				const note = await joplin.data.get(['notes', cardToRender.noteId], { fields: ['body'] });
 				bodyToRender = note.body;
+			} else { // source = card
+				bodyToRender = cardToRender.cardBody;
 			}
 
 			const result = await joplin.commands.execute('renderMarkup', 1, bodyToRender, null, { postMessageSyntax: 'cardPostMessage("' + id  + '")'});
@@ -63,6 +65,10 @@ const messageHandlers:Record<IpcMessageType, MessageHandler> = {
 
 	'openItem': async (message:IpcMessage) => {
 		await joplin.commands.execute('openItem', message.value);
+	},
+
+	'openNote': async (message:IpcMessage) => {
+		await joplin.commands.execute('openNote', message.value);
 	},
 
 	'getSettings': async (_message:IpcMessage) => {
@@ -85,6 +91,10 @@ const messageHandlers:Record<IpcMessageType, MessageHandler> = {
 		});
 
 		return newNote;
+	},
+
+	'deleteNote': async (message:IpcMessage) => {
+		await joplin.data.delete(['notes', message.value]);
 	},
 }
 

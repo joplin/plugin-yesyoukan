@@ -30,7 +30,7 @@ export interface State {
 	board: Board;
 }
 
-export type IpcMessageType = 'getNote' | 'setNote' | 'isReady' | 'getSettings' | 'renderBodies' | 'openItem' | 'cardMessage' | 'scrollToCard' | 'createNote';
+export type IpcMessageType = 'getNote' | 'setNote' | 'isReady' | 'getSettings' | 'renderBodies' | 'openItem' | 'cardMessage' | 'scrollToCard' | 'createNote' | 'openNote' | 'deleteNote';
 
 export interface IpcMessage {
 	type: IpcMessageType;

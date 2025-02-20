@@ -1,6 +1,6 @@
 import { Draggable } from "@hello-pangea/dnd";
 import * as React from "react";
-import { useCallback, useRef, useEffect } from "react";
+import { useCallback, useRef, useEffect, useMemo } from "react";
 import { Card, ConfirmKey, NewlineKey, Platform } from "../utils/types";
 import ConfirmButtons from "./ConfirmButtons";
 import useOnEditorKeyDown from "./hooks/useOnEditorKeyDown";
@@ -42,6 +42,7 @@ export interface Props {
 	onDelete: DeleteEventHandler;
 	onScrollToCard: CardHandler;
 	onCreateNoteFromCard: CardHandler;
+	onOpenAssociatedNote: CardHandler;
 	isEditing: boolean;
 	platform: Platform;
 }
@@ -69,6 +70,14 @@ export default (props:Props) => {
 
 	const editorRef = useRef<HTMLTextAreaElement>(null);
 
+	const parsedTitle = useMemo(() => {
+		return parseAsNoteLink(card.title);
+	}, [card.title]);
+
+	const cardTitle = parsedTitle ? parsedTitle.title : card.title;
+	const associatedNoteId = parsedTitle ? parsedTitle.id : null;
+	const isNoteLink = !!parsedTitle;
+
 	const onEditorSubmit = useCallback(() => {
 		props.onEditorSubmit({
 			card: stringToCard(card, editorRef.current.value),
@@ -81,9 +90,13 @@ export default (props:Props) => {
 
 	const onDoubleClick = useCallback(() => {
 		if (!props.isEditing) {
-			props.onEditorStart({ card });
+			if (isNoteLink) {
+				props.onOpenAssociatedNote({ cardId: card.id });
+			} else {
+				props.onEditorStart({ card });
+			}
 		}
-	}, [props.isEditing, card]);
+	}, [props.isEditing, card, isNoteLink, props.onOpenAssociatedNote]);
 
 	useEffect(() => {
 		if (props.isEditing) {
@@ -111,7 +124,6 @@ export default (props:Props) => {
 			props.onScrollToCard({ cardId: card.id });
 		} else if (event.itemId === 'createNoteFromCard') {
 			props.onCreateNoteFromCard({ cardId: card.id });
-		} else {
 			throw new Error('Unknown item ID: ' + event.itemId);
 		}
 	}, [onDoubleClick, props.onDelete, card.id]);
@@ -119,17 +131,19 @@ export default (props:Props) => {
 	const renderKebabButton = () => {
 		const menuItems:MenuItem[] = [];
 
-		if (props.platform === "desktop") {
+		if (props.platform === "desktop" && !isNoteLink) {
 			menuItems.push({
 				id: 'scrollToCard',
 				label: 'Open in note',
 			});
 		}
 
-		menuItems.push({
-			id: 'createNoteFromCard',
-			label: 'Create note from card',
-		});
+		if (!isNoteLink) {
+			menuItems.push({
+				id: 'createNoteFromCard',
+				label: 'Create note from card',
+			});
+		}
 			
 		menuItems.push({
 			id: 'edit',
@@ -153,9 +167,6 @@ export default (props:Props) => {
 
 	const renderContent = () => {
 		if (!props.isEditing) {
-			const parsedTitle = parseAsNoteLink(card.title);
-			const cardTitle = parsedTitle ? parsedTitle.title : card.title;
-
 			return (
 				<div className="content">
 					<div className="header">
