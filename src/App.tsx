@@ -1,13 +1,13 @@
 import * as React from "react";
 import { useCallback, useState, useEffect, useMemo, useRef } from "react";
-import { Board, IpcMessage, Note, Platform, RenderResult, Settings, WebviewApi, emptyBoard } from "./utils/types";
+import { Board, CardToRender, IpcMessage, Note, Platform, RenderResult, Settings, WebviewApi, emptyBoard } from "./utils/types";
 import StackViewer, { AddCardEventHandler, DeleteEventHandler, TitleChangeEventHandler } from "./gui/StackViewer";
 import { DragDropContext, Droppable, OnDragEndResponder } from "@hello-pangea/dnd";
 import { produce} from "immer"
-import { boardsEqual, noteIsBoard, parseNote, serializeBoard } from "./utils/noteParser";
+import { boardsEqual, noteIsBoard, parseAsNoteLink, parseNote, serializeBoard } from "./utils/noteParser";
 import AsyncActionQueue from "./utils/AsyncActionQueue";
-import { EditorSubmitHandler as CardChangeEventHandler, DeleteEventHandler as CardDeleteEventHandler, EditorCancelHandler, EditorStartHandler, ScrollToCardHandler } from "./gui/CardViewer";
-import { findCard, findCardIndex, findStackIndex } from "./utils/board";
+import { EditorSubmitHandler as CardChangeEventHandler, DeleteEventHandler as CardDeleteEventHandler, EditorCancelHandler, EditorStartHandler, CardHandler } from "./gui/CardViewer";
+import { findCard, findCardIndex, findStackIndex, getCardTitleAndIndex } from "./utils/board";
 import { ThemeProvider, createTheme } from "@mui/material";
 import Toolbar from './gui/Toolbar';
 import { Props as ButtonProps } from './gui/Button';
@@ -211,9 +211,33 @@ export const App = () => {
 		stopCardEditing(event.card.id);
 	}, []);
 
-	const onScrollToCard = useCallback<ScrollToCardHandler>((event) => {
+	const onScrollToCard = useCallback<CardHandler>((event) => {
+		const { title, index } = getCardTitleAndIndex(board, event.cardId);
+		void webviewApi.postMessage<string>({ type: 'scrollToCard', value: {
+			cardTitle: title,
+			cardIndex: index,
+		}});
+	}, [board]);
+
+	const onCreateNoteFromCard = useCallback<CardHandler>(async (event) => {
 		const card = findCard(board, event.cardId);
-		void webviewApi.postMessage<string>({ type: 'scrollToCard', value: { cardTitle: card.title }  });
+
+		const newNote = await webviewApi.postMessage<Note>({
+			type: 'createNote',
+			value: { 
+				title: card.title,
+				body: card.body,
+			}
+		});
+
+		const newBoard = produce(board, draft => {
+			const [stackIndex, cardIndex] = findCardIndex(draft, event.cardId);
+			const newCard = draft.stacks[stackIndex].cards[cardIndex];
+			newCard.title = `[${newNote.title}](:/${newNote.id})`
+			newCard.body = '';
+		});
+
+		setBoard(newBoard);
 	}, [board]);
 
 	const onAddCard = useCallback<AddCardEventHandler>((event) => {
@@ -291,6 +315,7 @@ export const App = () => {
 				onCardEditorSubmit={onCardChange}
 				onCardEditorCancel={onCardEditorCancel}
 				onScrollToCard={onScrollToCard}
+				onCreateNoteFromCard={onCreateNoteFromCard}
 				onAddCard={onAddCard}
 				onDeleteCard={onDeleteCard}
 				key={stack.id}
@@ -467,18 +492,23 @@ export const App = () => {
 	useEffect(() => {
 		let cancelled = false;
 		const fn = async () => {
-			const toRenderBodies:Record<string, string> = {};
+			const cardsToRender:Record<string, CardToRender> = {};
 			const bodyHtmlHashes:Record<string, string> = {};
 			for (const stack of board.stacks) {
 				for (const card of stack.cards) {
 					const hash = await getHash(card.body)
 					if (card.bodyHtmlHash === hash) continue;
+					const linkedNote = parseAsNoteLink(card.title);
 					bodyHtmlHashes[card.id] = hash;
-					toRenderBodies[card.id] = card.body;
+					cardsToRender[card.id] = {
+						source: linkedNote ? 'note' : 'card',
+						noteId: linkedNote ? linkedNote.id : '',
+						cardBody: linkedNote ? '' : card.body,
+					}
 				}
 			}
 
-			const rendered = await webviewApi.postMessage<Record<string, RenderResult>>({ type: 'renderBodies', value: JSON.stringify(toRenderBodies) });
+			const rendered = await webviewApi.postMessage<Record<string, RenderResult>>({ type: 'renderBodies', value: JSON.stringify(cardsToRender) });
 			if (cancelled) return;
 
 			setBoard(current => {

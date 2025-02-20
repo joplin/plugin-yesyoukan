@@ -20,3 +20,23 @@ export const findCard = (board:Board, cardId:string) => {
 	const [stackIndex, cardIndex] = findCardIndex(board, cardId);
 	return board.stacks[stackIndex].cards[cardIndex];
 }
+
+export const getCardTitleAndIndex = (board:Board, cardId:string) => {
+	const [stackIndex, cardIndex] = findCardIndex(board, cardId);
+	const card = board.stacks[stackIndex].cards[cardIndex];
+	let cardWithTitleIndex = 0;
+	for (let si = 0; si <= stackIndex; si++) {
+		const stack = board.stacks[si];
+		for (let ci = 0; ci < stack.cards.length; ci++) {
+			const c = board.stacks[si].cards[ci];
+			if (stackIndex === si && cardIndex === ci) break;
+
+			if (c.title === card.title) cardWithTitleIndex++;
+		}
+	}
+
+	return {
+		title: card.title,
+		index: cardWithTitleIndex,
+	}
+}

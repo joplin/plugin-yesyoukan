@@ -1,12 +1,13 @@
 import { Draggable } from "@hello-pangea/dnd";
 import * as React from "react";
 import { useCallback, useRef, useEffect } from "react";
-import { Card, ConfirmKey, NewlineKey, Platform } from "src/utils/types";
+import { Card, ConfirmKey, NewlineKey, Platform } from "../utils/types";
 import ConfirmButtons from "./ConfirmButtons";
 import useOnEditorKeyDown from "./hooks/useOnEditorKeyDown";
 import KebabButton, { ItemClickEventHandler, MenuItem } from "./KebabButton";
 import moveCaretToEnd from "../utils/moveCaretToEnd";
 import Logger from "@joplin/utils/Logger";
+import { parseAsNoteLink } from "../utils/noteParser";
 
 const logger = Logger.create('CardViewer');
 
@@ -14,14 +15,14 @@ export interface ChangeEvent {
 	card: Card;
 }
 
-export interface ScrollToCardEvent {
+export interface CardEvent {
 	cardId: string;
 }
 
 export type EditorStartHandler = (event:ChangeEvent) => void;
 export type EditorSubmitHandler = (event:ChangeEvent) => void;
 export type EditorCancelHandler = (event:ChangeEvent) => void;
-export type ScrollToCardHandler = (event:ScrollToCardEvent) => void;
+export type CardHandler = (event:CardEvent) => void;
 
 export interface DeleteEvent {
 	cardId: string;
@@ -39,7 +40,8 @@ export interface Props {
 	onEditorSubmit:EditorSubmitHandler;
 	onEditorCancel: EditorCancelHandler;
 	onDelete: DeleteEventHandler;
-	onScrollToCard: ScrollToCardHandler;
+	onScrollToCard: CardHandler;
+	onCreateNoteFromCard: CardHandler;
 	isEditing: boolean;
 	platform: Platform;
 }
@@ -107,6 +109,8 @@ export default (props:Props) => {
 			props.onDelete({ cardId: card.id });
 		} else if (event.itemId === 'scrollToCard') {
 			props.onScrollToCard({ cardId: card.id });
+		} else if (event.itemId === 'createNoteFromCard') {
+			props.onCreateNoteFromCard({ cardId: card.id });
 		} else {
 			throw new Error('Unknown item ID: ' + event.itemId);
 		}
@@ -121,6 +125,11 @@ export default (props:Props) => {
 				label: 'Open in note',
 			});
 		}
+
+		menuItems.push({
+			id: 'createNoteFromCard',
+			label: 'Create note from card',
+		});
 			
 		menuItems.push({
 			id: 'edit',
@@ -144,10 +153,13 @@ export default (props:Props) => {
 
 	const renderContent = () => {
 		if (!props.isEditing) {
+			const parsedTitle = parseAsNoteLink(card.title);
+			const cardTitle = parsedTitle ? parsedTitle.title : card.title;
+
 			return (
 				<div className="content">
 					<div className="header">
-						<h3 className="title">{card.title}</h3>{renderKebabButton()}
+						<h3 className="title">{cardTitle}</h3>{renderKebabButton()}
 					</div>
 					<p className="body" dangerouslySetInnerHTML={{ __html: card.bodyHtml} }></p>
 				</div>

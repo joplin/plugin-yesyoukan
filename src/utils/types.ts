@@ -2,6 +2,7 @@ import { SettingItem, SettingItemType } from "../../api/types";
 
 export interface Note {
 	id: string;
+	title: string;
 	body: string;
 }
 
@@ -29,8 +30,10 @@ export interface State {
 	board: Board;
 }
 
+export type IpcMessageType = 'getNote' | 'setNote' | 'isReady' | 'getSettings' | 'renderBodies' | 'openItem' | 'cardMessage' | 'scrollToCard' | 'createNote';
+
 export interface IpcMessage {
-	type: 'getNote' | 'setNote' | 'isReady' | 'getSettings' | 'renderBodies' | 'openItem' | 'cardMessage' | 'scrollToCard';
+	type: IpcMessageType;
 	value?: any;
 }
 
@@ -128,3 +131,9 @@ export interface RenderResult {
 }
 
 export type Platform = 'desktop' | 'mobile'; 
+
+export interface CardToRender {
+	source: 'note' | 'card',
+	noteId: string;
+	cardBody: string;
+}
