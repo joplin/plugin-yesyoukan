@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useCallback, useState, useEffect, useMemo, useRef } from "react";
-import { Board, CardToRender, IpcMessage, Note, Platform, RenderResult, Settings, WebviewApi, emptyBoard } from "./utils/types";
+import { Board, CardToRender, IpcMessage, Note, Platform, RenderResult, RenderedNote, Settings, WebviewApi, emptyBoard } from "./utils/types";
 import StackViewer, { AddCardEventHandler, DeleteEventHandler, TitleChangeEventHandler } from "./gui/StackViewer";
 import { DragDropContext, Droppable, OnDragEndResponder } from "@hello-pangea/dnd";
 import { produce} from "immer"
@@ -542,19 +542,20 @@ export const App = () => {
 			const bodyHtmlHashes:Record<string, string> = {};
 			for (const stack of board.stacks) {
 				for (const card of stack.cards) {
-					const hash = await getHash(card.body)
-					if (card.bodyHtmlHash === hash) continue;
+					const bodyHash = await getHash(card.title + '\n' + card.body);
+					if (card.bodyHtmlHash === bodyHash) continue;
 					const linkedNote = parseAsNoteLink(card.title);
-					bodyHtmlHashes[card.id] = hash;
+					bodyHtmlHashes[card.id] = bodyHash;
 					cardsToRender[card.id] = {
 						source: linkedNote ? 'note' : 'card',
 						noteId: linkedNote ? linkedNote.id : '',
+						cardTitle: linkedNote ? '' : card.title,
 						cardBody: linkedNote ? '' : card.body,
 					}
 				}
 			}
 
-			const rendered = await webviewApi.postMessage<Record<string, RenderResult>>({ type: 'renderBodies', value: JSON.stringify(cardsToRender) });
+			const rendered = await webviewApi.postMessage<Record<string, RenderedNote>>({ type: 'renderBodies', value: JSON.stringify(cardsToRender) });
 			if (cancelled) return;
 
 			setBoard(current => {
@@ -562,7 +563,8 @@ export const App = () => {
 					for (const [cardId, result] of Object.entries(rendered)) {
 						const [stackIndex, cardIndex] = findCardIndex(board, cardId);
 						draft.stacks[stackIndex].cards[cardIndex].bodyHtmlHash = bodyHtmlHashes[cardId];
-						draft.stacks[stackIndex].cards[cardIndex].bodyHtml = result.html;
+						draft.stacks[stackIndex].cards[cardIndex].titleHtml = result.title.html;
+						draft.stacks[stackIndex].cards[cardIndex].bodyHtml = result.body.html;
 					}
 				});
 			});
@@ -570,7 +572,7 @@ export const App = () => {
 			setCssStrings(current => {
 				return produce(current, draft => {
 					for (const [, result] of Object.entries(rendered)) {
-						for (const cssString of result.cssStrings) {
+						for (const cssString of result.body.cssStrings) {
 							if (!draft.includes(cssString)) {
 								draft.push(cssString);
 							}

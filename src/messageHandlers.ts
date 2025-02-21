@@ -1,5 +1,5 @@
 import Logger from "@joplin/utils/Logger";
-import { CardToRender, IpcMessage, IpcMessageType, Note, settingItems } from "./utils/types";
+import { CardToRender, IpcMessage, IpcMessageType, Note, RenderedNote, RenderResult, settingItems } from "./utils/types";
 import joplin from "api";
 import { boardsEqual, parseNote } from "./utils/noteParser";
 import { msleep } from "./utils/time";
@@ -40,20 +40,26 @@ const messageHandlers:Record<IpcMessageType, MessageHandler> = {
 
 	'renderBodies': async (message:IpcMessage) => {
 		const toRender = JSON.parse(message.value) as Record<string, CardToRender>;
-		const rendered:Record<string, string> = {};
+		const rendered:Record<string, RenderedNote> = {};
 		for (const [id, cardToRender] of Object.entries(toRender)) {
+			let titleToRender = '';
 			let bodyToRender = '';
 
 			if (cardToRender.source === "note") {
-				// TODO: also update note title, if it has changed
-				const note = await joplin.data.get(['notes', cardToRender.noteId], { fields: ['body'] });
+				const note:Note = await joplin.data.get(['notes', cardToRender.noteId], { fields: ['title', 'body'] });
+				titleToRender = note.title;
 				bodyToRender = note.body;
 			} else { // source = card
+				titleToRender = cardToRender.cardTitle;
 				bodyToRender = cardToRender.cardBody;
 			}
 
-			const result = await joplin.commands.execute('renderMarkup', 1, bodyToRender, null, { postMessageSyntax: 'cardPostMessage("' + id  + '")'});
-			rendered[id] = result;
+			const titleResult:RenderResult = await joplin.commands.execute('renderMarkup', 1, titleToRender);
+			const bodyResult:RenderResult = await joplin.commands.execute('renderMarkup', 1, bodyToRender, null, { postMessageSyntax: 'cardPostMessage("' + id  + '")'});
+			rendered[id] = {
+				title: titleResult,
+				body: bodyResult,
+			};
 		}
 
 		return rendered;

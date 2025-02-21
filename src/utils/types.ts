@@ -9,6 +9,7 @@ export interface Note {
 export interface Card {
 	id: string;
 	title: string;
+	titleHtml?: string;
 	body?: string;
 	bodyHtml?: string;
 	bodyHtmlHash?: string;
@@ -135,5 +136,11 @@ export type Platform = 'desktop' | 'mobile';
 export interface CardToRender {
 	source: 'note' | 'card',
 	noteId: string;
+	cardTitle: string;
 	cardBody: string;
+}
+
+export interface RenderedNote {
+	title: RenderResult;
+	body: RenderResult;
 }

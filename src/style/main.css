@@ -171,6 +171,12 @@ ul, ol {
 				font-weight: bold;
 				margin-bottom: 0;
 				margin-top: 0;
+
+				/* The title is rendered as HTML using `renderMarkup` and is going to be inside a
+				<P> tag with a bottom margin. So we need to clear it here. */
+				p {
+					margin-bottom: 0;
+				}
 			}
 		}
 

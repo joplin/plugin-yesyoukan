@@ -170,7 +170,7 @@ export default (props:Props) => {
 			return (
 				<div className="content">
 					<div className="header">
-						<h3 className="title">{cardTitle}</h3>{renderKebabButton()}
+						<h3 className="title" dangerouslySetInnerHTML={{ __html: card.titleHtml} }></h3>{renderKebabButton()}
 					</div>
 					<p className="body" dangerouslySetInnerHTML={{ __html: card.bodyHtml} }></p>
 				</div>
