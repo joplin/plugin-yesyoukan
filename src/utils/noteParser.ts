@@ -15,6 +15,17 @@ export const noteIsBoard = (noteBody:string) => {
 	return noteBody.includes('```kanban-settings');
 }
 
+const parseAsNoteLinkRegex = /^\[([^\]]+)\]\(:\/([a-f0-9]{32})\)$/;
+
+export const parseAsNoteLink = (s:string) => {
+	const m = s.trim().match(parseAsNoteLinkRegex);
+	if (!m) return null;
+	return {
+		title: m[1],
+		id: m[2],
+	}
+}
+
 export const parseNote = async (noteId:string, noteBody:string) => {
 	const lines = noteBody.split('\n').map(l => l.trimEnd());
 

@@ -56,6 +56,14 @@ Draft a comprehensive plan outlining business strategy, target market, and finan
 ```
 ````
 
+## Creating a note from a card
+
+By default the entire board is contained within the same note. That can be convenient if you only have relatively small card and don't need to add much details to them. If certain cards need to be more detailed you can however convert them to actual notes. To do that, click on the card kebab button **⋮** and select **Create note from card**.
+
+This will create a new note in the same notebook as the board and it will be linked to from the Kanban board. Now when you double-click on that card, it will open the note automatically.
+
+When you delete this card, the associated note will also be deleted.
+
 ## Credits
 
 - Kanban icon created by [Muhammad_Usman](https://www.flaticon.com/authors/muhammad-usman)

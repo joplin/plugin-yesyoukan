@@ -1,12 +1,13 @@
 import { Draggable } from "@hello-pangea/dnd";
 import * as React from "react";
-import { useCallback, useRef, useEffect } from "react";
-import { Card, ConfirmKey, NewlineKey, Platform } from "src/utils/types";
+import { useCallback, useRef, useEffect, useMemo } from "react";
+import { Card, ConfirmKey, NewlineKey, Platform } from "../utils/types";
 import ConfirmButtons from "./ConfirmButtons";
 import useOnEditorKeyDown from "./hooks/useOnEditorKeyDown";
 import KebabButton, { ItemClickEventHandler, MenuItem } from "./KebabButton";
 import moveCaretToEnd from "../utils/moveCaretToEnd";
 import Logger from "@joplin/utils/Logger";
+import { parseAsNoteLink } from "../utils/noteParser";
 
 const logger = Logger.create('CardViewer');
 
@@ -14,14 +15,14 @@ export interface ChangeEvent {
 	card: Card;
 }
 
-export interface ScrollToCardEvent {
+export interface CardEvent {
 	cardId: string;
 }
 
 export type EditorStartHandler = (event:ChangeEvent) => void;
 export type EditorSubmitHandler = (event:ChangeEvent) => void;
 export type EditorCancelHandler = (event:ChangeEvent) => void;
-export type ScrollToCardHandler = (event:ScrollToCardEvent) => void;
+export type CardHandler = (event:CardEvent) => void;
 
 export interface DeleteEvent {
 	cardId: string;
@@ -39,7 +40,9 @@ export interface Props {
 	onEditorSubmit:EditorSubmitHandler;
 	onEditorCancel: EditorCancelHandler;
 	onDelete: DeleteEventHandler;
-	onScrollToCard: ScrollToCardHandler;
+	onScrollToCard: CardHandler;
+	onCreateNoteFromCard: CardHandler;
+	onOpenAssociatedNote: CardHandler;
 	isEditing: boolean;
 	platform: Platform;
 }
@@ -67,6 +70,14 @@ export default (props:Props) => {
 
 	const editorRef = useRef<HTMLTextAreaElement>(null);
 
+	const parsedTitle = useMemo(() => {
+		return parseAsNoteLink(card.title);
+	}, [card.title]);
+
+	const cardTitle = parsedTitle ? parsedTitle.title : card.title;
+	const associatedNoteId = parsedTitle ? parsedTitle.id : null;
+	const isNoteLink = !!parsedTitle;
+
 	const onEditorSubmit = useCallback(() => {
 		props.onEditorSubmit({
 			card: stringToCard(card, editorRef.current.value),
@@ -79,9 +90,13 @@ export default (props:Props) => {
 
 	const onDoubleClick = useCallback(() => {
 		if (!props.isEditing) {
-			props.onEditorStart({ card });
+			if (isNoteLink) {
+				props.onOpenAssociatedNote({ cardId: card.id });
+			} else {
+				props.onEditorStart({ card });
+			}
 		}
-	}, [props.isEditing, card]);
+	}, [props.isEditing, card, isNoteLink, props.onOpenAssociatedNote]);
 
 	useEffect(() => {
 		if (props.isEditing) {
@@ -107,7 +122,8 @@ export default (props:Props) => {
 			props.onDelete({ cardId: card.id });
 		} else if (event.itemId === 'scrollToCard') {
 			props.onScrollToCard({ cardId: card.id });
-		} else {
+		} else if (event.itemId === 'createNoteFromCard') {
+			props.onCreateNoteFromCard({ cardId: card.id });
 			throw new Error('Unknown item ID: ' + event.itemId);
 		}
 	}, [onDoubleClick, props.onDelete, card.id]);
@@ -115,10 +131,17 @@ export default (props:Props) => {
 	const renderKebabButton = () => {
 		const menuItems:MenuItem[] = [];
 
-		if (props.platform === "desktop") {
+		if (props.platform === "desktop" && !isNoteLink) {
 			menuItems.push({
 				id: 'scrollToCard',
 				label: 'Open in note',
+			});
+		}
+
+		if (!isNoteLink) {
+			menuItems.push({
+				id: 'createNoteFromCard',
+				label: 'Create note from card',
 			});
 		}
 			
@@ -147,7 +170,7 @@ export default (props:Props) => {
 			return (
 				<div className="content">
 					<div className="header">
-						<h3 className="title">{card.title}</h3>{renderKebabButton()}
+						<h3 className="title">{cardTitle}</h3>{renderKebabButton()}
 					</div>
 					<p className="body" dangerouslySetInnerHTML={{ __html: card.bodyHtml} }></p>
 				</div>

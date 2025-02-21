@@ -1,13 +1,13 @@
 import * as React from "react";
 import { useCallback, useState, useEffect, useMemo, useRef } from "react";
-import { Board, IpcMessage, Note, Platform, RenderResult, Settings, WebviewApi, emptyBoard } from "./utils/types";
+import { Board, CardToRender, IpcMessage, Note, Platform, RenderResult, Settings, WebviewApi, emptyBoard } from "./utils/types";
 import StackViewer, { AddCardEventHandler, DeleteEventHandler, TitleChangeEventHandler } from "./gui/StackViewer";
 import { DragDropContext, Droppable, OnDragEndResponder } from "@hello-pangea/dnd";
 import { produce} from "immer"
-import { boardsEqual, noteIsBoard, parseNote, serializeBoard } from "./utils/noteParser";
+import { boardsEqual, noteIsBoard, parseAsNoteLink, parseNote, serializeBoard } from "./utils/noteParser";
 import AsyncActionQueue from "./utils/AsyncActionQueue";
-import { EditorSubmitHandler as CardChangeEventHandler, DeleteEventHandler as CardDeleteEventHandler, EditorCancelHandler, EditorStartHandler, ScrollToCardHandler } from "./gui/CardViewer";
-import { findCard, findCardIndex, findStackIndex } from "./utils/board";
+import { EditorSubmitHandler as CardChangeEventHandler, DeleteEventHandler as CardDeleteEventHandler, EditorCancelHandler, EditorStartHandler, CardHandler } from "./gui/CardViewer";
+import { findCard, findCardIndex, findStackIndex, getCardTitleAndIndex } from "./utils/board";
 import { ThemeProvider, createTheme } from "@mui/material";
 import Toolbar from './gui/Toolbar';
 import { Props as ButtonProps } from './gui/Button';
@@ -149,6 +149,11 @@ const emptyHistory = ():History => {
 	}
 }
 
+interface AfterSetNoteAction {
+	type: string;
+	noteId: string;
+}
+
 export const App = () => {
 	const [board, setBoard] = useState<Board>(emptyBoard());
 	const [baseSettings, setBaseSettings] = useState<Settings>({});
@@ -159,6 +164,7 @@ export const App = () => {
 	const [isReadySent, setIsReadySent] = useState<boolean>(false);
 	const [cssStrings, setCssStrings] = useState([]);
 	const [platform, setPlatform] = useState<Platform>('desktop');
+	const afterSetNoteAction = useRef<AfterSetNoteAction|null>(null);
 
 	const effectiveBoardSettings = useMemo(() => {
 		return {
@@ -211,9 +217,51 @@ export const App = () => {
 		stopCardEditing(event.card.id);
 	}, []);
 
-	const onScrollToCard = useCallback<ScrollToCardHandler>((event) => {
+	const onScrollToCard = useCallback<CardHandler>((event) => {
+		const { title, index } = getCardTitleAndIndex(board, event.cardId);
+		void webviewApi.postMessage<string>({ type: 'scrollToCard', value: {
+			cardTitle: title,
+			cardIndex: index,
+		}});
+	}, [board]);
+
+	const onCreateNoteFromCard = useCallback<CardHandler>(async (event) => {
 		const card = findCard(board, event.cardId);
-		void webviewApi.postMessage<string>({ type: 'scrollToCard', value: { cardTitle: card.title }  });
+
+		const newNote = await webviewApi.postMessage<Note>({
+			type: 'createNote',
+			value: { 
+				title: card.title,
+				body: card.body,
+			}
+		});
+
+		const newBoard = produce(board, draft => {
+			const [stackIndex, cardIndex] = findCardIndex(draft, event.cardId);
+			const newCard = draft.stacks[stackIndex].cards[cardIndex];
+			newCard.title = `[${newNote.title}](:/${newNote.id})`
+			newCard.body = '';
+		});
+
+		afterSetNoteAction.current = {
+			type: 'openNote',
+			noteId: newNote.id,
+		};
+
+		setBoard(newBoard);
+	}, [board]);
+
+	const onOpenAssociatedNote = useCallback<CardHandler>(async (event) => {
+		const card = findCard(board, event.cardId);
+		const parsedTitle = parseAsNoteLink(card.title);
+		if (!parsedTitle) {
+			logger.warn('Card has not associated note:', card);
+		} else {
+			await webviewApi.postMessage({
+				type: 'openNote',
+				value: parsedTitle.id
+			});
+		}
 	}, [board]);
 
 	const onAddCard = useCallback<AddCardEventHandler>((event) => {
@@ -235,8 +283,21 @@ export const App = () => {
 		startCardEditing(newCardId);
 	}, [board]);
 
-	const onDeleteCard = useCallback<CardDeleteEventHandler>((event) => {
-		pushUndo(board);
+	const onDeleteCard = useCallback<CardDeleteEventHandler>(async (event) => {
+		const card = findCard(board, event.cardId);
+		const parsedTitle = parseAsNoteLink(card.title);
+
+		if (parsedTitle) {
+			const answer = confirm('This will also delete the associated note. Continue?');
+			if (!answer) return;
+
+			await webviewApi.postMessage({
+				type: 'deleteNote',
+				value: parsedTitle.id
+			});
+		} else {
+			pushUndo(board);
+		}
 
 		const newBoard = produce(board, draft => {
 			const [stackIndex, cardIndex] = findCardIndex(draft, event.cardId);
@@ -291,6 +352,8 @@ export const App = () => {
 				onCardEditorSubmit={onCardChange}
 				onCardEditorCancel={onCardEditorCancel}
 				onScrollToCard={onScrollToCard}
+				onCreateNoteFromCard={onCreateNoteFromCard}
+				onOpenAssociatedNote={onOpenAssociatedNote}
 				onAddCard={onAddCard}
 				onDeleteCard={onDeleteCard}
 				key={stack.id}
@@ -458,7 +521,15 @@ export const App = () => {
 			updateNoteQueue.push(async () => {
 				logger.info('Boad has changed - updating note body...');
 				const noteBody = serializeBoard(board);
-				await webviewApi.postMessage({ type: 'setNote', value: { id: board.noteId, body: noteBody }});	
+				await webviewApi.postMessage({ type: 'setNote', value: { id: board.noteId, body: noteBody }});
+
+				if (afterSetNoteAction.current) {
+					const action = afterSetNoteAction.current;
+					afterSetNoteAction.current = null;
+					if (action.type === 'openNote') {
+						await webviewApi.postMessage({ type: 'openNote', value: action.noteId });
+					}
+				}
 			});
 		}
 		ignoreNextBoardUpdate.current = false;
@@ -467,18 +538,23 @@ export const App = () => {
 	useEffect(() => {
 		let cancelled = false;
 		const fn = async () => {
-			const toRenderBodies:Record<string, string> = {};
+			const cardsToRender:Record<string, CardToRender> = {};
 			const bodyHtmlHashes:Record<string, string> = {};
 			for (const stack of board.stacks) {
 				for (const card of stack.cards) {
 					const hash = await getHash(card.body)
 					if (card.bodyHtmlHash === hash) continue;
+					const linkedNote = parseAsNoteLink(card.title);
 					bodyHtmlHashes[card.id] = hash;
-					toRenderBodies[card.id] = card.body;
+					cardsToRender[card.id] = {
+						source: linkedNote ? 'note' : 'card',
+						noteId: linkedNote ? linkedNote.id : '',
+						cardBody: linkedNote ? '' : card.body,
+					}
 				}
 			}
 
-			const rendered = await webviewApi.postMessage<Record<string, RenderResult>>({ type: 'renderBodies', value: JSON.stringify(toRenderBodies) });
+			const rendered = await webviewApi.postMessage<Record<string, RenderResult>>({ type: 'renderBodies', value: JSON.stringify(cardsToRender) });
 			if (cancelled) return;
 
 			setBoard(current => {
