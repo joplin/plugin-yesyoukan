@@ -56,6 +56,10 @@ Draft a comprehensive plan outlining business strategy, target market, and finan
 ```
 ````
 
+## Toggling between the Kanban board and note
+
+You can toggle at any time between the Kanban board and the underlying note by clicking on the "eye" button (<img style="height: 16px;" src="./doc/images/ToggleButton.png"/>) in the top right corner.
+
 ## Creating a note from a card
 
 By default the entire board is contained within the same note. That can be convenient if you only have relatively small card and don't need to add much details to them. If certain cards need to be more detailed you can however convert them to actual notes. To do that, click on the card kebab button **⋮** and select **Create note from card**.
