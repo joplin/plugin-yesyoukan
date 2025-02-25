@@ -41,6 +41,7 @@ interface Props {
 	onScrollToCard: CardHandler;
 	onCreateNoteFromCard: CardHandler;
 	onOpenAssociatedNote: CardHandler;
+	onEditCardSettings: CardHandler;
 	onTitleChange: TitleChangeEventHandler;
 	onDelete: DeleteEventHandler;
 	onAddCard: AddCardEventHandler;
@@ -143,6 +144,7 @@ export default (props:Props) => {
 				onScrollToCard={props.onScrollToCard}
 				onCreateNoteFromCard={props.onCreateNoteFromCard}
 				onOpenAssociatedNote={props.onOpenAssociatedNote}
+				onEditSettings={props.onEditCardSettings}
 				isLast={index === props.value.cards.length - 1}
 				platform={props.platform}
 				index={index}

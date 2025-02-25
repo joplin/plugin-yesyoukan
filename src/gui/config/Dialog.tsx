@@ -3,18 +3,36 @@ import { useState } from 'react';
 import {
 	Dialog, DialogTitle, DialogContent, DialogActions, Button,
 	TextField, Checkbox, FormControlLabel, MenuItem,
-	IconButton
+	IconButton,
+	Box
 } from '@mui/material';
+import { SettingItems, Settings } from 'src/utils/types';
+import ColorPicker from '../ColorPicker';
 
-export interface Settings {
-	stackWidth?: number;
-	confirmKey?: 'Enter' | 'Shift+Enter';
-	enabled?: boolean;
+export interface ConfigItem {
+	
 }
 
+
+
+function GenericControl({ label, control: Control }) {
+	return (
+		<Box display="flex" alignItems="center">
+			<Box width="30%">
+				<label>{label}</label>
+			</Box>
+			<Box width="70%">
+				<Control />
+			</Box>
+		</Box>
+	);
+}
+
+
+
 interface SettingsDialogProps {
-	settings: Settings;
-	defaultSettings: Settings;
+	settings: Record<string, any>;
+	settingItems: SettingItems;
 	onSave: (newSettings: Settings) => void;
 	onClose: () => void;
 }
@@ -32,7 +50,7 @@ const ResetButton: React.FC<ResetButtonProps> = ({ disabled, onReset }) => {
 	);
 };
 
-const SettingsDialog: React.FC<SettingsDialogProps> = ({ settings, defaultSettings, onSave, onClose }) => {
+const SettingsDialog: React.FC<SettingsDialogProps> = ({ settings, settingItems, onSave, onClose }) => {
 	const [currentSettings, setCurrentSettings] = useState<Settings>(settings);
 
 	// Handle value change for any setting
@@ -47,22 +65,57 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({ settings, defaultSettin
 	const handleReset = (key: keyof Settings) => {
 		setCurrentSettings(prevSettings => ({
 			...prevSettings,
-			[key]: defaultSettings[key]
+			[key]: settingItems[key].value,
 		}));
 	};
 
 	// Check if the setting differs from its default value
 	const isChanged = (key: keyof Settings) => {
-		return currentSettings[key] !== defaultSettings[key];
+		return currentSettings[key] !== settingItems[key].value;
 	};
 
 	// Dynamically render controls based on the type of the value in defaultSettings
 	const renderControl = (key: keyof Settings) => {
 		const currentValue = currentSettings[key];
-		const defaultValue = defaultSettings[key];
+		const settingItem = settingItems[key];
+		const defaultValue = settingItems[key].value;
 
 		// Determine control type based on value type
-		if (typeof defaultValue === 'boolean') {
+		if (key.includes('backgroundColor')) {
+			// TODO: move this to class names
+
+			const colors = [
+				'#FFFFFF', // White
+				'#F0F0F0', // Light Gray
+				'#FFFFE0', // Pale Yellow
+				'#E0FFFF', // Light Cyan
+				'#FFB6C1', // Light Pink
+				'#90EE90', // Light Green
+				'#ADD8E6', // Light Blue
+				'#FFE5B4', // Peach
+				'#E6E6FA', // Lavender
+				'#F5FFFA', // Mint Cream
+				'#F0FFF0', // Honeydew
+				'#F0F8FF', // Alice Blue
+				'#FFF8DC', // Cornsilk
+				'#FFFACD', // Lemon Chiffon
+				'#FFF5EE', // Seashell
+				'#FFFAFA', // Snow
+			];
+
+			return (
+				<GenericControl
+					label={key}
+					control={() => <ColorPicker
+						colors={colors}
+						value={currentValue as string || ''}
+						onChange={(color) => handleChange(key, color)}
+					/>}
+				/>
+			);
+		} else if (typeof defaultValue === 'boolean') {
+			throw new Error('No implemented: boolean');
+
 			return (
 				<div key={key} style={{ display: 'flex', alignItems: 'center', marginBottom: '16px' }}>
 					<FormControlLabel
@@ -81,6 +134,8 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({ settings, defaultSettin
 				</div>
 			);
 		} else if (typeof defaultValue === 'number') {
+			throw new Error('No implemented: number');
+
 			return (
 				<div key={key} style={{ display: 'flex', alignItems: 'center', marginBottom: '16px' }}>
 					<TextField
@@ -98,6 +153,8 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({ settings, defaultSettin
 			);
 		} else if (typeof defaultValue === 'string') {
 			if (key === 'confirmKey') {
+				throw new Error('No implemented: confirmKey');
+
 				// Special case for the "confirmKey" field since it has predefined options
 				return (
 					<div key={key} style={{ display: 'flex', alignItems: 'center', marginBottom: '16px' }}>
@@ -119,18 +176,15 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({ settings, defaultSettin
 				);
 			}
 			return (
-				<div key={key} style={{ display: 'flex', alignItems: 'center', marginBottom: '16px' }}>
-					<TextField
+				<GenericControl
+					label={key}
+					control={() => <TextField
 						fullWidth
 						label={key}
 						value={currentValue || ''}
 						onChange={(e) => handleChange(key, e.target.value)}
-					/>
-					<ResetButton
-						disabled={!isChanged(key)}
-						onReset={() => handleReset(key)}
-					/>
-				</div>
+					/>}
+				/>
 			);
 		}
 		return null;
@@ -143,10 +197,10 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({ settings, defaultSettin
 	};
 
 	return (
-		<Dialog open={true} onClose={onClose}>
+		<Dialog open={true} onClose={onClose} fullWidth maxWidth="sm">
 			<DialogTitle>Settings</DialogTitle>
 			<DialogContent>
-				{Object.keys(defaultSettings).map((key) => (
+				{Object.keys(settingItems).map((key) => (
 					<div key={key} style={{ marginBottom: '16px' }}>
 						{renderControl(key as keyof Settings)}
 					</div>

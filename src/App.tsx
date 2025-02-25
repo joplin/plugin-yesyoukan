@@ -1,12 +1,12 @@
 import * as React from "react";
 import { useCallback, useState, useEffect, useMemo, useRef } from "react";
-import { Board, CardToRender, IpcMessage, Note, Platform, RenderResult, RenderedNote, Settings, WebviewApi, emptyBoard } from "./utils/types";
+import { Board, CardSettings, CardToRender, IpcMessage, Note, Platform, RenderResult, RenderedNote, SettingItems, Settings, WebviewApi, cardSettingItems, emptyBoard, settingItems } from "./utils/types";
 import StackViewer, { AddCardEventHandler, DeleteEventHandler, TitleChangeEventHandler } from "./gui/StackViewer";
 import { DragDropContext, Droppable, OnDragEndResponder } from "@hello-pangea/dnd";
 import { produce} from "immer"
 import { boardsEqual, noteIsBoard, parseAsNoteLink, parseNote, serializeBoard } from "./utils/noteParser";
 import AsyncActionQueue from "./utils/AsyncActionQueue";
-import { EditorSubmitHandler as CardChangeEventHandler, DeleteEventHandler as CardDeleteEventHandler, EditorCancelHandler, EditorStartHandler, CardHandler } from "./gui/CardViewer";
+import { EditorSubmitHandler as CardChangeEventHandler, DeleteEventHandler as CardDeleteEventHandler, EditorCancelHandler, EditorStartHandler, CardHandler, CardEvent } from "./gui/CardViewer";
 import { findCard, findCardIndex, findStackIndex, getCardTitleAndIndex } from "./utils/board";
 import { ThemeProvider, createTheme } from "@mui/material";
 import Toolbar from './gui/Toolbar';
@@ -16,6 +16,8 @@ import Logger from '@joplin/utils/Logger';
 import getHash from "./utils/getHash";
 import { toggleCheckbox } from "./utils/renderMarkupUtils";
 import setupFontAwesome from "./utils/setupFontAwesome";
+import SettingsDialog from "./gui/config/Dialog";
+import { getDefaultSettings } from "http2";
 
 const logger = Logger.create('YesYouKan: App');
 
@@ -154,6 +156,12 @@ interface AfterSetNoteAction {
 	noteId: string;
 }
 
+interface DialogConfig {
+	settings: Settings | CardSettings;
+	settingItems: SettingItems;
+	onSave: (newSettings: Settings | CardSettings) => void;
+}
+
 export const App = () => {
 	const [board, setBoard] = useState<Board>(emptyBoard());
 	const [baseSettings, setBaseSettings] = useState<Settings>({});
@@ -165,6 +173,7 @@ export const App = () => {
 	const [cssStrings, setCssStrings] = useState([]);
 	const [platform, setPlatform] = useState<Platform>('desktop');
 	const afterSetNoteAction = useRef<AfterSetNoteAction|null>(null);
+	const [dialogConfig, setDialogConfig] = useState<DialogConfig|null>(null);
 
 	const effectiveBoardSettings = useMemo(() => {
 		return {
@@ -307,6 +316,21 @@ export const App = () => {
 		setBoard(newBoard);
 	}, [board]);
 
+	const onEditCardSettings = useCallback<CardHandler>(async (event) => {
+		const card = findCard(board, event.cardId);
+		setDialogConfig({
+			settingItems: cardSettingItems,
+			settings: { ...card.settings },
+			onSave: (newSettings: CardSettings) => {
+				const newBoard = produce(board, draft => {
+					const [stackIndex, cardIndex] = findCardIndex(draft, event.cardId);
+					draft.stacks[stackIndex].cards[cardIndex].settings = newSettings;
+				});
+				setBoard(newBoard);
+			},
+		});
+	}, [board]);
+
 	const onStackTitleChange = useCallback<TitleChangeEventHandler>((event) => {
 		pushUndo(board);
 
@@ -354,6 +378,7 @@ export const App = () => {
 				onScrollToCard={onScrollToCard}
 				onCreateNoteFromCard={onCreateNoteFromCard}
 				onOpenAssociatedNote={onOpenAssociatedNote}
+				onEditCardSettings={onEditCardSettings}
 				onAddCard={onAddCard}
 				onDeleteCard={onDeleteCard}
 				key={stack.id}
@@ -694,6 +719,23 @@ export const App = () => {
 		return output;
 	}, [onUndoBoard, onRedoBoard, history.undo.length, history.redo.length, onAddStack]);
 
+	const onSettingsDialogClose = useCallback(() => {
+		setDialogConfig(null);
+	}, []);
+
+	const renderSettingsDialog = () => {
+		if (!dialogConfig) return;
+
+		return (
+			<SettingsDialog
+				settingItems={dialogConfig.settingItems}
+				settings={dialogConfig.settings}
+				onClose={onSettingsDialogClose}
+				onSave={dialogConfig.onSave}
+			/>
+		);
+	}
+
 	// A more natural way to do this would be to set the `style` prop on the stack element. However
 	// doing this interfers with Beautiful DND and makes the stacks no longer draggable. It seems to
 	// be fine with CSS being set via stylesheet though, so we do that here.
@@ -709,6 +751,7 @@ export const App = () => {
 	return (
 		<ThemeProvider theme={theme}>
 			<div className="app">
+				{renderSettingsDialog()}
 				<style>{appStyle}</style>
 				<Toolbar buttons={toolbarButtons}/>
 				<div className="stacks">

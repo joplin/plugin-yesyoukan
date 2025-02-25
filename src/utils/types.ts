@@ -13,6 +13,7 @@ export interface Card {
 	body?: string;
 	bodyHtml?: string;
 	bodyHtmlHash?: string;
+	settings?: CardSettings;
 }
 
 export interface Stack {
@@ -71,6 +72,10 @@ export interface Settings {
 	newlineKey?: NewlineKey;
 }
 
+export interface CardSettings {
+	backgroundColor?: string;
+}
+
 export const settingItems:SettingItems = {
 	stackWidth: {
 		label: 'Stack width',
@@ -110,6 +115,24 @@ export const settingItems:SettingItems = {
 		section: settingSectionName,
 	},
 };
+
+export const cardSettingItems:SettingItems = {
+	'backgroundColor': {
+		label: 'Card background colour',
+		type: SettingItemType.String,
+		public: true,
+		value: '',
+		section: settingSectionName,
+	},
+
+	'testing': {
+		label: 'Just testing',
+		type: SettingItemType.String,
+		public: true,
+		value: 'test',
+		section: settingSectionName,
+	},
+}
 
 export interface RenderResultPluginAsset {
 	source: string;

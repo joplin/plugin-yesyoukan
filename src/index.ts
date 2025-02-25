@@ -40,6 +40,8 @@ joplin.plugins.register({
 		await editors.addScript(view, './panel.js');
 		await editors.addScript(view, './style/reset.css');
 		await editors.addScript(view, './style/main.css');
+		await editors.addScript(view, './vendor/coloris/coloris.css');
+		await editors.addScript(view, './vendor/coloris/coloris.js');
 
 		const updateFromSelectedNote = async () => {
 			const note = await joplin.workspace.selectedNote();

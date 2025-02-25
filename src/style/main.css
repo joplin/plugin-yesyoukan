@@ -245,6 +245,17 @@ ul, ol {
 
 }
 
+.color-picker {
+	> input {
+		width: 28px;
+		height: 28px;
+		color: #00000000;
+		border: 1px solid var(--joplin-divider-color);
+		background-color: #00000000;
+		cursor: pointer;
+	}
+}
+
 .alert-box {
 	position: absolute;
 	bottom: 20px;

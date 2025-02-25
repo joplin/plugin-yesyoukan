@@ -43,6 +43,7 @@ export interface Props {
 	onScrollToCard: CardHandler;
 	onCreateNoteFromCard: CardHandler;
 	onOpenAssociatedNote: CardHandler;
+	onEditSettings: CardHandler;
 	isEditing: boolean;
 	platform: Platform;
 }
@@ -124,6 +125,9 @@ export default (props:Props) => {
 			props.onScrollToCard({ cardId: card.id });
 		} else if (event.itemId === 'createNoteFromCard') {
 			props.onCreateNoteFromCard({ cardId: card.id });
+		} else if (event.itemId === 'editSettings') {
+			props.onEditSettings({ cardId: card.id });
+		} else {
 			throw new Error('Unknown item ID: ' + event.itemId);
 		}
 	}, [onDoubleClick, props.onDelete, card.id]);
@@ -153,6 +157,11 @@ export default (props:Props) => {
 		menuItems.push({
 			id: 'delete',
 			label: 'Delete',
+		});
+
+		menuItems.push({
+			id: 'editSettings',
+			label: 'Settings',
 		});
 
 		return (
@@ -192,6 +201,20 @@ export default (props:Props) => {
 			);
 		}
 	}
+
+	const cardElementId = 'card-' + card.id;
+
+	const cardStyle = useMemo(() => {
+		if (card.settings?.backgroundColor) {
+			return `
+				#${cardElementId} {
+					background-color: ${card.settings.backgroundColor};
+				}
+			`;
+		} else {
+			return '';
+		}
+	}, [card.settings?.backgroundColor, cardElementId]);
 	
 	return (
 		<Draggable draggableId={card.id} index={props.index}>
@@ -201,7 +224,8 @@ export default (props:Props) => {
 				if (props.isLast) classes.push('-last');
 				if (props.isEditing) classes.push('-editing');
 				return (
-					<div className={classes.join(' ')} {...provided.draggableProps} {...provided.dragHandleProps} ref={provided.innerRef} onDoubleClick={onDoubleClick}>
+					<div id={cardElementId} className={classes.join(' ')} {...provided.draggableProps} {...provided.dragHandleProps} ref={provided.innerRef} onDoubleClick={onDoubleClick}>
+						<style>{cardStyle}</style>
 						{renderContent()}
 					</div>
 				);

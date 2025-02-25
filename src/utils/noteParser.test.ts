@@ -17,6 +17,10 @@ Content 2
 
 Content 3
 
+\`\`\`card-settings
+backgroundColor: #ff0000
+\`\`\`
+
 # To publish
 
 ## Post 4
@@ -67,6 +71,9 @@ describe('noteParser', () => {
 							{
 								id: '',
 								title: 'Post 3',
+								settings: {
+									backgroundColor: '#ff0000',
+								},
 								body: 'Content 3',
 							},
 						]
