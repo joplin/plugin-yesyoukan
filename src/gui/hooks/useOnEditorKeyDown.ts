@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useCallback } from "react";
-import { ConfirmKey, NewlineKey, ValidationKey } from "src/utils/types";
+import { ConfirmKey, NewlineKey, ValidationKey } from "../../utils/types";
 
 interface Props {
 	onEditorSubmit():void;

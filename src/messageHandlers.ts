@@ -47,13 +47,17 @@ const messageHandlers:Record<IpcMessageType, MessageHandler> = {
 
 			if (cardToRender.source === "note") {
 				const note:Note = await joplin.data.get(['notes', cardToRender.noteId], { fields: ['title', 'body'] });
-				titleToRender = note.title;
-				bodyToRender = note.body;
+				if (!note) {
+					logger.warn('Could not find note associated with card:', cardToRender);
+				} else {
+					titleToRender = note.title;
+					bodyToRender = note.body;
+				}
 			} else { // source = card
 				titleToRender = cardToRender.cardTitle;
 				bodyToRender = cardToRender.cardBody;
 			}
-
+			
 			const titleResult:RenderResult = await joplin.commands.execute('renderMarkup', 1, titleToRender);
 			const bodyResult:RenderResult = await joplin.commands.execute('renderMarkup', 1, bodyToRender, null, { postMessageSyntax: 'cardPostMessage("' + id  + '")'});
 			rendered[id] = {

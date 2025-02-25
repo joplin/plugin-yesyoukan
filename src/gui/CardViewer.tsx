@@ -202,30 +202,26 @@ export default (props:Props) => {
 		}
 	}
 
-	const cardElementId = 'card-' + card.id;
+	const cardClasses = useMemo(() => {
+		const classes = ['card'];
 
-	const cardStyle = useMemo(() => {
 		if (card.settings?.backgroundColor) {
-			return `
-				#${cardElementId} {
-					background-color: ${card.settings.backgroundColor};
-				}
-			`;
-		} else {
-			return '';
+			classes.push('background-' + card.settings.backgroundColor);
 		}
-	}, [card.settings?.backgroundColor, cardElementId]);
+
+		if (props.isLast) classes.push('-last');
+		if (props.isEditing) classes.push('-editing');
+
+		return classes;
+	}, [card.settings?.backgroundColor, props.isLast, props.isEditing]);
 	
 	return (
 		<Draggable draggableId={card.id} index={props.index}>
 			{(provided, snapshot) => {
-				const classes = ['card'];
-				if (snapshot.isDragging) classes.push('-dragging');
-				if (props.isLast) classes.push('-last');
-				if (props.isEditing) classes.push('-editing');
+				let classes = cardClasses;
+				if (snapshot.isDragging) classes.slice().push('-dragging');
 				return (
-					<div id={cardElementId} className={classes.join(' ')} {...provided.draggableProps} {...provided.dragHandleProps} ref={provided.innerRef} onDoubleClick={onDoubleClick}>
-						<style>{cardStyle}</style>
+					<div className={classes.join(' ')} {...provided.draggableProps} {...provided.dragHandleProps} ref={provided.innerRef} onDoubleClick={onDoubleClick}>
 						{renderContent()}
 					</div>
 				);

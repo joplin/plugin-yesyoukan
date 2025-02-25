@@ -6,8 +6,9 @@ import {
 	IconButton,
 	Box
 } from '@mui/material';
-import { SettingItems, Settings } from 'src/utils/types';
+import { SettingItems, Settings } from '../../utils/types';
 import ColorPicker from '../ColorPicker';
+import { getColorValues, lightBackgroundColors } from '../../utils/colors';
 
 export interface ConfigItem {
 	
@@ -82,33 +83,12 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({ settings, settingItems,
 
 		// Determine control type based on value type
 		if (key.includes('backgroundColor')) {
-			// TODO: move this to class names
-
-			const colors = [
-				'#FFFFFF', // White
-				'#F0F0F0', // Light Gray
-				'#FFFFE0', // Pale Yellow
-				'#E0FFFF', // Light Cyan
-				'#FFB6C1', // Light Pink
-				'#90EE90', // Light Green
-				'#ADD8E6', // Light Blue
-				'#FFE5B4', // Peach
-				'#E6E6FA', // Lavender
-				'#F5FFFA', // Mint Cream
-				'#F0FFF0', // Honeydew
-				'#F0F8FF', // Alice Blue
-				'#FFF8DC', // Cornsilk
-				'#FFFACD', // Lemon Chiffon
-				'#FFF5EE', // Seashell
-				'#FFFAFA', // Snow
-			];
-
 			return (
 				<GenericControl
 					label={key}
 					control={() => <ColorPicker
-						colors={colors}
-						value={currentValue as string || ''}
+						colors={lightBackgroundColors}
+						value={currentValue as number || 0}
 						onChange={(color) => handleChange(key, color)}
 					/>}
 				/>

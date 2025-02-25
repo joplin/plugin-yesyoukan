@@ -1,12 +1,11 @@
 import * as React from 'react';
-import { useState, useEffect,useMemo, useCallback } from 'react';
-import { Button, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
-import { SketchPicker, ColorResult, GithubPicker } from 'react-color';
+import { useEffect,useMemo, useCallback } from 'react';
+import { colorIdToValue, Colors, colorValueToId, getColorValues } from '../utils/colors';
 
 interface Props {
-	colors: string[];
-	value: string;
-	onChange: (color: string) => void;
+	colors: Colors;
+	value: number;
+	onChange: (color: number) => void;
 }
 
 const ColorPicker = (props:Props) => {
@@ -14,28 +13,36 @@ const ColorPicker = (props:Props) => {
 		return 'color-picker-' + (Math.floor(Math.random() * 100000000));
 	}, []);
 
+	const colorValue = colorIdToValue(props.colors, props.value)
+
 	const onChange = useCallback((color:string) => {
-		props.onChange(color);
+		props.onChange(colorValueToId(props.colors, color));
 	}, [props.onChange]);
 
 	useEffect(() => {
 		(window as any).Coloris({
 			swatchesOnly: true,
 			parent: '#' + componentId,
-			swatches: props.colors,
+			swatches: getColorValues(props.colors),
 			onChange,
 		});
 	}, [props.colors]);
 
 	const inputStyle = useMemo(() => {
 		return {
-			backgroundColor: props.value,
+			backgroundColor: colorValue,
 		}
-	}, [props.value]);
+	}, [colorValue]);
 
 	return (
 		<div id={componentId} className="color-picker">
-			<input type="text" style={inputStyle} data-coloris defaultValue={props.value} readOnly={true}/>
+			<input
+				type="text"
+				style={inputStyle}
+				data-coloris 
+				defaultValue={colorValue}
+				readOnly={true}
+			/>
 		</div>
 	);
 };

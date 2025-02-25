@@ -18,6 +18,7 @@ import { toggleCheckbox } from "./utils/renderMarkupUtils";
 import setupFontAwesome from "./utils/setupFontAwesome";
 import SettingsDialog from "./gui/config/Dialog";
 import { getDefaultSettings } from "http2";
+import { colorsToCss, lightBackgroundColors } from "./utils/colors";
 
 const logger = Logger.create('YesYouKan: App');
 
@@ -744,6 +745,8 @@ export const App = () => {
 			width: ${effectiveBoardSettings.stackWidth}px;
 			max-width: ${effectiveBoardSettings.stackWidth}px;
 		}
+
+		${colorsToCss(lightBackgroundColors, 'background', 'background-color')}
 
 		${cssStrings.join('\n')}
 	`;
