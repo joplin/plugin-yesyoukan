@@ -37,6 +37,10 @@ const messageHandlers:Record<IpcMessageType, MessageHandler> = {
 		logger.info('PostMessagePlugin (Webview): Responding with:', response);
 		return { id: response.id, body: response.body };
 	},
+	
+	'shouldUseDarkColors': async () => {
+		return (joplin as any).shouldUseDarkColors();
+	},
 
 	'renderBodies': async (message:IpcMessage) => {
 		const toRender = JSON.parse(message.value) as Record<string, CardToRender>;

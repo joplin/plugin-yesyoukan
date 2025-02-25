@@ -18,7 +18,7 @@ import { toggleCheckbox } from "./utils/renderMarkupUtils";
 import setupFontAwesome from "./utils/setupFontAwesome";
 import SettingsDialog from "./gui/config/Dialog";
 import { getDefaultSettings } from "http2";
-import { colorsToCss, lightBackgroundColors } from "./utils/colors";
+import { colorsToCss, darkBackgroundColors, lightBackgroundColors } from "./utils/colors";
 
 const logger = Logger.create('YesYouKan: App');
 
@@ -175,6 +175,7 @@ export const App = () => {
 	const [platform, setPlatform] = useState<Platform>('desktop');
 	const afterSetNoteAction = useRef<AfterSetNoteAction|null>(null);
 	const [dialogConfig, setDialogConfig] = useState<DialogConfig|null>(null);
+	const [isDarkMode, setIsDarkMode] = useState(false);
 
 	const effectiveBoardSettings = useMemo(() => {
 		return {
@@ -393,6 +394,15 @@ export const App = () => {
 		}
 		return output;
 	}
+
+	useEffect(() => {
+		const fn = async () => {
+			const shouldUseDarkColors = await webviewApi.postMessage<boolean>({ type: 'shouldUseDarkColors' });
+			setIsDarkMode(shouldUseDarkColors);
+		}
+
+		void fn();		
+	}, []);
 
 	useEffect(() => {
 		const rootElement = document.getElementById('root');
@@ -724,6 +734,10 @@ export const App = () => {
 		setDialogConfig(null);
 	}, []);
 
+	const backgroundColors = useMemo(() => {
+		return isDarkMode ? darkBackgroundColors : lightBackgroundColors;
+	}, [isDarkMode]);
+
 	const renderSettingsDialog = () => {
 		if (!dialogConfig) return;
 
@@ -733,6 +747,8 @@ export const App = () => {
 				settings={dialogConfig.settings}
 				onClose={onSettingsDialogClose}
 				onSave={dialogConfig.onSave}
+				backgroundColor={backgroundColors}
+				isDarkMode={isDarkMode}
 			/>
 		);
 	}
@@ -746,7 +762,7 @@ export const App = () => {
 			max-width: ${effectiveBoardSettings.stackWidth}px;
 		}
 
-		${colorsToCss(lightBackgroundColors, 'background', 'background-color')}
+		${colorsToCss(backgroundColors, 'background', 'background-color')}
 
 		${cssStrings.join('\n')}
 	`;

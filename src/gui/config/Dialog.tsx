@@ -8,7 +8,7 @@ import {
 } from '@mui/material';
 import { SettingItems, Settings } from '../../utils/types';
 import ColorPicker from '../ColorPicker';
-import { getColorValues, lightBackgroundColors } from '../../utils/colors';
+import { Colors } from '../../utils/colors';
 
 export interface ConfigItem {
 	
@@ -31,11 +31,13 @@ function GenericControl({ label, control: Control }) {
 
 
 
-interface SettingsDialogProps {
+interface Props {
 	settings: Record<string, any>;
 	settingItems: SettingItems;
 	onSave: (newSettings: Settings) => void;
 	onClose: () => void;
+	isDarkMode: boolean;
+	backgroundColor: Colors;
 }
 
 interface ResetButtonProps {
@@ -51,8 +53,8 @@ const ResetButton: React.FC<ResetButtonProps> = ({ disabled, onReset }) => {
 	);
 };
 
-const SettingsDialog: React.FC<SettingsDialogProps> = ({ settings, settingItems, onSave, onClose }) => {
-	const [currentSettings, setCurrentSettings] = useState<Settings>(settings);
+const SettingsDialog: React.FC<Props> = (props:Props) => {
+	const [currentSettings, setCurrentSettings] = useState<Settings>(props.settings);
 
 	// Handle value change for any setting
 	const handleChange = (key: keyof Settings, value: any) => {
@@ -66,20 +68,20 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({ settings, settingItems,
 	const handleReset = (key: keyof Settings) => {
 		setCurrentSettings(prevSettings => ({
 			...prevSettings,
-			[key]: settingItems[key].value,
+			[key]: props.settingItems[key].value,
 		}));
 	};
 
 	// Check if the setting differs from its default value
 	const isChanged = (key: keyof Settings) => {
-		return currentSettings[key] !== settingItems[key].value;
+		return currentSettings[key] !== props.settingItems[key].value;
 	};
 
 	// Dynamically render controls based on the type of the value in defaultSettings
 	const renderControl = (key: keyof Settings) => {
 		const currentValue = currentSettings[key];
-		const settingItem = settingItems[key];
-		const defaultValue = settingItems[key].value;
+		const settingItem = props.settingItems[key];
+		const defaultValue = props.settingItems[key].value;
 
 		// Determine control type based on value type
 		if (key.includes('backgroundColor')) {
@@ -87,9 +89,10 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({ settings, settingItems,
 				<GenericControl
 					label={key}
 					control={() => <ColorPicker
-						colors={lightBackgroundColors}
+						colors={props.backgroundColor}
 						value={currentValue as number || 0}
 						onChange={(color) => handleChange(key, color)}
+						isDarkMode={props.isDarkMode}
 					/>}
 				/>
 			);
@@ -172,22 +175,22 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({ settings, settingItems,
 
 	// Save current settings and close dialog
 	const handleSave = () => {
-		onSave(currentSettings);
-		onClose();
+		props.onSave(currentSettings);
+		props.onClose();
 	};
 
 	return (
-		<Dialog open={true} onClose={onClose} fullWidth maxWidth="sm">
+		<Dialog open={true} onClose={props.onClose} fullWidth maxWidth="sm">
 			<DialogTitle>Settings</DialogTitle>
 			<DialogContent>
-				{Object.keys(settingItems).map((key) => (
+				{Object.keys(props.settingItems).map((key) => (
 					<div key={key} style={{ marginBottom: '16px' }}>
 						{renderControl(key as keyof Settings)}
 					</div>
 				))}
 			</DialogContent>
 			<DialogActions>
-				<Button onClick={onClose}>Cancel</Button>
+				<Button onClick={props.onClose}>Cancel</Button>
 				<Button onClick={handleSave} color="primary">Save</Button>
 			</DialogActions>
 		</Dialog>

@@ -6,6 +6,7 @@ interface Props {
 	colors: Colors;
 	value: number;
 	onChange: (color: number) => void;
+	isDarkMode: boolean;
 }
 
 const ColorPicker = (props:Props) => {
@@ -24,9 +25,10 @@ const ColorPicker = (props:Props) => {
 			swatchesOnly: true,
 			parent: '#' + componentId,
 			swatches: getColorValues(props.colors),
+			themeMode: props.isDarkMode ? 'dark' : 'light',
 			onChange,
 		});
-	}, [props.colors]);
+	}, [props.colors, props.isDarkMode]);
 
 	const inputStyle = useMemo(() => {
 		return {

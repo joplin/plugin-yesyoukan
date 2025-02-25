@@ -22,6 +22,26 @@ export const lightBackgroundColors: Colors = {
 	16: '#f0f0f0', // light gray (neutral)
 };
 
+export const darkBackgroundColors: Colors = {
+	0: '', // Default
+	1: '#4b3f2f', // dark cornsilk (yellow-brown)
+	2: '#5c5236', // dark lemon chiffon (yellow-brown)
+	3: '#5f5a33', // dark pale yellow (yellow-green)
+	4: '#2e4d2e', // dark green (forest green)
+	5: '#3a4d3a', // dark honeydew (green-gray)
+	6: '#3a4e4e', // dark cyan (teal-gray)
+	7: '#2b4c5c', // dark blue (steel blue)
+	8: '#2e3e5c', // dark alice blue (blue-gray)
+	9: '#3e3a5c', // dark lavender (purple-gray)
+	10: '#4d3b4d', // dark thistle (purple-brown)
+	11: '#5c3a2e', // dark peach (brown-orange)
+	12: '#5c2e3a', // dark pink (red-brown)
+	13: '#4a3a3a', // dark snow (warm gray)
+	14: '#4d3b32', // dark seashell (orange-brown)
+	15: '#3b4a3b', // dark mint cream (green-gray)
+	16: '#3a3a3a', // dark gray (neutral)
+};
+
 export const getColorValues = (colors:Colors) => {
 	const output:string[] = [];
 	for (const [, value] of Object.entries(colors)) {
