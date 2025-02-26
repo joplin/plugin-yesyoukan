@@ -1,4 +1,4 @@
-import { CardSettings, Settings, cardSettingItems, settingItems } from "./types";
+import { CardSettings, Settings, StackSettings, cardSettingItems, settingItems } from "./types";
 import { LoggerWrapper } from '@joplin/utils/Logger';
 
 const parseBoolean = (s: string): boolean => {
@@ -10,6 +10,7 @@ const parseBoolean = (s: string): boolean => {
 export enum SettingType {
 	App = 'app',
 	Card = 'card',
+	Stack = 'stack',
 }
 
 function parseSettings(type:SettingType, rawSettings:Record<string, string>, logger:LoggerWrapper = null) {
@@ -56,4 +57,8 @@ export const parseAppSettings = (rawSettings:Record<string, string>, logger:Logg
 
 export const parseCardSettings = (rawSettings:Record<string, string>, logger:LoggerWrapper = null) => {
 	return parseSettings(SettingType.Card, rawSettings, logger) as CardSettings;
+}
+
+export const parseStackSettings = (rawSettings:Record<string, string>, logger:LoggerWrapper = null) => {
+	return parseSettings(SettingType.Stack, rawSettings, logger) as StackSettings;
 }

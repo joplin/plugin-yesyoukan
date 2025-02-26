@@ -16,7 +16,7 @@ export interface TitleChangeEvent {
 	title: string;
 }
 
-export interface DeleteEvent {
+export interface StackEvent {
 	stackId: string;
 }
 
@@ -25,7 +25,7 @@ export interface AddCardEvent {
 }
 
 export type TitleChangeEventHandler = (event:TitleChangeEvent) => void;
-export type DeleteEventHandler = (event:DeleteEvent) => void;
+export type StackEventHandler = (event:StackEvent) => void;
 export type AddCardEventHandler = (event:AddCardEvent) => void;
 
 interface Props {
@@ -43,7 +43,8 @@ interface Props {
 	onOpenAssociatedNote: CardHandler;
 	onEditCardSettings: CardHandler;
 	onTitleChange: TitleChangeEventHandler;
-	onDelete: DeleteEventHandler;
+	onDelete: StackEventHandler;
+	onEditSettings: StackEventHandler;
 	onAddCard: AddCardEventHandler;
 	onDeleteCard: CardDeleteEventHandler;
 }
@@ -51,6 +52,8 @@ interface Props {
 export default (props:Props) => {
 	const [isEditing, setIsEditing] = useState<boolean>(false);
 	const editorRef = useRef<HTMLInputElement>(null);
+
+	const stack = props.value;
 
 	const onStartEditing = useCallback(() => {
 		setIsEditing(true);
@@ -86,6 +89,8 @@ export default (props:Props) => {
 			onStartEditing();
 		} else if (event.itemId === 'delete') {
 			props.onDelete({ stackId: props.value.id });
+		} else if (event.itemId === 'editSettings') {
+			props.onEditSettings({ stackId: props.value.id });
 		} else {
 			throw new Error('Unknown item ID: ' + event.itemId);
 		}
@@ -126,6 +131,13 @@ export default (props:Props) => {
 							id: 'delete',
 							label: 'Delete',
 						},
+						{
+							isDivider: true,
+						},
+						{
+							id: 'editSettings',
+							label: 'Properties...',
+						},
 					]}
 					onItemClick={onKebabItemClick}
 				/>
@@ -158,11 +170,21 @@ export default (props:Props) => {
 		return output;
 	}
 
+	const stackClasses = useMemo(() => {
+		const classes = ['stack'];
+
+		if (stack.settings?.backgroundColor) {
+			classes.push('background-' + stack.settings.backgroundColor);
+		}
+
+		return classes;
+	}, [stack.settings?.backgroundColor]);
+
 	return (
 		<Draggable draggableId={props.value.id} index={props.index}>
 			{(provided, snapshot) => {
-				const classes = ['stack'];
-				if (snapshot.isDragging) classes.push('-dragging');
+				let classes = stackClasses;
+				if (snapshot.isDragging) classes.slice().push('-dragging');
 				return (
 					<div className={classes.join(' ')} {...provided.draggableProps} ref={provided.innerRef}>
 						<div onDoubleClick={onTitleDoubleClick} className="stack-header" {...provided.dragHandleProps}>

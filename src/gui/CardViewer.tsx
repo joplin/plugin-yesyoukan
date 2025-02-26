@@ -171,7 +171,7 @@ export default (props:Props) => {
 
 		menuItems.push({
 			id: 'editSettings',
-			label: 'Options...',
+			label: 'Properties...',
 		});
 
 		return (

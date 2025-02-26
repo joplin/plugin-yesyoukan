@@ -20,6 +20,7 @@ export interface Stack {
 	id: string;
 	title: string;
 	cards: Card[];
+	settings?: StackSettings;
 }
 
 export interface Board {
@@ -76,6 +77,10 @@ export interface CardSettings {
 	backgroundColor?: string;
 }
 
+export interface StackSettings {
+	backgroundColor?: string;
+}
+
 export const settingItems:SettingItems = {
 	stackWidth: {
 		label: 'Stack width',
@@ -117,6 +122,16 @@ export const settingItems:SettingItems = {
 };
 
 export const cardSettingItems:SettingItems = {
+	'backgroundColor': {
+		label: 'Background colour',
+		type: SettingItemType.String,
+		public: true,
+		value: '',
+		section: settingSectionName,
+	},
+}
+
+export const stackSettingItems:SettingItems = {
 	'backgroundColor': {
 		label: 'Background colour',
 		type: SettingItemType.String,

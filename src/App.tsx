@@ -1,13 +1,13 @@
 import * as React from "react";
 import { useCallback, useState, useEffect, useMemo, useRef } from "react";
-import { Board, CardSettings, CardToRender, IpcMessage, Note, Platform, RenderResult, RenderedNote, SettingItems, Settings, WebviewApi, cardSettingItems, emptyBoard, settingItems } from "./utils/types";
-import StackViewer, { AddCardEventHandler, DeleteEventHandler, TitleChangeEventHandler } from "./gui/StackViewer";
+import { Board, CardSettings, CardToRender, IpcMessage, Note, Platform, RenderResult, RenderedNote, SettingItems, Settings, StackSettings, WebviewApi, cardSettingItems, emptyBoard, settingItems, stackSettingItems } from "./utils/types";
+import StackViewer, { AddCardEventHandler, StackEventHandler, TitleChangeEventHandler } from "./gui/StackViewer";
 import { DragDropContext, Droppable, OnDragEndResponder } from "@hello-pangea/dnd";
 import { produce} from "immer"
 import { boardsEqual, noteIsBoard, parseAsNoteLink, parseNote, serializeBoard } from "./utils/noteParser";
 import AsyncActionQueue from "./utils/AsyncActionQueue";
 import { EditorSubmitHandler as CardChangeEventHandler, DeleteEventHandler as CardDeleteEventHandler, EditorCancelHandler, EditorStartHandler, CardHandler, CardEvent } from "./gui/CardViewer";
-import { findCard, findCardIndex, findStackIndex, getCardTitleAndIndex } from "./utils/board";
+import { findCard, findCardIndex, findStack, findStackIndex, getCardTitleAndIndex } from "./utils/board";
 import { ThemeProvider, createTheme } from "@mui/material";
 import Toolbar from './gui/Toolbar';
 import { Props as ButtonProps } from './gui/Button';
@@ -322,13 +322,29 @@ export const App = () => {
 	const onEditCardSettings = useCallback<CardHandler>(async (event) => {
 		const card = findCard(board, event.cardId);
 		setDialogConfig({
-			title: 'Card options',
+			title: 'Card properties',
 			settingItems: cardSettingItems,
 			settings: { ...card.settings },
 			onSave: (newSettings: CardSettings) => {
 				const newBoard = produce(board, draft => {
 					const [stackIndex, cardIndex] = findCardIndex(draft, event.cardId);
 					draft.stacks[stackIndex].cards[cardIndex].settings = newSettings;
+				});
+				setBoard(newBoard);
+			},
+		});
+	}, [board]);
+
+	const onEditStackSettings = useCallback<StackEventHandler>(async (event) => {
+		const stack = findStack(board, event.stackId);
+		setDialogConfig({
+			title: 'Stack properties',
+			settingItems: stackSettingItems,
+			settings: { ...stack.settings },
+			onSave: (newSettings: StackSettings) => {
+				const newBoard = produce(board, draft => {
+					const stackIndex = findStackIndex(draft, event.stackId);
+					draft.stacks[stackIndex].settings = newSettings;
 				});
 				setBoard(newBoard);
 			},
@@ -359,7 +375,7 @@ export const App = () => {
 		setHistory(emptyHistory());
 	}
 
-	const onStackDelete = useCallback<DeleteEventHandler>((event) => {
+	const onStackDelete = useCallback<StackEventHandler>((event) => {
 		pushUndo(board);
 
 		const newBoard = produce(board, draft => {
@@ -385,6 +401,7 @@ export const App = () => {
 				onEditCardSettings={onEditCardSettings}
 				onAddCard={onAddCard}
 				onDeleteCard={onDeleteCard}
+				onEditSettings={onEditStackSettings}
 				key={stack.id}
 				value={stack}
 				platform={platform}

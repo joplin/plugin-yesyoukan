@@ -1,4 +1,4 @@
-import { parseAppSettings, parseCardSettings, SettingType } from "./settings";
+import { parseAppSettings, parseCardSettings, parseStackSettings, SettingType } from "./settings";
 import { Board, Card, CardSettings, Settings, Stack, emptyBoard } from "./types";
 import uuid from "./uuid";
 import Logger from '@joplin/utils/Logger';
@@ -44,7 +44,7 @@ export const parseNote = async (noteId:string, noteBody:string) => {
 	let currentCard:Card = null;
 
 	for (const line of lines) {
-		if (line === '```kanban-settings' || line === '```card-settings') {
+		if (line === '```kanban-settings' || line === '```card-settings' || line === '```stack-settings') {
 			previousState = state;
 			state = 'inSettings';
 			settingBlockType = line.substring(3);
@@ -54,8 +54,10 @@ export const parseNote = async (noteId:string, noteBody:string) => {
 
 			if (settingBlockType === 'kanban-settings') {
 				kanbanRawSettings = rawSettings;
-			} else { // CARD
+			} else if (settingBlockType === 'card-settings') {
 				currentCard.settings = parseCardSettings(rawSettings, logger);
+			} else if (settingBlockType === 'stack-settings') {
+				currentStack.settings = parseStackSettings(rawSettings, logger);
 			}
 		} else if (state === 'inSettings') {
 			if (line.startsWith('#')) continue;
@@ -131,6 +133,11 @@ export const serializeBoard = (board:Board) => {
 		output.push('# ' + stack.title);
 		output.push('');
 
+		if (stack.settings && Object.keys(stack.settings).length) {
+			output.push(serializeSettings(SettingType.Stack, 'stack-settings', stack.settings));
+			output.push('');
+		}
+
 		for (const card of stack.cards) {
 			output.push('## ' + card.title);
 			output.push('');
@@ -167,6 +174,7 @@ export const boardsEqual = (board1:Board, board2:Board) => {
 
 		if (stack1.title !== stack2.title) return false;
 		if (stack1.cards.length !== stack2.cards.length) return false;
+		if (!fastDeepEqual(stack1.settings, stack2.settings)) return false;
 
 		for (const [cardIndex, card1] of stack1.cards.entries()) {
 			const card2 = stack2.cards[cardIndex];

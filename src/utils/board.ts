@@ -21,6 +21,11 @@ export const findCard = (board:Board, cardId:string) => {
 	return board.stacks[stackIndex].cards[cardIndex];
 }
 
+export const findStack = (board:Board, stackId:string) => {
+	const stackIndex = findStackIndex(board, stackId);
+	return board.stacks[stackIndex];
+}
+
 export const getCardTitleAndIndex = (board:Board, cardId:string) => {
 	const [stackIndex, cardIndex] = findCardIndex(board, cardId);
 	const card = board.stacks[stackIndex].cards[cardIndex];

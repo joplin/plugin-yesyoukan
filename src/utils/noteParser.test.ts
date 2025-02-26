@@ -23,6 +23,10 @@ backgroundColor: #ff0000
 
 # To publish
 
+\`\`\`stack-settings
+backgroundColor: #00ff00
+\`\`\`
+
 ## Post 4
 
 Content 4
@@ -82,6 +86,9 @@ describe('noteParser', () => {
 					{
 						id: '',
 						title: 'To publish',
+						settings: {
+							backgroundColor: '#00ff00',
+						},
 						cards: [
 							{
 								id: '',
