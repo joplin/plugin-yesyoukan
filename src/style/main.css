@@ -212,6 +212,14 @@ ul, ol {
 	}
 }
 
+svg[data-icon] {
+	color: var(--joplin-color);
+}
+
+button:disabled {
+	opacity: 0.5;
+}
+
 .kebab-button-wrapper {
 	margin-right: -0.6em;
     margin-top: -0.3em;

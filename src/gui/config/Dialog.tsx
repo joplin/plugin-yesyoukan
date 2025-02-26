@@ -3,35 +3,14 @@ import { useState } from 'react';
 import {
 	Dialog, DialogTitle, DialogContent, DialogActions, Button,
 	TextField, Checkbox, FormControlLabel, MenuItem,
-	IconButton,
-	Box
 } from '@mui/material';
 import { SettingItems, Settings } from '../../utils/types';
 import ColorPicker from '../ColorPicker';
 import { Colors } from '../../utils/colors';
-
-export interface ConfigItem {
-	
-}
-
-
-
-function GenericControl({ label, control: Control }) {
-	return (
-		<Box display="flex" alignItems="center">
-			<Box width="30%">
-				<label>{label}</label>
-			</Box>
-			<Box width="70%">
-				<Control />
-			</Box>
-		</Box>
-	);
-}
-
-
+import GenericControl from './GenericControl';
 
 interface Props {
+	title: string;
 	settings: Record<string, any>;
 	settingItems: SettingItems;
 	onSave: (newSettings: Settings) => void;
@@ -40,41 +19,23 @@ interface Props {
 	backgroundColor: Colors;
 }
 
-interface ResetButtonProps {
-	disabled: boolean;
-	onReset: () => void;
-}
-
-const ResetButton: React.FC<ResetButtonProps> = ({ disabled, onReset }) => {
-	return (
-		<IconButton onClick={onReset} disabled={disabled} style={{ marginLeft: '8px' }}>
-			<span>X</span>
-		</IconButton>
-	);
-};
-
 const SettingsDialog: React.FC<Props> = (props:Props) => {
 	const [currentSettings, setCurrentSettings] = useState<Settings>(props.settings);
 
 	// Handle value change for any setting
 	const handleChange = (key: keyof Settings, value: any) => {
-		setCurrentSettings(prevSettings => ({
-			...prevSettings,
-			[key]: value
-		}));
-	};
-
-	// Reset value to the default for a particular setting
-	const handleReset = (key: keyof Settings) => {
-		setCurrentSettings(prevSettings => ({
-			...prevSettings,
-			[key]: props.settingItems[key].value,
-		}));
-	};
-
-	// Check if the setting differs from its default value
-	const isChanged = (key: keyof Settings) => {
-		return currentSettings[key] !== props.settingItems[key].value;
+		setCurrentSettings((prevSettings) => {
+			if (value === undefined) {
+				const output = { ...prevSettings };
+				delete output[key];
+				return output; 
+			} else {
+				return {
+					...prevSettings,
+					[key]: value,
+				}
+			}
+		});
 	};
 
 	// Dynamically render controls based on the type of the value in defaultSettings
@@ -83,11 +44,17 @@ const SettingsDialog: React.FC<Props> = (props:Props) => {
 		const settingItem = props.settingItems[key];
 		const defaultValue = props.settingItems[key].value;
 
+		const baseGenericControlProps = {
+			label: settingItem.label,
+			resetDisabled: currentValue === undefined,
+			onReset: () => { handleChange(key, undefined) },
+		}
+
 		// Determine control type based on value type
 		if (key.includes('backgroundColor')) {
 			return (
 				<GenericControl
-					label={key}
+					{...baseGenericControlProps}
 					control={() => <ColorPicker
 						colors={props.backgroundColor}
 						value={currentValue as number || 0}
@@ -110,10 +77,6 @@ const SettingsDialog: React.FC<Props> = (props:Props) => {
 						}
 						label={key}
 					/>
-					<ResetButton
-						disabled={!isChanged(key)}
-						onReset={() => handleReset(key)}
-					/>
 				</div>
 			);
 		} else if (typeof defaultValue === 'number') {
@@ -127,10 +90,6 @@ const SettingsDialog: React.FC<Props> = (props:Props) => {
 						type="number"
 						value={currentValue || ''}
 						onChange={(e) => handleChange(key, parseInt(e.target.value, 10))}
-					/>
-					<ResetButton
-						disabled={!isChanged(key)}
-						onReset={() => handleReset(key)}
 					/>
 				</div>
 			);
@@ -151,15 +110,13 @@ const SettingsDialog: React.FC<Props> = (props:Props) => {
 							<MenuItem value="Enter">Enter</MenuItem>
 							<MenuItem value="Shift+Enter">Shift+Enter</MenuItem>
 						</TextField>
-						<ResetButton
-							disabled={!isChanged(key)}
-							onReset={() => handleReset(key)}
-						/>
 					</div>
 				);
 			}
 			return (
 				<GenericControl
+					onReset={() => {}}
+					resetDisabled={false}
 					label={key}
 					control={() => <TextField
 						fullWidth
@@ -181,7 +138,7 @@ const SettingsDialog: React.FC<Props> = (props:Props) => {
 
 	return (
 		<Dialog open={true} onClose={props.onClose} fullWidth maxWidth="sm">
-			<DialogTitle>Settings</DialogTitle>
+			<DialogTitle>{props.title}</DialogTitle>
 			<DialogContent>
 				{Object.keys(props.settingItems).map((key) => (
 					<div key={key} style={{ marginBottom: '16px' }}>

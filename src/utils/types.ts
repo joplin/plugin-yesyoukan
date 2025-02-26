@@ -118,18 +118,10 @@ export const settingItems:SettingItems = {
 
 export const cardSettingItems:SettingItems = {
 	'backgroundColor': {
-		label: 'Card background colour',
+		label: 'Background colour',
 		type: SettingItemType.String,
 		public: true,
 		value: '',
-		section: settingSectionName,
-	},
-
-	'testing': {
-		label: 'Just testing',
-		type: SettingItemType.String,
-		public: true,
-		value: 'test',
 		section: settingSectionName,
 	},
 }

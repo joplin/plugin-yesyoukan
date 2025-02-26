@@ -158,6 +158,7 @@ interface AfterSetNoteAction {
 }
 
 interface DialogConfig {
+	title: string;
 	settings: Settings | CardSettings;
 	settingItems: SettingItems;
 	onSave: (newSettings: Settings | CardSettings) => void;
@@ -321,6 +322,7 @@ export const App = () => {
 	const onEditCardSettings = useCallback<CardHandler>(async (event) => {
 		const card = findCard(board, event.cardId);
 		setDialogConfig({
+			title: 'Card options',
 			settingItems: cardSettingItems,
 			settings: { ...card.settings },
 			onSave: (newSettings: CardSettings) => {
@@ -743,6 +745,7 @@ export const App = () => {
 
 		return (
 			<SettingsDialog
+				title={dialogConfig.title}
 				settingItems={dialogConfig.settingItems}
 				settings={dialogConfig.settings}
 				onClose={onSettingsDialogClose}

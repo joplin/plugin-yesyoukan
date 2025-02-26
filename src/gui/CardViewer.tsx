@@ -138,14 +138,20 @@ export default (props:Props) => {
 		if (props.platform === "desktop" && !isNoteLink) {
 			menuItems.push({
 				id: 'scrollToCard',
-				label: 'Open in note',
+				label: 'Open in note...',
 			});
 		}
 
 		if (!isNoteLink) {
 			menuItems.push({
 				id: 'createNoteFromCard',
-				label: 'Create note from card',
+				label: 'Create note from card...',
+			});
+		}
+
+		if (menuItems.length) {
+			menuItems.push({
+				isDivider: true,
 			});
 		}
 			
@@ -160,8 +166,12 @@ export default (props:Props) => {
 		});
 
 		menuItems.push({
+			isDivider: true,
+		});
+
+		menuItems.push({
 			id: 'editSettings',
-			label: 'Settings',
+			label: 'Options...',
 		});
 
 		return (
