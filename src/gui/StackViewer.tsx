@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useCallback, useState, useRef, useMemo } from "react";
-import { ConfirmKey, NewlineKey, Platform, Stack } from "src/utils/types";
+import { ConfirmKey, NewlineKey, Platform, Stack } from "../utils/types";
 import CardViewer, { EditorSubmitHandler as CardEditorSubmitEventHandler, DeleteEventHandler as CardDeleteEventHandler, EditorCancelHandler as CardEditorCancelHandler, EditorStartHandler as CardEditorStartEventHandler, CardHandler } from "./CardViewer";
 import { Draggable, DraggableProvided, Droppable } from "@hello-pangea/dnd";
 import ConfirmButtons from "./ConfirmButtons";
@@ -41,6 +41,7 @@ interface Props {
 	onScrollToCard: CardHandler;
 	onCreateNoteFromCard: CardHandler;
 	onOpenAssociatedNote: CardHandler;
+	onEditCardSettings: CardHandler;
 	onTitleChange: TitleChangeEventHandler;
 	onDelete: DeleteEventHandler;
 	onAddCard: AddCardEventHandler;
@@ -143,6 +144,7 @@ export default (props:Props) => {
 				onScrollToCard={props.onScrollToCard}
 				onCreateNoteFromCard={props.onCreateNoteFromCard}
 				onOpenAssociatedNote={props.onOpenAssociatedNote}
+				onEditSettings={props.onEditCardSettings}
 				isLast={index === props.value.cards.length - 1}
 				platform={props.platform}
 				index={index}

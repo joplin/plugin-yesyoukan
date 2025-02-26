@@ -1,7 +1,8 @@
-import { parseSettings } from "./settings";
-import { Board, Card, Settings, Stack, emptyBoard } from "./types";
+import { parseAppSettings, parseCardSettings, SettingType } from "./settings";
+import { Board, Card, CardSettings, Settings, Stack, emptyBoard } from "./types";
 import uuid from "./uuid";
 import Logger from '@joplin/utils/Logger';
+const fastDeepEqual = require('fast-deep-equal');
 
 const logger = Logger.create('YesYouKan: noteParser');
 
@@ -35,17 +36,27 @@ export const parseNote = async (noteId:string, noteBody:string) => {
 
 	let state:'idle'|'inStack'|'inCard'|'inBody'|'inSettings' = 'idle';
 	let previousState:string = '';
-	const rawSettings:Record<string, string> = {};
+	let rawSettings:Record<string, string> = {};
+	let kanbanRawSettings:Record<string, string> = {};
+	let settingBlockType = '';
 
 	let currentStack:Stack = null;
 	let currentCard:Card = null;
 
 	for (const line of lines) {
-		if (line === '```kanban-settings') {
+		if (line === '```kanban-settings' || line === '```card-settings') {
 			previousState = state;
 			state = 'inSettings';
+			settingBlockType = line.substring(3);
+			rawSettings = {};
 		} else if (state === 'inSettings' && line === '```') {
 			state = previousState as any;
+
+			if (settingBlockType === 'kanban-settings') {
+				kanbanRawSettings = rawSettings;
+			} else { // CARD
+				currentCard.settings = parseCardSettings(rawSettings, logger);
+			}
 		} else if (state === 'inSettings') {
 			if (line.startsWith('#')) continue;
 			const [key, value] = parseSettingLine(line);
@@ -87,9 +98,30 @@ export const parseNote = async (noteId:string, noteBody:string) => {
 		}
 	}
 
-	board.settings = parseSettings(rawSettings, logger);
+	board.settings = parseAppSettings(kanbanRawSettings, logger);
 
 	return board;
+}
+
+const serializeSettings = (type:SettingType, header:string, settings:Settings | CardSettings) => {
+	const sortedKeys = Object.keys(settings).sort();
+
+	const output:string[] = [];
+	output.push('```' + header);
+	if (type === SettingType.App) output.push('# Do not remove this block');
+	for (const key of sortedKeys) {
+		const value = settings[key];
+		let sValue = '';
+		if (typeof value === 'boolean') {
+			sValue = value === true ? 'true' : 'false';
+		} else {
+			sValue = value.toString();
+		}
+		output.push(key + ': ' + sValue);
+	}
+	output.push('```');
+
+	return output.join('\n');
 }
 
 export const serializeBoard = (board:Board) => {
@@ -103,25 +135,17 @@ export const serializeBoard = (board:Board) => {
 			output.push('## ' + card.title);
 			output.push('');
 			output.push(card.body);
+
+			if (card.settings && Object.keys(card.settings).length) {
+				output.push('');
+				output.push(serializeSettings(SettingType.Card, 'card-settings', card.settings));
+			}
+
 			output.push('');
 		}
 	}
 
-	const sortedKeys = Object.keys(board.settings).sort();
-
-	output.push('```kanban-settings');
-	output.push('# Do not remove this block');
-	for (const key of sortedKeys) {
-		const value = board.settings[key];
-		let sValue = '';
-		if (typeof value === 'boolean') {
-			sValue = value === true ? 'true' : 'false';
-		} else {
-			sValue = value.toString();
-		}
-		output.push(key + ': ' + sValue);
-	}
-	output.push('```');
+	output.push(serializeSettings(SettingType.App, 'kanban-settings', board.settings));
 	output.push('');
 
 	return output.join('\n');
@@ -149,6 +173,7 @@ export const boardsEqual = (board1:Board, board2:Board) => {
 
 			if (card1.title !== card2.title) return false;
 			if (card1.body !== card2.body) return false;
+			if (!fastDeepEqual(card1.settings, card2.settings)) return false;
 		}
 	}
 

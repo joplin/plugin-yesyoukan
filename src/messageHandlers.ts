@@ -37,6 +37,10 @@ const messageHandlers:Record<IpcMessageType, MessageHandler> = {
 		logger.info('PostMessagePlugin (Webview): Responding with:', response);
 		return { id: response.id, body: response.body };
 	},
+	
+	'shouldUseDarkColors': async () => {
+		return (joplin as any).shouldUseDarkColors();
+	},
 
 	'renderBodies': async (message:IpcMessage) => {
 		const toRender = JSON.parse(message.value) as Record<string, CardToRender>;
@@ -47,13 +51,17 @@ const messageHandlers:Record<IpcMessageType, MessageHandler> = {
 
 			if (cardToRender.source === "note") {
 				const note:Note = await joplin.data.get(['notes', cardToRender.noteId], { fields: ['title', 'body'] });
-				titleToRender = note.title;
-				bodyToRender = note.body;
+				if (!note) {
+					logger.warn('Could not find note associated with card:', cardToRender);
+				} else {
+					titleToRender = note.title;
+					bodyToRender = note.body;
+				}
 			} else { // source = card
 				titleToRender = cardToRender.cardTitle;
 				bodyToRender = cardToRender.cardBody;
 			}
-
+			
 			const titleResult:RenderResult = await joplin.commands.execute('renderMarkup', 1, titleToRender);
 			const bodyResult:RenderResult = await joplin.commands.execute('renderMarkup', 1, bodyToRender, null, { postMessageSyntax: 'cardPostMessage("' + id  + '")'});
 			rendered[id] = {

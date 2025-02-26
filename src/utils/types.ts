@@ -13,6 +13,7 @@ export interface Card {
 	body?: string;
 	bodyHtml?: string;
 	bodyHtmlHash?: string;
+	settings?: CardSettings;
 }
 
 export interface Stack {
@@ -31,7 +32,7 @@ export interface State {
 	board: Board;
 }
 
-export type IpcMessageType = 'getNote' | 'setNote' | 'isReady' | 'getSettings' | 'renderBodies' | 'openItem' | 'cardMessage' | 'scrollToCard' | 'createNote' | 'openNote' | 'deleteNote';
+export type IpcMessageType = 'getNote' | 'setNote' | 'isReady' | 'getSettings' | 'renderBodies' | 'openItem' | 'cardMessage' | 'scrollToCard' | 'createNote' | 'openNote' | 'deleteNote' | 'shouldUseDarkColors';
 
 export interface IpcMessage {
 	type: IpcMessageType;
@@ -69,6 +70,10 @@ export interface Settings {
 	stackWidth?: number;
 	confirmKey?: ConfirmKey;
 	newlineKey?: NewlineKey;
+}
+
+export interface CardSettings {
+	backgroundColor?: string;
 }
 
 export const settingItems:SettingItems = {
@@ -110,6 +115,16 @@ export const settingItems:SettingItems = {
 		section: settingSectionName,
 	},
 };
+
+export const cardSettingItems:SettingItems = {
+	'backgroundColor': {
+		label: 'Background colour',
+		type: SettingItemType.String,
+		public: true,
+		value: '',
+		section: settingSectionName,
+	},
+}
 
 export interface RenderResultPluginAsset {
 	source: string;

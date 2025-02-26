@@ -212,6 +212,14 @@ ul, ol {
 	}
 }
 
+svg[data-icon] {
+	color: var(--joplin-color);
+}
+
+button:disabled {
+	opacity: 0.5;
+}
+
 .kebab-button-wrapper {
 	margin-right: -0.6em;
     margin-top: -0.3em;
@@ -243,6 +251,17 @@ ul, ol {
 		}
 	}
 
+}
+
+.color-picker {
+	> input {
+		width: 28px;
+		height: 28px;
+		color: #00000000;
+		border: 1px solid var(--joplin-divider-color);
+		background-color: #00000000;
+		cursor: pointer;
+	}
 }
 
 .alert-box {

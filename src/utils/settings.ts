@@ -1,4 +1,4 @@
-import { Settings, settingItems } from "./types";
+import { CardSettings, Settings, cardSettingItems, settingItems } from "./types";
 import { LoggerWrapper } from '@joplin/utils/Logger';
 
 const parseBoolean = (s: string): boolean => {
@@ -7,16 +7,23 @@ const parseBoolean = (s: string): boolean => {
 	throw new Error(`Invalid boolean value: "${s}" (Must be one of "true", "false", "0, "1")`);
 };
 
-export function parseSettings(rawSettings:Record<string, string>, logger:LoggerWrapper = null): Settings {
-	const output: Settings = {};
+export enum SettingType {
+	App = 'app',
+	Card = 'card',
+}
+
+function parseSettings(type:SettingType, rawSettings:Record<string, string>, logger:LoggerWrapper = null) {
+	const output = {};
+
+	const items = type === SettingType.App ? settingItems : cardSettingItems;
 
 	for (const [key, rawValue] of Object.entries(rawSettings)) {
-		if (!(key in settingItems)) {
+		if (!(key in items)) {
 			if (logger) logger.warn('Unknown setting key: ' + key);
 			continue;
 		}
 
-		const value = settingItems[key].value;
+		const value = items[key].value;
 		
 		try {
 			if (typeof value === 'number') {
@@ -36,5 +43,17 @@ export function parseSettings(rawSettings:Record<string, string>, logger:LoggerW
 		}
 	}
 
-	return output;
+	if (type === SettingType.App) {
+		return output as Settings;
+	} else {
+		return output as CardSettings;
+	}
+}
+
+export const parseAppSettings = (rawSettings:Record<string, string>, logger:LoggerWrapper = null) => {
+	return parseSettings(SettingType.App, rawSettings, logger) as Settings;
+}
+
+export const parseCardSettings = (rawSettings:Record<string, string>, logger:LoggerWrapper = null) => {
+	return parseSettings(SettingType.Card, rawSettings, logger) as CardSettings;
 }

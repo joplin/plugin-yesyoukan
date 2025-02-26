@@ -43,6 +43,7 @@ export interface Props {
 	onScrollToCard: CardHandler;
 	onCreateNoteFromCard: CardHandler;
 	onOpenAssociatedNote: CardHandler;
+	onEditSettings: CardHandler;
 	isEditing: boolean;
 	platform: Platform;
 }
@@ -124,6 +125,9 @@ export default (props:Props) => {
 			props.onScrollToCard({ cardId: card.id });
 		} else if (event.itemId === 'createNoteFromCard') {
 			props.onCreateNoteFromCard({ cardId: card.id });
+		} else if (event.itemId === 'editSettings') {
+			props.onEditSettings({ cardId: card.id });
+		} else {
 			throw new Error('Unknown item ID: ' + event.itemId);
 		}
 	}, [onDoubleClick, props.onDelete, card.id]);
@@ -134,14 +138,20 @@ export default (props:Props) => {
 		if (props.platform === "desktop" && !isNoteLink) {
 			menuItems.push({
 				id: 'scrollToCard',
-				label: 'Open in note',
+				label: 'Open in note...',
 			});
 		}
 
 		if (!isNoteLink) {
 			menuItems.push({
 				id: 'createNoteFromCard',
-				label: 'Create note from card',
+				label: 'Create note from card...',
+			});
+		}
+
+		if (menuItems.length) {
+			menuItems.push({
+				isDivider: true,
 			});
 		}
 			
@@ -153,6 +163,15 @@ export default (props:Props) => {
 		menuItems.push({
 			id: 'delete',
 			label: 'Delete',
+		});
+
+		menuItems.push({
+			isDivider: true,
+		});
+
+		menuItems.push({
+			id: 'editSettings',
+			label: 'Options...',
 		});
 
 		return (
@@ -192,14 +211,25 @@ export default (props:Props) => {
 			);
 		}
 	}
+
+	const cardClasses = useMemo(() => {
+		const classes = ['card'];
+
+		if (card.settings?.backgroundColor) {
+			classes.push('background-' + card.settings.backgroundColor);
+		}
+
+		if (props.isLast) classes.push('-last');
+		if (props.isEditing) classes.push('-editing');
+
+		return classes;
+	}, [card.settings?.backgroundColor, props.isLast, props.isEditing]);
 	
 	return (
 		<Draggable draggableId={card.id} index={props.index}>
 			{(provided, snapshot) => {
-				const classes = ['card'];
-				if (snapshot.isDragging) classes.push('-dragging');
-				if (props.isLast) classes.push('-last');
-				if (props.isEditing) classes.push('-editing');
+				let classes = cardClasses;
+				if (snapshot.isDragging) classes.slice().push('-dragging');
 				return (
 					<div className={classes.join(' ')} {...provided.draggableProps} {...provided.dragHandleProps} ref={provided.innerRef} onDoubleClick={onDoubleClick}>
 						{renderContent()}
