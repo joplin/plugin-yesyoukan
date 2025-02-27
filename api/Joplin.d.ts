@@ -73,4 +73,5 @@ export default class Joplin {
      */
     require(_path: string): any;
     versionInfo(): Promise<import("./types").VersionInfo>;
+    shouldUseDarkColors(): Promise<boolean>;
 }

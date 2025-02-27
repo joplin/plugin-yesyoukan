@@ -6,6 +6,11 @@ export interface Note {
 	body: string;
 }
 
+export interface Tag {
+	id: string;
+	title: string;
+}
+
 export interface Card {
 	id: string;
 	title: string;
@@ -14,6 +19,7 @@ export interface Card {
 	bodyHtml?: string;
 	bodyHtmlHash?: string;
 	settings?: CardSettings;
+	tags?: Tag[];
 }
 
 export interface Stack {
@@ -33,7 +39,20 @@ export interface State {
 	board: Board;
 }
 
-export type IpcMessageType = 'getNote' | 'setNote' | 'isReady' | 'getSettings' | 'renderBodies' | 'openItem' | 'cardMessage' | 'scrollToCard' | 'createNote' | 'openNote' | 'deleteNote' | 'shouldUseDarkColors';
+export type IpcMessageType =
+	'getNote' |
+	'setNote' |
+	'isReady' |
+	'getSettings' |
+	'renderBodies' |
+	'openItem' |
+	'cardMessage' |
+	'scrollToCard' |
+	'createNote' |
+	'openNote' |
+	'deleteNote' |
+	'getTags' |
+	'shouldUseDarkColors';
 
 export interface IpcMessage {
 	type: IpcMessageType;

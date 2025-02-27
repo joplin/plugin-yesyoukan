@@ -184,6 +184,22 @@ export default (props:Props) => {
 		);
 	}
 
+	const renderTags = () => {
+		if (!card.tags || !card.tags.length) return null;
+
+		const tagComponents = [];
+
+		for (const tag of card.tags) {
+			tagComponents.push(<div key={tag.id} className="tag">{tag.title}</div>);
+		}
+
+		return (
+			<div className="tags">
+				{tagComponents}
+			</div>
+		);
+	}
+
 	const renderContent = () => {
 		if (!props.isEditing) {
 			return (
@@ -191,6 +207,7 @@ export default (props:Props) => {
 					<div className="header">
 						<h3 className="title" dangerouslySetInnerHTML={{ __html: card.titleHtml} }></h3>{renderKebabButton()}
 					</div>
+					{renderTags()}
 					<p className="body" dangerouslySetInnerHTML={{ __html: card.bodyHtml} }></p>
 				</div>
 			);

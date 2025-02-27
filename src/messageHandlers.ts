@@ -39,7 +39,7 @@ const messageHandlers:Record<IpcMessageType, MessageHandler> = {
 	},
 	
 	'shouldUseDarkColors': async () => {
-		return (joplin as any).shouldUseDarkColors();
+		return joplin.shouldUseDarkColors();
 	},
 
 	'renderBodies': async (message:IpcMessage) => {
@@ -71,6 +71,18 @@ const messageHandlers:Record<IpcMessageType, MessageHandler> = {
 		}
 
 		return rendered;
+	},
+
+	'getTags': async (message:IpcMessage) => {
+		const noteIds = message.value as string[];
+		const notesIdsToTags:Record<string, any>[] = []
+
+		for (const noteId of noteIds) {
+			const result = await joplin.data.get(['notes', noteId, 'tags']);
+			notesIdsToTags[noteId] = result.items;
+		}
+
+		return notesIdsToTags;
 	},
 
 	'setNote': async (message:IpcMessage) => {

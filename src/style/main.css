@@ -161,6 +161,22 @@ ul, ol {
 		flex-direction: column;
 		max-height: 100%;
 
+		> .tags {
+			display: flex;
+			flex-direction: row;
+			margin-top: 4px;
+			flex-wrap: wrap;
+            row-gap: 8px;
+
+			> .tag {
+				background-color: var(--joplin-background-color3);
+				border: 1px solid var(--joplin-divider-color);
+				border-radius: 4px;
+				padding: 0 6px;
+				margin-right: 8px;
+			}
+		}
+
 		> .header {
 			display: flex;
 			flex-direction: row;
