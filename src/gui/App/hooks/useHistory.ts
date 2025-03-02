@@ -1,6 +1,6 @@
 import { produce } from "immer";
-import { useCallback, useEffect, useState } from "react"
-import { Board } from "src/utils/types";
+import { useCallback, useState } from "react"
+import { Board } from "../../../utils/types";
 
 interface HistoryItem {
 	board: Board;
@@ -17,6 +17,8 @@ const emptyHistory = ():History => {
 		redo: [],
 	}
 }
+
+export type PushUndo = (board:Board) => void;
 
 interface Props {
 	board: Board;

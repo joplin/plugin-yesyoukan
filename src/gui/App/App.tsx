@@ -20,6 +20,9 @@ import SettingsDialog from "../config/Dialog";
 import { colorsToCss, darkBackgroundColors, lightBackgroundColors } from "../../utils/colors";
 import getTheme from "./utils/getTheme";
 import useHistory from "./hooks/useHistory";
+import useCardContentRendering from "./hooks/useCardContentRendering";
+import { DialogConfig } from "./utils/types";
+import useCardHandler from "./hooks/useCardHandler";
 
 const logger = Logger.create('YesYouKan: App');
 
@@ -42,21 +45,12 @@ interface AfterSetNoteAction {
 	noteId: string;
 }
 
-interface DialogConfig {
-	title: string;
-	settings: Settings | CardSettings;
-	settingItems: SettingItems;
-	onSave: (newSettings: Settings | CardSettings) => void;
-}
-
 export default () => {
 	const [board, setBoard] = useState<Board>(emptyBoard());
 	const [baseSettings, setBaseSettings] = useState<Settings>({});
 	const ignoreNextBoardUpdate = useRef<boolean>(false);
-	const [editedCardIds, setEditedCardIds] = useState<string[]>([]);
 	const [enabled, setEnabled] = useState<boolean>(false);
 	const [isReadySent, setIsReadySent] = useState<boolean>(false);
-	const [cssStrings, setCssStrings] = useState([]);
 	const [platform, setPlatform] = useState<Platform>('desktop');
 	const afterSetNoteAction = useRef<AfterSetNoteAction|null>(null);
 	const [dialogConfig, setDialogConfig] = useState<DialogConfig|null>(null);
@@ -69,51 +63,32 @@ export default () => {
 		}
 	}, [board.settings, baseSettings]);
 
-	const { history, pushUndo, clearUndo, onUndoBoard, onRedoBoard } = useHistory({ board, setBoard });
+	const { history, pushUndo, clearUndo, onUndoBoard, onRedoBoard } = useHistory({ 
+		board,
+		setBoard,
+	});
 
-	const startCardEditing = (cardId:string) => {
-		setEditedCardIds(current => {
-			return produce(current, draft => {
-				const index = draft.findIndex(id => id === cardId);
-				if (index >= 0) return;
-				draft.push(cardId);
-			});
-		});
-	}
+	const { cssStrings } = useCardContentRendering({
+		board,
+		setBoard,
+		webviewApi,
+	});
 
-	const stopCardEditing = (cardId:string) => {
-		setEditedCardIds(current => {
-			return produce(current, draft => {
-				const index = draft.findIndex(id => id === cardId);
-				if (index >= 0) draft.splice(index, 1);
-			});
-		});
-	}
-
-	const onCardEditorStart = useCallback<EditorStartHandler>((event) => {
-		startCardEditing(event.card.id);
-	}, []);
-	
-	const onCardChange = useCallback<CardChangeEventHandler>((event) => {
-		pushUndo(board);
-
-		const cardId = event.card.id;
-
-		const newBoard = produce(board, draft => {
-			const [stackIndex, cardIndex] = findCardIndex(draft, cardId);
-			const newCard = draft.stacks[stackIndex].cards[cardIndex];
-			newCard.title = event.card.title;
-			newCard.body = event.card.body;
-		});
-
-		setBoard(newBoard);
-
-		stopCardEditing(cardId);
-	}, [board]);
-
-	const onCardEditorCancel = useCallback<EditorCancelHandler>((event) => {
-		stopCardEditing(event.card.id);
-	}, []);
+	const {
+		editedCardIds,
+		onCardEditorStart,
+		onCardChange,
+		onEditCardSettings,
+		onDeleteCard,
+		onCardEditorCancel,
+		onAddCard,
+	} = useCardHandler({
+		board,
+		pushUndo,
+		setBoard,
+		setDialogConfig,
+		webviewApi,
+	});
 
 	const onScrollToCard = useCallback<CardHandler>((event) => {
 		const { title, index } = getCardTitleAndIndex(board, event.cardId);
@@ -160,65 +135,6 @@ export default () => {
 				value: parsedTitle.id
 			});
 		}
-	}, [board]);
-
-	const onAddCard = useCallback<AddCardEventHandler>((event) => {
-		pushUndo(board);
-
-		const newCardId = uuid();
-
-		const newBoard = produce(board, draft => {
-			const stackIndex = findStackIndex(board, event.stackId);
-			draft.stacks[stackIndex].cards.push({
-				id: newCardId,
-				title: 'New card',
-				body: '',
-			});
-		});
-
-		setBoard(newBoard);
-
-		startCardEditing(newCardId);
-	}, [board]);
-
-	const onDeleteCard = useCallback<CardDeleteEventHandler>(async (event) => {
-		const card = findCard(board, event.cardId);
-		const parsedTitle = parseAsNoteLink(card.title);
-
-		if (parsedTitle) {
-			const answer = confirm('This will also delete the associated note. Continue?');
-			if (!answer) return;
-
-			await webviewApi.postMessage({
-				type: 'deleteNote',
-				value: parsedTitle.id
-			});
-		} else {
-			pushUndo(board);
-		}
-
-		const newBoard = produce(board, draft => {
-			const [stackIndex, cardIndex] = findCardIndex(draft, event.cardId);
-			draft.stacks[stackIndex].cards.splice(cardIndex, 1);
-		});
-
-		setBoard(newBoard);
-	}, [board]);
-
-	const onEditCardSettings = useCallback<CardHandler>(async (event) => {
-		const card = findCard(board, event.cardId);
-		setDialogConfig({
-			title: 'Card properties',
-			settingItems: cardSettingItems,
-			settings: { ...card.settings },
-			onSave: (newSettings: CardSettings) => {
-				const newBoard = produce(board, draft => {
-					const [stackIndex, cardIndex] = findCardIndex(draft, event.cardId);
-					draft.stacks[stackIndex].cards[cardIndex].settings = newSettings;
-				});
-				setBoard(newBoard);
-			},
-		});
 	}, [board]);
 
 	const onEditStackSettings = useCallback<StackEventHandler>(async (event) => {
@@ -467,85 +383,6 @@ export default () => {
 		ignoreNextBoardUpdate.current = false;
 	}, [board]);
 
-	useEffect(() => {
-		let cancelled = false;
-		const fn = async () => {
-			const cardsToRender:Record<string, CardToRender> = {};
-			const bodyHtmlHashes:Record<string, string> = {};
-			const cardIdToNoteId = getCardNotes(board);
-			const noteIds:string[] = [];
-
-			for (const stack of board.stacks) {
-				for (const card of stack.cards) {
-					const bodyHash = await getHash(card.title + '\n' + card.body);
-					if (card.bodyHtmlHash === bodyHash) continue;
-
-					const linkedNote = parseAsNoteLink(card.title);
-					bodyHtmlHashes[card.id] = bodyHash;
-					cardsToRender[card.id] = {
-						source: linkedNote ? 'note' : 'card',
-						noteId: linkedNote ? linkedNote.id : '',
-						cardTitle: linkedNote ? '' : card.title,
-						cardBody: linkedNote ? '' : card.body,
-					}
-
-					if (cardIdToNoteId[card.id]) {
-						noteIds.push(cardIdToNoteId[card.id]);
-					}
-				}
-			}
-			const promises = [
-				webviewApi.postMessage<Record<string, RenderedNote>>({ type: 'renderBodies', value: JSON.stringify(cardsToRender) }),
-				webviewApi.postMessage<Record<string, Tag[]>>({ type: 'getTags', value: noteIds }),
-			];
-
-			const [rendered, noteIdToTags] = await Promise.all(promises);
-
-			if (cancelled) return;
-
-			const getCardIdByNoteId = (id: string) => {
-				for (const [cardId, noteId] of Object.entries(cardIdToNoteId)) {
-					if (id === noteId) return cardId;
-				}
-				throw new Error('Invalid card ID: ' + id);
-			}
-
-			setBoard(current => {
-				return produce(current, draft => {
-					for (const [cardId, result] of Object.entries(rendered)) {
-						const [stackIndex, cardIndex] = findCardIndex(board, cardId);
-						draft.stacks[stackIndex].cards[cardIndex].bodyHtmlHash = bodyHtmlHashes[cardId];
-						draft.stacks[stackIndex].cards[cardIndex].titleHtml = result.title.html;
-						draft.stacks[stackIndex].cards[cardIndex].bodyHtml = result.body.html;
-					}
-
-					for (const [noteId, tags] of Object.entries(noteIdToTags)) {
-						const cardId = getCardIdByNoteId(noteId);
-						const [stackIndex, cardIndex] = findCardIndex(board, cardId);
-						draft.stacks[stackIndex].cards[cardIndex].tags = tags;
-					}
-				});
-			});
-
-			setCssStrings(current => {
-				return produce(current, draft => {
-					for (const [, result] of Object.entries(rendered)) {
-						for (const cssString of result.body.cssStrings) {
-							if (!draft.includes(cssString)) {
-								draft.push(cssString);
-							}
-						}
-					}
-				});
-			});
-		}
-
-		void fn();
-
-		return () => {
-			cancelled = true;
-		}
-	}, [board]);
 
 	const onAddStack = useCallback(() => {
 		pushUndo(board);
