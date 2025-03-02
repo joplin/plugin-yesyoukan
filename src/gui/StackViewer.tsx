@@ -35,6 +35,8 @@ interface Props {
 	newlineKey: NewlineKey;
 	editedCardIds: string[];
 	platform: Platform;
+	isLast: boolean;
+	dynamicWidth: number;
 	onCardEditorStart: CardEditorStartEventHandler;
 	onCardEditorSubmit: CardEditorSubmitEventHandler;
 	onCardEditorCancel: CardEditorCancelHandler;
@@ -177,8 +179,16 @@ export default (props:Props) => {
 			classes.push('background-' + stack.settings.backgroundColor);
 		}
 
+		if (props.dynamicWidth) {
+			classes.push('-percent-width-' + props.dynamicWidth);
+		}
+
+		if (props.isLast) {
+			classes.push('-last');
+		}
+
 		return classes;
-	}, [stack.settings?.backgroundColor]);
+	}, [stack.settings?.backgroundColor, props.dynamicWidth, props.isLast],);
 
 	return (
 		<Draggable draggableId={props.value.id} index={props.index}>

@@ -4,7 +4,7 @@ import {
 	Dialog, DialogTitle, DialogContent, DialogActions, Button,
 	TextField, Checkbox, FormControlLabel, MenuItem,
 } from '@mui/material';
-import { SettingItems, Settings } from '../../utils/types';
+import { AppSettingItems, SettingItems, Settings } from '../../utils/types';
 import ColorPicker from '../ColorPicker';
 import { Colors } from '../../utils/colors';
 import GenericControl from './GenericControl';

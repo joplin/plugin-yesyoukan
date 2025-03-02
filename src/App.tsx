@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useCallback, useState, useEffect, useMemo, useRef } from "react";
-import { Board, CardSettings, CardToRender, IpcMessage, Note, Platform, RenderResult, RenderedNote, SettingItems, Settings, StackSettings, Tag, WebviewApi, cardSettingItems, emptyBoard, settingItems, stackSettingItems } from "./utils/types";
+import { Board, CardSettingItems, CardSettings, CardToRender, IpcMessage, Note, Platform, RenderResult, RenderedNote, AppSettingItems, Settings, StackSettingItems, StackSettings, WebviewApi, cardSettingItems, emptyBoard, settingItems, stackSettingItems, SettingItems, Tag } from "./utils/types";
 import StackViewer, { AddCardEventHandler, StackEventHandler, TitleChangeEventHandler } from "./gui/StackViewer";
 import { DragDropContext, Droppable, OnDragEndResponder } from "@hello-pangea/dnd";
 import { produce} from "immer"
@@ -387,6 +387,8 @@ export const App = () => {
 	}, [board]);
 
 	const renderStacks = () => {
+		const dynamicWidth = effectiveBoardSettings.stackDynamicWidth ? board.stacks.length : 0;
+
 		const output:React.JSX.Element[] = [];
 		for (let [index, stack] of board.stacks.entries()) {
 			output.push(<StackViewer
@@ -402,6 +404,8 @@ export const App = () => {
 				onAddCard={onAddCard}
 				onDeleteCard={onDeleteCard}
 				onEditSettings={onEditStackSettings}
+				isLast={index === board.stacks.length - 1}
+				dynamicWidth={dynamicWidth}
 				key={stack.id}
 				value={stack}
 				platform={platform}
@@ -802,16 +806,30 @@ export const App = () => {
 	// A more natural way to do this would be to set the `style` prop on the stack element. However
 	// doing this interfers with Beautiful DND and makes the stacks no longer draggable. It seems to
 	// be fine with CSS being set via stylesheet though, so we do that here.
-	const appStyle = `
-		.stack {
-			width: ${effectiveBoardSettings.stackWidth}px;
-			max-width: ${effectiveBoardSettings.stackWidth}px;
+	const appStyle = useMemo(() => {
+		const styles:string[] = [];
+
+		if (!effectiveBoardSettings.stackDynamicWidth) {
+			styles.push( `
+				.stack {
+					width: ${effectiveBoardSettings.stackWidth}px;
+					max-width: ${effectiveBoardSettings.stackWidth}px;
+				}
+			`);
+		} else {
+			styles.push( `
+				.stack {
+					min-width: 10px;
+				}
+			`);
 		}
 
-		${colorsToCss(backgroundColors, 'background', 'background-color')}
+		styles.push(colorsToCss(backgroundColors, 'background', 'background-color'));
 
-		${cssStrings.join('\n')}
-	`;
+		styles.push(cssStrings.join('\n'));
+
+		return styles.join('\n\n');
+	}, [effectiveBoardSettings.stackDynamicWidth, effectiveBoardSettings.stackWidth, backgroundColors, cssStrings]);
 
 	return (
 		<ThemeProvider theme={theme}>

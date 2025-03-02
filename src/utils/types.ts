@@ -78,8 +78,6 @@ export const emptyBoard = ():Board => {
 	}
 }
 
-export type SettingItems = Record<string, SettingItem> ;
-
 export const settingSectionName = 'yesYouKan';
 
 export type ValidationKey = 'Enter' | 'Shift+Enter' | 'Ctrl+Enter' | 'Cmd+Enter';
@@ -90,6 +88,7 @@ export interface Settings {
 	stackWidth?: number;
 	confirmKey?: ConfirmKey;
 	newlineKey?: NewlineKey;
+	stackDynamicWidth?: boolean;
 }
 
 export interface CardSettings {
@@ -100,7 +99,12 @@ export interface StackSettings {
 	backgroundColor?: string;
 }
 
-export const settingItems:SettingItems = {
+export type AppSettingItems = Record<keyof Settings, SettingItem>;
+export type CardSettingItems = Record<keyof CardSettings, SettingItem>;
+export type StackSettingItems = Record<keyof StackSettings, SettingItem>;
+export type SettingItems = AppSettingItems | CardSettingItems | StackSettingItems;
+
+export const settingItems:AppSettingItems = {
 	stackWidth: {
 		label: 'Stack width',
 		type: SettingItemType.Int,
@@ -108,6 +112,7 @@ export const settingItems:SettingItems = {
 		value: 270,
 		section: settingSectionName,
 	},
+
 	confirmKey: {
 		label: 'Confirm key',
 		description: 'Press this key to confirm the text you just entered in the card title or body.',
@@ -123,6 +128,7 @@ export const settingItems:SettingItems = {
 		},
 		section: settingSectionName,
 	},
+
 	newlineKey: {
 		label: 'Newline key',
 		description: 'Press this key to enter a newline in the card body.',
@@ -138,9 +144,18 @@ export const settingItems:SettingItems = {
 		},
 		section: settingSectionName,
 	},
+
+	stackDynamicWidth: {
+		label: 'Enable stack dynamic width',
+		description: 'When this is enabled, the width of the stacks is changed dynamically to fit the whole window',
+		type: SettingItemType.Bool,
+		value: false,
+		public: true,
+		section: settingSectionName,
+	},
 };
 
-export const cardSettingItems:SettingItems = {
+export const cardSettingItems:CardSettingItems = {
 	'backgroundColor': {
 		label: 'Background colour',
 		type: SettingItemType.String,
@@ -150,7 +165,7 @@ export const cardSettingItems:SettingItems = {
 	},
 }
 
-export const stackSettingItems:SettingItems = {
+export const stackSettingItems:StackSettingItems = {
 	'backgroundColor': {
 		label: 'Background colour',
 		type: SettingItemType.String,

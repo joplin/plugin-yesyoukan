@@ -51,9 +51,10 @@ export default (props:Props) => {
 
 	const renderMenuItems = () => {
 		const output:React.JSX.Element[] = [];
+		let dividerIndex = 0;
 		for (const menuItem of props.menuItems) {
 			if (menuItem.isDivider) {
-				output.push(<Divider/>);
+				output.push(<Divider key={'divider-' + (dividerIndex++)}/>);
 			} else {
 				output.push(<MenuItem data-id={menuItem.id} key={menuItem.id} onClick={onMenuItemClick}>{menuItem.label}</MenuItem>);
 			}
