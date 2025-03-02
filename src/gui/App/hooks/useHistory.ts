@@ -19,6 +19,7 @@ const emptyHistory = ():History => {
 }
 
 export type PushUndo = (board:Board) => void;
+export type ClearUndo = () => void;
 
 interface Props {
 	board: Board;

@@ -6,3 +6,8 @@ export interface DialogConfig {
 	settingItems: SettingItems;
 	onSave: (newSettings: Settings | CardSettings) => void;
 }
+
+export interface AfterSetNoteAction {
+	type: string;
+	noteId: string;
+}
