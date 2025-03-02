@@ -23,6 +23,7 @@ import useHistory from "./hooks/useHistory";
 import useCardContentRendering from "./hooks/useCardContentRendering";
 import { DialogConfig } from "./utils/types";
 import useCardHandler from "./hooks/useCardHandler";
+import useStackHandler from "./hooks/useStackHandler";
 
 const logger = Logger.create('YesYouKan: App');
 
@@ -90,6 +91,18 @@ export default () => {
 		webviewApi,
 	});
 
+	const {
+		onEditStackSettings,
+		onStackTitleChange, 
+		onStackDelete,
+		onAddStack,
+	} = useStackHandler({
+		board,
+		pushUndo,
+		setBoard,
+		setDialogConfig,
+	});
+
 	const onScrollToCard = useCallback<CardHandler>((event) => {
 		const { title, index } = getCardTitleAndIndex(board, event.cardId);
 		void webviewApi.postMessage<string>({ type: 'scrollToCard', value: {
@@ -137,43 +150,7 @@ export default () => {
 		}
 	}, [board]);
 
-	const onEditStackSettings = useCallback<StackEventHandler>(async (event) => {
-		const stack = findStack(board, event.stackId);
-		setDialogConfig({
-			title: 'Stack properties',
-			settingItems: stackSettingItems,
-			settings: { ...stack.settings },
-			onSave: (newSettings: StackSettings) => {
-				const newBoard = produce(board, draft => {
-					const stackIndex = findStackIndex(draft, event.stackId);
-					draft.stacks[stackIndex].settings = newSettings;
-				});
-				setBoard(newBoard);
-			},
-		});
-	}, [board]);
-
-	const onStackTitleChange = useCallback<TitleChangeEventHandler>((event) => {
-		pushUndo(board);
-
-		const newBoard = produce(board, draft => {
-			const stackIndex = findStackIndex(board, event.stackId);
-			draft.stacks[stackIndex].title = event.title;
-		});
-
-		setBoard(newBoard);
-	}, [board]);
-
-	const onStackDelete = useCallback<StackEventHandler>((event) => {
-		pushUndo(board);
-
-		const newBoard = produce(board, draft => {
-			const stackIndex = findStackIndex(board, event.stackId);
-			draft.stacks.splice(stackIndex, 1);
-		});
-
-		setBoard(newBoard);
-	}, [board]);
+	
 
 	const renderStacks = () => {
 		const dynamicWidth = effectiveBoardSettings.stackDynamicWidth ? board.stacks.length : 0;
@@ -381,22 +358,6 @@ export default () => {
 			});
 		}
 		ignoreNextBoardUpdate.current = false;
-	}, [board]);
-
-
-	const onAddStack = useCallback(() => {
-		pushUndo(board);
-
-		setBoard(current => {
-			const newBoard = produce(current, draft => {
-				draft.stacks.push({
-					cards: [],
-					title: 'New stack',
-					id: uuid(),
-				});
-			});
-			return newBoard;
-		});
 	}, [board]);
 
 	const onDragEnd:OnDragEndResponder = useCallback((result) => {
