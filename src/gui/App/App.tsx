@@ -1,24 +1,25 @@
 import * as React from "react";
 import { useCallback, useState, useEffect, useMemo, useRef } from "react";
-import { Board, CardSettingItems, CardSettings, CardToRender, IpcMessage, Note, Platform, RenderResult, RenderedNote, AppSettingItems, Settings, StackSettingItems, StackSettings, WebviewApi, cardSettingItems, emptyBoard, settingItems, stackSettingItems, SettingItems, Tag } from "./utils/types";
-import StackViewer, { AddCardEventHandler, StackEventHandler, TitleChangeEventHandler } from "./gui/StackViewer";
+import { Board, CardSettings, CardToRender, IpcMessage, Note, Platform, RenderedNote, Settings, StackSettings, WebviewApi, cardSettingItems, emptyBoard, stackSettingItems, SettingItems, Tag } from "../../utils/types";
+import StackViewer, { AddCardEventHandler, StackEventHandler, TitleChangeEventHandler } from "../StackViewer";
 import { DragDropContext, Droppable, OnDragEndResponder } from "@hello-pangea/dnd";
 import { produce} from "immer"
-import { boardsEqual, noteIsBoard, parseAsNoteLink, parseNote, serializeBoard } from "./utils/noteParser";
-import AsyncActionQueue from "./utils/AsyncActionQueue";
-import { EditorSubmitHandler as CardChangeEventHandler, DeleteEventHandler as CardDeleteEventHandler, EditorCancelHandler, EditorStartHandler, CardHandler, CardEvent } from "./gui/CardViewer";
-import { findCard, findCardIndex, findStack, findStackIndex, getCardNotes, getCardTitleAndIndex } from "./utils/board";
+import { boardsEqual, noteIsBoard, parseAsNoteLink, parseNote, serializeBoard } from "../../utils/noteParser";
+import AsyncActionQueue from "../../utils/AsyncActionQueue";
+import { EditorSubmitHandler as CardChangeEventHandler, DeleteEventHandler as CardDeleteEventHandler, EditorCancelHandler, EditorStartHandler, CardHandler } from "../CardViewer";
+import { findCard, findCardIndex, findStack, findStackIndex, getCardNotes, getCardTitleAndIndex } from "../../utils/board";
 import { ThemeProvider, createTheme } from "@mui/material";
-import Toolbar from './gui/Toolbar';
-import { Props as ButtonProps } from './gui/Button';
-import uuid from "./utils/uuid";
+import Toolbar from '../Toolbar';
+import { Props as ButtonProps } from '../Button';
+import uuid from "../../utils/uuid";
 import Logger from '@joplin/utils/Logger';
-import getHash from "./utils/getHash";
-import { toggleCheckbox } from "./utils/renderMarkupUtils";
-import setupFontAwesome from "./utils/setupFontAwesome";
-import SettingsDialog from "./gui/config/Dialog";
-import { getDefaultSettings } from "http2";
-import { colorsToCss, darkBackgroundColors, lightBackgroundColors } from "./utils/colors";
+import getHash from "../../utils/getHash";
+import { toggleCheckbox } from "../../utils/renderMarkupUtils";
+import setupFontAwesome from "../../utils/setupFontAwesome";
+import SettingsDialog from "../config/Dialog";
+import { colorsToCss, darkBackgroundColors, lightBackgroundColors } from "../../utils/colors";
+import getTheme from "./utils/getTheme";
+import useHistory from "./hooks/useHistory";
 
 const logger = Logger.create('YesYouKan: App');
 
@@ -28,128 +29,12 @@ setupFontAwesome();
 
 const updateNoteQueue = new AsyncActionQueue(100);
 
-let computedStyle_:CSSStyleDeclaration|null = null;
-const getCssVariable = (variableName: string) => {
-	if (!computedStyle_) computedStyle_ = getComputedStyle(document.documentElement);
-	return computedStyle_.getPropertyValue(variableName).trim();
-}
-
-const sharedControlStyle:any = {
-	styleOverrides: {
-		root: {
-			'& .MuiOutlinedInput-notchedOutline': {
-				borderColor: getCssVariable('--joplin-divider-color'), // Set default border color
-			},
-			'&:hover .MuiOutlinedInput-notchedOutline': {
-				borderColor: getCssVariable('--joplin-color'), // Set hover color
-			},
-			'&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-				borderColor: getCssVariable('--joplin-color'), // Set focused color
-			},
-		},
-	},
-};
-
-const theme = createTheme({
-	palette: {
-		background: {
-			default: getCssVariable('--joplin-background-color'),
-		},
-		primary: {
-			main: getCssVariable('--joplin-color'), 
-		},
-		text: {
-			primary: getCssVariable('--joplin-color'), 
-		},
-		divider: getCssVariable('--joplin-divider-color'),
-	},
-
-	components: {
-		MuiMenuItem: {
-			styleOverrides: {
-				root: {
-					color: getCssVariable('--joplin-color'),
-					'&:hover': {
-						backgroundColor: getCssVariable('--joplin-selected-color'),
-						color: getCssVariable('--joplin-color'),
-					},
-				},
-			},
-		},
-		MuiPopover: {
-			styleOverrides: {
-				paper: {
-					backgroundColor: getCssVariable('--joplin-background-color'),
-				},
-			},
-		},
-		MuiButton: {
-			styleOverrides: {
-				root: {
-					color: getCssVariable('--joplin-color'),
-					'&.Mui-disabled': {
-						color: getCssVariable('--joplin-color'),
-						opacity: 0.4,
-					},
-				},
-			},
-		},
-		MuiDialog: {
-			styleOverrides: {
-				paper: {
-					backgroundColor: getCssVariable('--joplin-background-color'),
-					color: getCssVariable('--joplin-color'),
-				},
-			},
-		},
-		MuiDialogContent: {
-			styleOverrides: {
-				root: {
-					backgroundColor: getCssVariable('--joplin-background-color'),
-					paddingTop: '10px !important',
-				},
-			},
-		},
-		MuiOutlinedInput: sharedControlStyle,
-		MuiTextField: sharedControlStyle,
-		MuiSelect: sharedControlStyle,
-		MuiInputBase: sharedControlStyle,
-		MuiFormLabel: {
-			styleOverrides: {
-				root: {
-					color: getCssVariable('--joplin-color'), // Set default label color
-					'&.Mui-focused': {
-						color: getCssVariable('--joplin-color'), // Set color when focused
-					},
-					'&.MuiFormLabel-filled': {
-						color: getCssVariable('--joplin-color'), // Set color when filled
-					},
-				},
-			},
-		},
-	},
-});
-
-interface HistoryItem {
-	board: Board;
-}
-
-interface History {
-	undo: HistoryItem[];
-	redo: HistoryItem[];
-}
+const theme = getTheme();
 
 // We support anything that looks like a URL - we just want to send it back to the app via the
 // `openItem` command.
 const isSupportedUrl = (text:string) => {
 	return !!text.match(/^[a-zA-Z\-]+:.+/);
-}
-
-const emptyHistory = ():History => {
-	return {
-		undo: [],
-		redo: [],
-	}
 }
 
 interface AfterSetNoteAction {
@@ -164,10 +49,9 @@ interface DialogConfig {
 	onSave: (newSettings: Settings | CardSettings) => void;
 }
 
-export const App = () => {
+export default () => {
 	const [board, setBoard] = useState<Board>(emptyBoard());
 	const [baseSettings, setBaseSettings] = useState<Settings>({});
-	const [history, setHistory] = useState<History>(emptyHistory);
 	const ignoreNextBoardUpdate = useRef<boolean>(false);
 	const [editedCardIds, setEditedCardIds] = useState<string[]>([]);
 	const [enabled, setEnabled] = useState<boolean>(false);
@@ -184,6 +68,8 @@ export const App = () => {
 			...board.settings,
 		}
 	}, [board.settings, baseSettings]);
+
+	const { history, pushUndo, clearUndo, onUndoBoard, onRedoBoard } = useHistory({ board, setBoard });
 
 	const startCardEditing = (cardId:string) => {
 		setEditedCardIds(current => {
@@ -361,19 +247,6 @@ export const App = () => {
 
 		setBoard(newBoard);
 	}, [board]);
-
-	const pushUndo = (board:Board) => {
-		setHistory(current => {
-			return produce(current, draft => {
-				draft.undo.push({ board });
-				draft.redo = [];
-			}); 
-		});
-	}
-
-	const clearUndo = () => {
-		setHistory(emptyHistory());
-	}
 
 	const onStackDelete = useCallback<StackEventHandler>((event) => {
 		pushUndo(board);
@@ -673,33 +546,6 @@ export const App = () => {
 			cancelled = true;
 		}
 	}, [board]);
-	
-	const onUndoBoard = useCallback(() => {
-		if (history.undo.length) {
-			const undoItem = history.undo[history.undo.length - 1];
-			setHistory(current => {
-				return produce(current, draft => {
-					draft.redo.push({ board });
-					draft.undo.pop();
-				});
-			});
-			setBoard(undoItem.board);
-		}
-	}, [history, board]);
-
-	const onRedoBoard = useCallback(() => {
-		if (history.redo.length) {
-			const redoItem = history.redo[history.redo.length - 1];
-			setHistory(current => {
-				const newHistory = produce(current, draft => {
-					draft.undo.push({ board });
-					draft.redo.pop();
-				});
-				return newHistory;
-			});
-			setBoard(redoItem.board);
-		}
-	}, [history, board]);
 
 	const onAddStack = useCallback(() => {
 		pushUndo(board);
