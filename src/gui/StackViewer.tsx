@@ -20,12 +20,18 @@ export interface StackEvent {
 	stackId: string;
 }
 
+export interface StackDropEvent {
+	stackId: string;
+	noteIds: string[];
+}
+
 export interface AddCardEvent {
 	stackId: string;
 }
 
 export type TitleChangeEventHandler = (event:TitleChangeEvent) => void;
 export type StackEventHandler = (event:StackEvent) => void;
+export type StackDropEventHandler = (event:StackDropEvent) => void;
 export type AddCardEventHandler = (event:AddCardEvent) => void;
 
 interface Props {
@@ -49,6 +55,7 @@ interface Props {
 	onEditSettings: StackEventHandler;
 	onAddCard: AddCardEventHandler;
 	onDeleteCard: CardDeleteEventHandler;
+	onDrop: StackDropEventHandler;
 }
 
 export default (props:Props) => {
@@ -85,6 +92,28 @@ export default (props:Props) => {
 		newlineKey: props.newlineKey,
 		tabKeyEnabled: false,
 	});
+
+	const onDrop = useCallback<React.DragEventHandler>((event) => {
+		const data = event.dataTransfer.getData('text/x-jop-note-ids');
+		if (!data || !data.length) return;
+
+		event.preventDefault();
+
+		try {
+			const noteIds = JSON.parse(data) as string[];
+
+			props.onDrop({
+				stackId: stack.id,
+				noteIds,
+			});
+		} catch (error) {
+			logger.error('Could not parse note IDs: ' + data, error);
+		}
+	}, [props.onDrop, stack.id]);
+
+	const onDragOver = useCallback<React.DragEventHandler>((event) => {
+		event.preventDefault(); 
+	}, []);
 
 	const onKebabItemClick = useCallback<ItemClickEventHandler>((event) => {
 		if (event.itemId === 'edit') {
@@ -196,7 +225,7 @@ export default (props:Props) => {
 				let classes = stackClasses;
 				if (snapshot.isDragging) classes.slice().push('-dragging');
 				return (
-					<div className={classes.join(' ')} {...provided.draggableProps} ref={provided.innerRef}>
+					<div className={classes.join(' ')} {...provided.draggableProps} ref={provided.innerRef} onDrop={onDrop} onDragOver={onDragOver}>
 						<div onDoubleClick={onTitleDoubleClick} className="stack-header" {...provided.dragHandleProps}>
 							{renderTitle()}
 							{renderHeadingButtons()}

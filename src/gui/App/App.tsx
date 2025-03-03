@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useCallback, useState, useMemo, useRef } from "react";
-import { Board, WebviewApi, emptyBoard } from "../../utils/types";
-import StackViewer from "../StackViewer";
+import { Board, Note, WebviewApi, emptyBoard } from "../../utils/types";
+import StackViewer, { StackDropEventHandler, StackEvent, StackEventHandler } from "../StackViewer";
 import { DragDropContext, Droppable, OnDragEndResponder } from "@hello-pangea/dnd";
 import { ThemeProvider } from "@mui/material";
 import Toolbar from '../Toolbar';
@@ -25,6 +25,8 @@ import useOnOpenAssociatedNote from "./hooks/useOnOpenAssociatedNote";
 import useOnDragEnd from "./hooks/useOnDragEnd";
 import useStyle from "./hooks/useStyle";
 import useToolbarButtons from "./hooks/useToolbarButtons";
+import Logger from "@joplin/utils/Logger";
+import useOnStackDrop from "./hooks/useOnStackDrop";
 
 declare var webviewApi: WebviewApi;
 
@@ -125,6 +127,12 @@ export default () => {
 		setBoard,
 	});
 
+	const onStackDrop = useOnStackDrop({
+		board,
+		setBoard,
+		webviewApi,
+	});
+
 	const appStyle = useStyle({
 		backgroundColors,
 		cssStrings,
@@ -162,6 +170,7 @@ export default () => {
 				onAddCard={onAddCard}
 				onDeleteCard={onDeleteCard}
 				onEditSettings={onEditStackSettings}
+				onDrop={onStackDrop}
 				isLast={index === board.stacks.length - 1}
 				dynamicWidth={dynamicWidth}
 				key={stack.id}

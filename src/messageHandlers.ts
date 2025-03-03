@@ -37,6 +37,15 @@ const messageHandlers:Record<IpcMessageType, MessageHandler> = {
 		logger.info('PostMessagePlugin (Webview): Responding with:', response);
 		return { id: response.id, body: response.body };
 	},
+
+	'getNotes': async (message:IpcMessage) => {
+		const noteIds = message.value as string[];
+		const notes:Note[] = [];
+		for (const noteId of noteIds) {
+			notes.push(await joplin.data.get(['notes', noteId]));
+		}
+		return notes;
+	},
 	
 	'shouldUseDarkColors': async () => {
 		return joplin.shouldUseDarkColors();

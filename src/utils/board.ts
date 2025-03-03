@@ -59,3 +59,14 @@ export const getCardNotes = (board:Board) => {
 	}
 	return output;
 }
+
+export const getAllNoteIds = (board:Board) => {
+	const output:string[] = [];
+	for (const [, stack] of board.stacks.entries()) {
+		for (const [, card] of stack.cards.entries()) {
+			const noteLink = parseAsNoteLink(card.title);
+			if (noteLink) output.push(noteLink.id);			
+		}
+	}
+	return output;
+}

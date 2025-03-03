@@ -40,7 +40,8 @@ export interface State {
 }
 
 export type IpcMessageType =
-	'getNote' |
+	'getNote' | // This returns the note associated with the board
+	'getNotes' | // This returns any number of notes
 	'setNote' |
 	'isReady' |
 	'getSettings' |
