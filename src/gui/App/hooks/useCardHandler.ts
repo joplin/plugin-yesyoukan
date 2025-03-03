@@ -88,13 +88,15 @@ export default (props:Props) => {
 		const parsedTitle = parseAsNoteLink(card.title);
 
 		if (parsedTitle) {
-			const answer = confirm('This will also delete the associated note. Continue?');
-			if (!answer) return;
+			// Probably better not to delete the associated note? Let's see depending on feedback
 
-			await props.webviewApi.postMessage({
-				type: 'deleteNote',
-				value: parsedTitle.id
-			});
+			// const answer = confirm('This will also delete the associated note. Continue?');
+			// if (!answer) return;
+
+			// await props.webviewApi.postMessage({
+			// 	type: 'deleteNote',
+			// 	value: parsedTitle.id
+			// });
 		} else {
 			props.pushUndo(props.board);
 		}
