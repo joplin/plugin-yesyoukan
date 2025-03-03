@@ -18,8 +18,7 @@ export const lightBackgroundColors: Colors = {
 	12: '#ffb6c1', // light pink (red-pink)
 	13: '#fffafa', // snow (white-pink)
 	14: '#fff5ee', // seashell (orange-white)
-	15: '#f5fffa', // mint cream (green-white)
-	16: '#f0f0f0', // light gray (neutral)
+	15: '#f0f0f0', // light gray (neutral)
 };
 
 export const darkBackgroundColors: Colors = {
@@ -38,8 +37,7 @@ export const darkBackgroundColors: Colors = {
 	12: '#5c2e3a', // dark pink (red-brown)
 	13: '#4a3a3a', // dark snow (warm gray)
 	14: '#4d3b32', // dark seashell (orange-brown)
-	15: '#3b4a3b', // dark mint cream (green-gray)
-	16: '#3a3a3a', // dark gray (neutral)
+	15: '#3a3a3a', // dark gray (neutral)
 };
 
 export const getColorValues = (colors:Colors) => {

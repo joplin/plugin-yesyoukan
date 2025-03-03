@@ -299,6 +299,11 @@ button:disabled {
 		background-color: #00000000;
 		cursor: pointer;
 	}
+
+	.clr-swatches button {
+		width: 25px;
+		height: 25px;
+	}	
 }
 
 .alert-box {
