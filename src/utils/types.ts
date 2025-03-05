@@ -85,12 +85,17 @@ export const settingSectionName = 'yesYouKan';
 export type ValidationKey = 'Enter' | 'Shift+Enter' | 'Ctrl+Enter' | 'Cmd+Enter';
 export type ConfirmKey = ValidationKey;
 export type NewlineKey = ValidationKey;
+export enum CardDoubleClickAction {
+	openInBoard = 'openInBoard',
+	openInNote = 'openInNote',
+}
 
 export interface Settings {
 	stackWidth?: number;
 	confirmKey?: ConfirmKey;
 	newlineKey?: NewlineKey;
 	stackDynamicWidth?: boolean;
+	cardDoubleClickAction?: CardDoubleClickAction;
 }
 
 export interface CardSettings {
@@ -153,6 +158,19 @@ export const settingItems:AppSettingItems = {
 		type: SettingItemType.Bool,
 		value: false,
 		public: true,
+		section: settingSectionName,
+	},
+
+	cardDoubleClickAction: {
+		label: 'Card double-click action',
+		type: SettingItemType.String,
+		isEnum: true,
+		public: true,
+		value: CardDoubleClickAction.openInBoard,
+		options: {
+			[CardDoubleClickAction.openInBoard]: 'Open in board',
+			[CardDoubleClickAction.openInNote]: 'Open in note',
+		},
 		section: settingSectionName,
 	},
 };

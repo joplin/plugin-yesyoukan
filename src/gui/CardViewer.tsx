@@ -1,7 +1,7 @@
 import { Draggable } from "@hello-pangea/dnd";
 import * as React from "react";
 import { useCallback, useRef, useEffect, useMemo } from "react";
-import { Card, ConfirmKey, NewlineKey, Platform } from "../utils/types";
+import { Card, CardDoubleClickAction, ConfirmKey, NewlineKey, Platform } from "../utils/types";
 import ConfirmButtons from "./ConfirmButtons";
 import useOnEditorKeyDown from "./hooks/useOnEditorKeyDown";
 import KebabButton, { ItemClickEventHandler, MenuItem } from "./KebabButton";
@@ -44,6 +44,7 @@ export interface Props {
 	onCreateNoteFromCard: CardHandler;
 	onOpenAssociatedNote: CardHandler;
 	onEditSettings: CardHandler;
+	cardDoubleClickAction: CardDoubleClickAction;
 	isEditing: boolean;
 	platform: Platform;
 }
@@ -87,15 +88,28 @@ export default (props:Props) => {
 		props.onEditorCancel({ card })
 	}, []);
 
-	const onDoubleClick = useCallback(() => {
+	const onEdit = useCallback((cardDoubleClickAction:CardDoubleClickAction|null = null) => {
 		if (!props.isEditing) {
 			if (isNoteLink) {
 				props.onOpenAssociatedNote({ cardId: card.id });
 			} else {
-				props.onEditorStart({ card });
+				const actions:Record<CardDoubleClickAction, () => void> = {
+					[CardDoubleClickAction.openInBoard]: () => {
+						props.onEditorStart({ card });
+					},
+					[CardDoubleClickAction.openInNote]: () => {
+						props.onScrollToCard({ cardId: card.id });
+					},
+				}
+				
+				actions[cardDoubleClickAction ? cardDoubleClickAction : props.cardDoubleClickAction]();
 			}
 		}
-	}, [props.isEditing, card, isNoteLink, props.onOpenAssociatedNote]);
+	}, [props.isEditing, card, isNoteLink, props.cardDoubleClickAction, props.onOpenAssociatedNote]);
+
+	const onDoubleClick = useCallback(() => {
+		onEdit();
+	}, [onEdit]);
 
 	useEffect(() => {
 		if (props.isEditing) {
@@ -116,7 +130,7 @@ export default (props:Props) => {
 
 	const onKebabItemClick = useCallback<ItemClickEventHandler>((event) => {
 		if (event.itemId === 'edit') {
-			onDoubleClick();
+			onEdit(CardDoubleClickAction.openInBoard);
 		} else if (event.itemId === 'delete') {
 			props.onDelete({ cardId: card.id });
 		} else if (event.itemId === 'scrollToCard') {

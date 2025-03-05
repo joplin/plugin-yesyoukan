@@ -180,6 +180,7 @@ export default () => {
 				confirmKey={effectiveBoardSettings.confirmKey}
 				newlineKey={effectiveBoardSettings.newlineKey}
 				editedCardIds={editedCardIds}
+				cardDoubleClickAction={effectiveBoardSettings.cardDoubleClickAction}
 			/>);
 		}
 		return output;
