@@ -75,9 +75,7 @@ export default (props:Props) => {
 		return parseAsNoteLink(card.title);
 	}, [card.title]);
 
-	const cardTitle = parsedTitle ? parsedTitle.title : card.title;
-	const associatedNoteId = parsedTitle ? parsedTitle.id : null;
-	const isNoteLink = !!parsedTitle;
+	const isNoteLink = !!parsedTitle && card.noteExists;
 
 	const onEditorSubmit = useCallback(() => {
 		props.onEditorSubmit({

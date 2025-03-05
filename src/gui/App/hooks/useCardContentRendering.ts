@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { findCardIndex, getCardNotes } from "../../../utils/board";
 import getHash from "../../../utils/getHash";
 import { parseAsNoteLink } from "../../../utils/noteParser";
-import { Board, CardToRender, RenderedNote, Tag, WebviewApi } from "../../../utils/types";
+import { Board, CardToRender, RenderedCard, Tag, WebviewApi } from "../../../utils/types";
 
 interface Props {
 	board: Board;
@@ -32,7 +32,7 @@ export default (props:Props) => {
 					cardsToRender[card.id] = {
 						source: linkedNote ? 'note' : 'card',
 						noteId: linkedNote ? linkedNote.id : '',
-						cardTitle: linkedNote ? '' : card.title,
+						cardTitle: linkedNote ? linkedNote.title : card.title,
 						cardBody: linkedNote ? '' : card.body,
 					}
 
@@ -42,11 +42,14 @@ export default (props:Props) => {
 				}
 			}
 			const promises = [
-				props.webviewApi.postMessage<Record<string, RenderedNote>>({ type: 'renderBodies', value: JSON.stringify(cardsToRender) }),
+				props.webviewApi.postMessage<Record<string, RenderedCard>>({ type: 'renderBodies', value: JSON.stringify(cardsToRender) }),
 				props.webviewApi.postMessage<Record<string, Tag[]>>({ type: 'getTags', value: noteIds }),
 			];
 
-			const [rendered, noteIdToTags] = await Promise.all(promises);
+			const promiseResults = await Promise.all(promises);
+
+			const rendered = promiseResults[0] as Record<string, RenderedCard>;
+			const noteIdToTags = promiseResults[1] as Record<string, Tag[]>;
 
 			if (cancelled) return;
 
@@ -61,9 +64,11 @@ export default (props:Props) => {
 				return produce(current, draft => {
 					for (const [cardId, result] of Object.entries(rendered)) {
 						const [stackIndex, cardIndex] = findCardIndex(props.board, cardId);
-						draft.stacks[stackIndex].cards[cardIndex].bodyHtmlHash = bodyHtmlHashes[cardId];
-						draft.stacks[stackIndex].cards[cardIndex].titleHtml = result.title.html;
-						draft.stacks[stackIndex].cards[cardIndex].bodyHtml = result.body.html;
+						const card = draft.stacks[stackIndex].cards[cardIndex];
+						card.bodyHtmlHash = bodyHtmlHashes[cardId];
+						card.titleHtml = result.title.html;
+						card.bodyHtml = result.body.html;
+						card.noteExists = result.noteExists;
 					}
 
 					for (const [noteId, tags] of Object.entries(noteIdToTags)) {

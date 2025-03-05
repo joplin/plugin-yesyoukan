@@ -20,6 +20,7 @@ export interface Card {
 	bodyHtmlHash?: string;
 	settings?: CardSettings;
 	tags?: Tag[];
+	noteExists?: boolean;
 }
 
 export interface Stack {
@@ -205,7 +206,8 @@ export interface CardToRender {
 	cardBody: string;
 }
 
-export interface RenderedNote {
+export interface RenderedCard {
 	title: RenderResult;
 	body: RenderResult;
+	noteExists: boolean;
 }

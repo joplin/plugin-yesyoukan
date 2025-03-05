@@ -1,7 +1,7 @@
 import Logger from "@joplin/utils/Logger";
-import { CardToRender, IpcMessage, IpcMessageType, Note, RenderedNote, RenderResult, settingItems } from "./utils/types";
+import { CardToRender, IpcMessage, IpcMessageType, Note, RenderedCard, RenderResult, settingItems } from "./utils/types";
 import joplin from "api";
-import { boardsEqual, parseNote } from "./utils/noteParser";
+import { boardsEqual, parseAsNoteLink, parseNote } from "./utils/noteParser";
 import { msleep } from "./utils/time";
 
 const logger = Logger.create('YesYouCan: messageHandler');
@@ -53,19 +53,29 @@ const messageHandlers:Record<IpcMessageType, MessageHandler> = {
 
 	'renderBodies': async (message:IpcMessage) => {
 		const toRender = JSON.parse(message.value) as Record<string, CardToRender>;
-		const rendered:Record<string, RenderedNote> = {};
+		const rendered:Record<string, RenderedCard> = {};
 		for (const [id, cardToRender] of Object.entries(toRender)) {
 			let titleToRender = '';
 			let bodyToRender = '';
+			let noteExists = false;
 
 			if (cardToRender.source === "note") {
-				const note:Note = await joplin.data.get(['notes', cardToRender.noteId], { fields: ['title', 'body'] });
-				if (!note) {
-					logger.warn('Could not find note associated with card:', cardToRender);
-				} else {
-					titleToRender = note.title;
-					bodyToRender = note.body;
+				let note:Note =  null;
+				try {
+					note = await joplin.data.get(['notes', cardToRender.noteId], { fields: ['title', 'body'] });
+					noteExists = true;
+				} catch (error) {
+					logger.warn('Could not find note associated with card:', cardToRender, error);
+
+					note = {
+						id: cardToRender.noteId,
+						title: cardToRender.cardTitle || '',
+						body: '',
+					}
 				}
+
+				titleToRender = note.title;
+				bodyToRender = note.body;
 			} else { // source = card
 				titleToRender = cardToRender.cardTitle;
 				bodyToRender = cardToRender.cardBody;
@@ -76,6 +86,7 @@ const messageHandlers:Record<IpcMessageType, MessageHandler> = {
 			rendered[id] = {
 				title: titleResult,
 				body: bodyResult,
+				noteExists,
 			};
 		}
 
