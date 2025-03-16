@@ -128,13 +128,26 @@ export default (props:Props) => {
 		tabKeyEnabled: true,
 	});
 
+	const onSaveAndScrollToCard = useCallback(() => {
+		if (props.isEditing) {
+			// First save, otherwise the changes will be lost. And we need a delay to give time to
+			// the IPC call to save the note.
+			onEditorSubmit();
+			setTimeout(() => {
+				props.onScrollToCard({ cardId: card.id });
+			}, 1000);
+		} else {
+			props.onScrollToCard({ cardId: card.id });
+		}
+	}, [card.id, onEditorSubmit, props.isEditing, props.onScrollToCard]);
+
 	const onKebabItemClick = useCallback<ItemClickEventHandler>((event) => {
 		if (event.itemId === 'edit') {
 			onEdit(CardDoubleClickAction.openInBoard);
 		} else if (event.itemId === 'delete') {
 			props.onDelete({ cardId: card.id });
 		} else if (event.itemId === 'scrollToCard') {
-			props.onScrollToCard({ cardId: card.id });
+			onSaveAndScrollToCard();
 		} else if (event.itemId === 'createNoteFromCard') {
 			props.onCreateNoteFromCard({ cardId: card.id });
 		} else if (event.itemId === 'editSettings') {
@@ -142,7 +155,7 @@ export default (props:Props) => {
 		} else {
 			throw new Error('Unknown item ID: ' + event.itemId);
 		}
-	}, [onDoubleClick, props.onDelete, card.id]);
+	}, [onDoubleClick, props.onDelete, card.id, onSaveAndScrollToCard]);
 
 	const renderKebabButton = () => {
 		const menuItems:MenuItem[] = [];
