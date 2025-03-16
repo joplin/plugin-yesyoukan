@@ -1,3 +1,15 @@
+# v1.0.12
+
+- Resolves #14: Add support for mobile
+- Resolves #17: Allow using notes as cards
+- Render Markdown card titles as HTML
+- Resolves #6: Add support for card colors and added option dialog for cards
+- Resolves #24: Add option to set color to stack
+- Resolves #22: Display tags associated with the cards
+- Resolves #25: Add support for stack dynamic width
+- Resolves #27: Allow drag and dropping a note on the board
+- Add setting "Card double-click action"
+
 # v1.0.11
 
 - Fixes #13: Rendered links in cards are broken
