@@ -1,3 +1,9 @@
+# v1.0.13
+
+- Fixes #26: Opening a card in note while body is being edited loses the changes
+- Improve rendering performance for large boards with many cards
+- Resolves #23: Add due date to cards
+
 # v1.0.12
 
 - Resolves #14: Add support for mobile
