@@ -3,6 +3,7 @@ import { CardToRender, IpcMessage, IpcMessageType, Note, RenderedCard, RenderRes
 import joplin from "api";
 import { boardsEqual, parseAsNoteLink, parseNote } from "./utils/noteParser";
 import { msleep } from "./utils/time";
+import processRenderedCards from "./utils/processRenderedCards";
 
 const logger = Logger.create('YesYouCan: messageHandler');
 
@@ -52,45 +53,13 @@ const messageHandlers:Record<IpcMessageType, MessageHandler> = {
 	},
 
 	'renderBodies': async (message:IpcMessage) => {
-		const toRender = JSON.parse(message.value) as Record<string, CardToRender>;
-		const rendered:Record<string, RenderedCard> = {};
-		for (const [id, cardToRender] of Object.entries(toRender)) {
-			let titleToRender = '';
-			let bodyToRender = '';
-			let noteExists = false;
+		const cardsToRender = JSON.parse(message.value) as Record<string, CardToRender>;
 
-			if (cardToRender.source === "note") {
-				let note:Note =  null;
-				try {
-					note = await joplin.data.get(['notes', cardToRender.noteId], { fields: ['title', 'body'] });
-					noteExists = true;
-				} catch (error) {
-					logger.warn('Could not find note associated with card:', cardToRender, error);
-
-					note = {
-						id: cardToRender.noteId,
-						title: cardToRender.cardTitle || '',
-						body: '',
-					}
-				}
-
-				titleToRender = note.title;
-				bodyToRender = note.body;
-			} else { // source = card
-				titleToRender = cardToRender.cardTitle;
-				bodyToRender = cardToRender.cardBody;
-			}
-			
-			const titleResult:RenderResult = await joplin.commands.execute('renderMarkup', 1, titleToRender);
-			const bodyResult:RenderResult = await joplin.commands.execute('renderMarkup', 1, bodyToRender, null, { postMessageSyntax: 'cardPostMessage("' + id  + '")'});
-			rendered[id] = {
-				title: titleResult,
-				body: bodyResult,
-				noteExists,
-			};
-		}
-
-		return rendered;
+		return processRenderedCards(
+			cardsToRender,
+			noteId => joplin.data.get(['notes', noteId], { fields: ['title', 'body'] }),
+			(markup, option) => joplin.commands.execute('renderMarkup', 1, markup, null, option),
+		);
 	},
 
 	'getTags': async (message:IpcMessage) => {
