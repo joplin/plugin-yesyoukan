@@ -57,7 +57,7 @@ const messageHandlers:Record<IpcMessageType, MessageHandler> = {
 
 		return processRenderedCards(
 			cardsToRender,
-			noteId => joplin.data.get(['notes', noteId], { fields: ['title', 'body'] }),
+			noteId => joplin.data.get(['notes', noteId], { fields: ['title', 'body', 'todo_due', 'todo_completed', 'is_todo'] }),
 			(markup, option) => joplin.commands.execute('renderMarkup', 1, markup, null, option),
 		);
 	},
@@ -88,6 +88,13 @@ const messageHandlers:Record<IpcMessageType, MessageHandler> = {
 
 	'getSettings': async (_message:IpcMessage) => {
 		return await (joplin.settings as any).values(Object.keys(settingItems));
+	},
+
+	'getAppSettings': async () => {
+		return {
+			'dateFormat': await joplin.settings.globalValue('dateFormat'),
+			'timeFormat': await joplin.settings.globalValue('timeFormat'),
+		};
 	},
 
 	'scrollToCard': async (message:IpcMessage) => {

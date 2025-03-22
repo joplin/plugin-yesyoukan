@@ -1,5 +1,5 @@
 import { parseNote, serializeBoard } from "./noteParser";
-import { Board } from "./types";
+import { Board, Card } from "./types";
 
 const noteBody1 = `# Draft
 
@@ -43,6 +43,16 @@ stackWidth: 100
 \`\`\`
 `
 
+const getDefaultCard = ():Card => {
+	return {
+		id: '',
+		is_todo: 0,
+		title: '',
+		todo_completed: 0,
+		todo_due: 0,
+	}
+}
+
 describe('noteParser', () => {
 
 	test.each<[string, Board]>([
@@ -56,11 +66,13 @@ describe('noteParser', () => {
 						title: 'Draft',
 						cards: [
 							{
+								...getDefaultCard(),
 								id: '',
 								title: 'Post 1',
 								body: 'Content 1',
 							},
 							{
+								...getDefaultCard(),
 								id: '',
 								title: 'Post 2',
 								body: 'Content 2',
@@ -73,6 +85,7 @@ describe('noteParser', () => {
 						title: 'To review',
 						cards: [
 							{
+								...getDefaultCard(),
 								id: '',
 								title: 'Post 3',
 								settings: {
@@ -91,6 +104,7 @@ describe('noteParser', () => {
 						},
 						cards: [
 							{
+								...getDefaultCard(),
 								id: '',
 								title: 'Post 4',
 								body: 'Content 4\n\n\nSome empty lines above',

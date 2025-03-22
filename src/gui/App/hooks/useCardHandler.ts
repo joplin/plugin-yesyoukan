@@ -1,3 +1,4 @@
+import * as React from 'react';
 import { produce } from "immer";
 import { useCallback, useState } from "react";
 import { EditorSubmitHandler as CardChangeEventHandler, DeleteEventHandler as CardDeleteEventHandler, EditorCancelHandler, EditorStartHandler, CardHandler } from "../../CardViewer";
@@ -75,6 +76,9 @@ export default (props:Props) => {
 				id: newCardId,
 				title: 'New card',
 				body: '',
+				is_todo: 0,
+				todo_completed: 0,
+				todo_due: 0,
 			});
 		});
 

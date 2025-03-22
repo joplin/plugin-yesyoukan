@@ -69,6 +69,9 @@ export default (props:Props) => {
 						card.titleHtml = result.title.html;
 						card.bodyHtml = result.body.html;
 						card.noteExists = result.noteExists;
+						card.is_todo = result.is_todo;
+						card.todo_completed = result.todo_completed;
+						card.todo_due = result.todo_due;
 					}
 
 					for (const [noteId, tags] of Object.entries(noteIdToTags)) {

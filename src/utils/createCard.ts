@@ -9,6 +9,9 @@ export default (title:string = null, body:string = null) => {
 		id: uuid(),
 		title,
 		body,
+		is_todo: 0,
+		todo_completed: 0,
+		todo_due: 0,
 	}
 
 	return card;

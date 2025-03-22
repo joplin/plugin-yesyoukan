@@ -27,6 +27,7 @@ import useStyle from "./hooks/useStyle";
 import useToolbarButtons from "./hooks/useToolbarButtons";
 import Logger from "@joplin/utils/Logger";
 import useOnStackDrop from "./hooks/useOnStackDrop";
+import useAppSettings from "./hooks/useAppSettings";
 
 declare var webviewApi: WebviewApi;
 
@@ -152,6 +153,8 @@ export default () => {
 		setDialogConfig(null);
 	}, []);
 
+	const appSettings = useAppSettings({ webviewApi });
+
 	const renderStacks = () => {
 		const dynamicWidth = effectiveBoardSettings.stackDynamicWidth ? board.stacks.length : 0;
 
@@ -174,6 +177,7 @@ export default () => {
 				isLast={index === board.stacks.length - 1}
 				dynamicWidth={dynamicWidth}
 				key={stack.id}
+				appSettings={appSettings}
 				value={stack}
 				platform={platform}
 				index={index}

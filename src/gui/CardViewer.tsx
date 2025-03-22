@@ -1,13 +1,15 @@
-import { Draggable } from "@hello-pangea/dnd";
 import * as React from "react";
+import { Draggable } from "@hello-pangea/dnd";
 import { useCallback, useRef, useEffect, useMemo } from "react";
-import { Card, CardDoubleClickAction, ConfirmKey, NewlineKey, Platform } from "../utils/types";
+import { AppSettings, Card, CardDoubleClickAction, ConfirmKey, NewlineKey, Platform } from "../utils/types";
 import ConfirmButtons from "./ConfirmButtons";
 import useOnEditorKeyDown from "./hooks/useOnEditorKeyDown";
 import KebabButton, { ItemClickEventHandler, MenuItem } from "./KebabButton";
 import moveCaretToEnd from "../utils/moveCaretToEnd";
 import Logger from "@joplin/utils/Logger";
 import { parseAsNoteLink } from "../utils/noteParser";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { formatDateTime } from "../utils/time";
 
 const logger = Logger.create('CardViewer');
 
@@ -31,7 +33,9 @@ export interface DeleteEvent {
 export type DeleteEventHandler = (event:DeleteEvent) => void;
 
 export interface Props {
+	key:string;
 	value: Card;
+	appSettings: AppSettings;
 	index: number;
 	isLast: boolean;
 	confirmKey: ConfirmKey;
@@ -225,6 +229,25 @@ export default (props:Props) => {
 		);
 	}
 
+	const renderDueDate = () => {
+		if (!card.is_todo) return null;
+		if (!card.todo_due) return null;
+
+		const isOverdue = !card.todo_completed && card.todo_due <= Date.now();
+
+		const dateClasses = ['date'];
+		if (card.todo_completed) dateClasses.push('-done');
+		if (isOverdue) dateClasses.push('-overdue');
+
+		const icon = isOverdue ? "triangle-exclamation" : "clock";
+		
+		return (
+			<div className="duedate">
+				<FontAwesomeIcon className="icon" icon={icon} /><span className={dateClasses.join(' ')}>{formatDateTime(card.todo_due, props.appSettings.dateFormat + ' ' + props.appSettings.timeFormat)}</span>
+			</div>
+		);
+	}
+
 	const renderContent = () => {
 		if (!props.isEditing) {
 			return (
@@ -233,6 +256,7 @@ export default (props:Props) => {
 						<h3 className="title" dangerouslySetInnerHTML={{ __html: card.titleHtml} }></h3>{renderKebabButton()}
 					</div>
 					{renderTags()}
+					{renderDueDate()}
 					<p className="body" dangerouslySetInnerHTML={{ __html: card.bodyHtml} }></p>
 				</div>
 			);

@@ -4,6 +4,9 @@ export interface Note {
 	id: string;
 	title: string;
 	body: string;
+	todo_due: number;
+	todo_completed: number;
+	is_todo: number;
 }
 
 export interface Tag {
@@ -21,6 +24,21 @@ export interface Card {
 	settings?: CardSettings;
 	tags?: Tag[];
 	noteExists?: boolean;
+	todo_due: number;
+	todo_completed: number;
+	is_todo: number;
+}
+
+export interface AppSettings {
+	dateFormat: string;
+	timeFormat: string;
+}
+
+export const getDefaultAppSettings = ():AppSettings => {
+	return {
+		dateFormat: 'DD/MM/YYYY',
+		timeFormat: 'HH:mm',
+	}
 }
 
 export interface Stack {
@@ -46,6 +64,7 @@ export type IpcMessageType =
 	'setNote' |
 	'isReady' |
 	'getSettings' |
+	'getAppSettings' |
 	'renderBodies' |
 	'openItem' |
 	'cardMessage' |
@@ -228,4 +247,7 @@ export interface RenderedCard {
 	title: RenderResult;
 	body: RenderResult;
 	noteExists: boolean;
+	todo_due: number;
+	todo_completed: number;
+	is_todo: number;
 }

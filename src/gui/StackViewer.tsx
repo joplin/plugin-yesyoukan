@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useCallback, useState, useRef, useMemo } from "react";
-import { CardDoubleClickAction, ConfirmKey, NewlineKey, Platform, Stack } from "../utils/types";
+import { AppSettings, CardDoubleClickAction, ConfirmKey, NewlineKey, Platform, Stack } from "../utils/types";
 import CardViewer, { EditorSubmitHandler as CardEditorSubmitEventHandler, DeleteEventHandler as CardDeleteEventHandler, EditorCancelHandler as CardEditorCancelHandler, EditorStartHandler as CardEditorStartEventHandler, CardHandler } from "./CardViewer";
 import { Draggable, DraggableProvided, Droppable } from "@hello-pangea/dnd";
 import ConfirmButtons from "./ConfirmButtons";
@@ -57,6 +57,7 @@ interface Props {
 	onDeleteCard: CardDeleteEventHandler;
 	onDrop: StackDropEventHandler;
 	cardDoubleClickAction: CardDoubleClickAction;
+	appSettings: AppSettings;
 }
 
 export default (props:Props) => {
@@ -198,6 +199,7 @@ export default (props:Props) => {
 				newlineKey={props.newlineKey}
 				isEditing={props.editedCardIds.includes(card.id)}
 				cardDoubleClickAction={props.cardDoubleClickAction}
+				appSettings={props.appSettings}
 			/>);
 		}
 		return output;

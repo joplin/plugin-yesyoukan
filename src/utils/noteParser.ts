@@ -80,6 +80,9 @@ export const parseNote = async (noteId:string, noteBody:string) => {
 				id: uuid(),
 				title: line.substring(3),
 				body: '',
+				is_todo: 0,
+				todo_completed: 0,
+				todo_due: 0,
 			};
 
 			currentStack.cards.push(currentCard);

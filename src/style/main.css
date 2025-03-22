@@ -198,6 +198,25 @@ ul, ol {
 			}
 		}
 
+		> .duedate {
+			display: flex;
+			flex-direction: row;
+			margin-top: 5px;
+			align-items: center;
+
+			> .icon {
+				margin-right: 10px;
+			}
+
+			> .date.-done {
+				text-decoration: line-through;
+			}
+
+			> .date.-overdue {
+				font-weight: bold;
+			}
+		}
+
 		> .header {
 			display: flex;
 			flex-direction: row;

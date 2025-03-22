@@ -22,20 +22,20 @@ export default async (
 	// checkbox handlers are based on line number, which is going to be wrong if all the cards are
 	// concatenated.
 	const bigDoc:string[] = [];
-	const notesExists:Record<string, boolean> = {};
+	const cardIdToNotes:Record<string, Note|null> = {};
 	const cardLineIndexes:Record<string, number> = {};
 	let currentCardLineIndex = 0;
 
 	for (const [cardId, cardToRender] of Object.entries(cardsToRender)) {
 		let titleToRender = '';
 		let bodyToRender = '';
-		notesExists[cardId] = false;
+		cardIdToNotes[cardId] = null;
 
 		if (cardToRender.source === "note") {
 			let note:Note =  null;
 			try {
 				note = await fetchNote(cardToRender.noteId);
-				notesExists[cardId] = true;
+				cardIdToNotes[cardId] = note;
 			} catch (error) {
 				logger.warn('Could not find note associated with card:', cardToRender, error);
 
@@ -43,6 +43,9 @@ export default async (
 					id: cardToRender.noteId,
 					title: cardToRender.cardTitle || '',
 					body: '',
+					is_todo: 0,
+					todo_completed: 0,
+					todo_due: 0,
 				}
 			}
 
@@ -104,10 +107,15 @@ export default async (
 			return `checkboxclick:${checkedStatus}:${Number(lineNumber) - bodyLineIndex}`;
 		});
 
+		const note = cardIdToNotes[cardId];
+
 		rendered[cardId] = {
 			title: { html: titleHtml, cssStrings: bigDocResult.cssStrings, pluginAssets: bigDocResult.pluginAssets },
 			body: { html: bodyHtml, cssStrings: bigDocResult.cssStrings, pluginAssets: bigDocResult.pluginAssets },
-			noteExists: notesExists[cardId],
+			noteExists: !!note,
+			todo_due: note ? note.todo_due : 0,
+			todo_completed:  note ? note.todo_completed : 0,
+			is_todo: note ? note.is_todo : 0,
 		}
 		
 		cardIndex++;
