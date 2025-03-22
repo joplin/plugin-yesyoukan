@@ -68,6 +68,31 @@ This will create a new note in the same notebook as the board and it will be lin
 
 When you delete this card, the associated note will also be deleted.
 
+## Tag support
+
+To associate tags with a card, follow these steps:
+
+- First [create a note from the card](#creating-a-note-from-a-card) if not alread done
+- Double-click on the card to open the note
+- Associate some tags with the note
+
+Now if you open the Kanban board again, the tags will appear on the card.
+
+## Due date support
+
+To associate a due date with a card, follow these steps:
+
+- First [create a note from the card](#creating-a-note-from-a-card) if not alread done
+- Double-click on the card to open the note
+- Convert the note to a to-do
+- Associate an alarm with the to-do
+
+Now if you open the Kanban board again, the card will diplay the due date and time. If the to-do has been completed, the due date will be crossed out. If the due date has expired, a warning sign will be displayed.
+
+## Adding colours to cards and stacks
+
+Cards and stacks can have a colour associated with them. To assign the colour, click on the kebab button **⋮** for the card or stack, and select the colour. Note that the colours are predefined so that they look bright enough on a light theme, and dark enough on a dark theme.
+
 ## Credits
 
 - Kanban icon created by [Muhammad_Usman](https://www.flaticon.com/authors/muhammad-usman)
