@@ -73,6 +73,7 @@ export type IpcMessageType =
 	'openNote' |
 	'deleteNote' |
 	'getTags' |
+	'setNoteCheckbox' |
 	'shouldUseDarkColors';
 
 export interface IpcMessage {

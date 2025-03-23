@@ -4,6 +4,7 @@ import joplin from "api";
 import { boardsEqual, parseAsNoteLink, parseNote } from "./utils/noteParser";
 import { msleep } from "./utils/time";
 import processRenderedCards from "./utils/processRenderedCards";
+import { toggleCheckbox } from "./utils/renderMarkupUtils";
 
 const logger = Logger.create('YesYouCan: messageHandler');
 
@@ -76,6 +77,15 @@ const messageHandlers:Record<IpcMessageType, MessageHandler> = {
 
 	'setNote': async (message:IpcMessage) => {
 		await setNoteHandler(message.value as Note);
+	},
+
+	'setNoteCheckbox': async (message:IpcMessage) => {
+		const { cardMessage, noteId } = message.value;
+		const note:Note = await joplin.data.get(['notes', noteId], { fields: ['body'] });
+		const newBody = toggleCheckbox(cardMessage, note.body);
+		console.info('BEFORE', note.body);
+		console.info('AFTER', newBody);
+		await joplin.data.put(['notes', noteId], null, { body: newBody });
 	},
 
 	'openItem': async (message:IpcMessage) => {

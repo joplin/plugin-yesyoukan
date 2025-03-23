@@ -1,8 +1,9 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Board, IpcMessage, WebviewApi } from "../../../utils/types";
 import { produce } from "immer";
 import { findCardIndex } from "../../../utils/board";
 import { toggleCheckbox } from "../../../utils/renderMarkupUtils";
+import { parseAsNoteLink } from "../../../utils/noteParser";
 
 // We support anything that looks like a URL - we just want to send it back to the app via the
 // `openItem` command.
@@ -16,6 +17,8 @@ interface Props {
 }
 
 export default (props:Props) => {
+	const [noteCheckboxToUpdate, setNoteCheckboxToUpdate] = useState(null);
+
 	useEffect(() => {
 		const handleUrl = async (message:string) => {
 			if (isSupportedUrl(message)) {
@@ -42,9 +45,15 @@ export default (props:Props) => {
 					if (cardMessage.startsWith('checkboxclick:')) {
 						props.setBoard(current => produce(current, draft => {
 							const [stackIndex, cardIndex] = findCardIndex(current, cardId);
-							const cardBody = current.stacks[stackIndex].cards[cardIndex].body;
-							const newBody = toggleCheckbox(cardMessage, cardBody);
-							draft.stacks[stackIndex].cards[cardIndex].body = newBody;
+							const card = current.stacks[stackIndex].cards[cardIndex];
+							const linkedNote = parseAsNoteLink(card.title);
+							if (linkedNote) {
+								setNoteCheckboxToUpdate({ cardMessage, noteId: linkedNote.id });
+							} else {
+								const cardBody = current.stacks[stackIndex].cards[cardIndex].body;
+								const newBody = toggleCheckbox(cardMessage, cardBody);
+								draft.stacks[stackIndex].cards[cardIndex].body = newBody;
+							}
 						}));
 					} else {
 						await handleUrl(cardMessage);
@@ -59,6 +68,21 @@ export default (props:Props) => {
 			window.removeEventListener('message', onMessage);
 		}
 	}, [props.webviewApi, props.setBoard]);
+
+	useEffect(() => {
+		if (!noteCheckboxToUpdate) return;
+
+		const fn = async () => {
+			await props.webviewApi.postMessage({
+				type: 'setNoteCheckbox',
+				value: noteCheckboxToUpdate,
+			});
+
+			setNoteCheckboxToUpdate(null);
+		}
+
+		void fn();
+	}, [noteCheckboxToUpdate]);
 
 	useEffect(() => {
 		// "cardPostMessage" is defined when calling the `renderMarkup` command. The checkbox
