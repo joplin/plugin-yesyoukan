@@ -46,23 +46,28 @@ joplin.plugins.register({
 		const updateFromSelectedNote = async () => {
 			const note = await joplin.workspace.selectedNote();
 			if (!note) return;
-
 			await editors.postMessage(view, { type: 'setNote', value: { id: note.id, body: note.body }});
 		}
 
-		await editors.onActivationCheck(view, async () => {
-			const note = await joplin.workspace.selectedNote();
-			if (!note) return false;
+		await editors.onActivationCheck(view, async (event) => {
+			if (!event.noteId) return false;
 
-			logger.info('onActivationCheck: Handling note: ' + note.id);
-			const isBoard = noteIsBoard(note ? note.body : '');
+			const note = await joplin.data.get([ 'notes', event.noteId ], { fields: ['body'] });
+			logger.info('onActivationCheck: Handling note: ' + event.noteId);
+			const isBoard = noteIsBoard(note?.body ?? '');
 			logger.info('onActivationCheck: Note is board:', isBoard);
 			return isBoard;
 		});
 
-		await editors.onUpdate(view, async () => {
+		await editors.onUpdate(view, async (event) => {
 			logger.info('onUpdate');
-			await updateFromSelectedNote();
+			if (event.noteId) {
+				await editors.postMessage(
+					view,
+					{ type: 'setNote', value: { id: event.noteId, body: event.newBody } },
+					event.windowId,
+				);
+			}
 		});
 
 		await joplin.commands.register({
@@ -90,7 +95,7 @@ joplin.plugins.register({
 			logger.info('PostMessagePlugin (Webview): Got message from webview:', message);
 
 			if (message.type === 'isReady') {
-				await updateFromSelectedNote();
+				//await updateFromSelectedNote();
 				return;
 			}
 			
