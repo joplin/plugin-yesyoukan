@@ -10,7 +10,7 @@ const logger = Logger.create('YesYouCan: messageHandler');
 
 type MessageHandler = (message:IpcMessage) => Promise<any>;
 
-const setNoteHandler = async (messageNote:Note) => {
+const setNoteHandler = async (editorHandle: string, messageNote:Note) => {
 	const selectedNote = await joplin.workspace.selectedNote();
 	const newBoard = await parseNote(messageNote.id, messageNote.body);
 	const currentBoard = await parseNote(selectedNote.id, selectedNote.body);
@@ -24,18 +24,21 @@ const setNoteHandler = async (messageNote:Note) => {
 		logger.info('NOT updating note - board has not changed');
 	} else {
 		logger.info('Updating note - board has changed');
-		await joplin.data.put(['notes', messageNote.id], null, { body: messageNote.body });
+		await joplin.views.editors.saveNote(editorHandle, {
+			noteId: messageNote.id,
+			body: messageNote.body,
+		});
 	}
 }
 
-const messageHandlers:Record<IpcMessageType, MessageHandler> = {
+const messageHandlers = (editorHandle: string, windowId: string|undefined): Record<IpcMessageType, MessageHandler> => ({
 
 	'isReady': null,
 
 	'cardMessage': null,
 	
 	'getNote': async (_message:IpcMessage) => {
-		const response = await joplin.workspace.selectedNote();
+		const response = await joplin.workspace.selectedNote(windowId);
 		logger.info('PostMessagePlugin (Webview): Responding with:', response);
 		return { id: response.id, body: response.body };
 	},
@@ -76,7 +79,7 @@ const messageHandlers:Record<IpcMessageType, MessageHandler> = {
 	},
 
 	'setNote': async (message:IpcMessage) => {
-		await setNoteHandler(message.value as Note);
+		await setNoteHandler(editorHandle, message.value as Note);
 	},
 
 	'setNoteCheckbox': async (message:IpcMessage) => {
@@ -117,7 +120,7 @@ const messageHandlers:Record<IpcMessageType, MessageHandler> = {
 	},
 
 	'createNote': async (message:IpcMessage) => {
-		const selectedNote = await joplin.workspace.selectedNote();
+		const selectedNote = await joplin.workspace.selectedNote(windowId);
 
 		const newNote = await joplin.data.post(['notes'], null, {
 			parent_id: selectedNote.parent_id,
@@ -131,6 +134,6 @@ const messageHandlers:Record<IpcMessageType, MessageHandler> = {
 	'deleteNote': async (message:IpcMessage) => {
 		await joplin.data.delete(['notes', message.value]);
 	},
-}
+});
 
 export default messageHandlers;

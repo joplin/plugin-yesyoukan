@@ -400,17 +400,13 @@ export interface Rectangle {
 export interface EditorUpdateEvent {
 	newBody: string;
 	noteId: string;
-
-	/** The ID of the window containing the plugin. */
-	windowId: string;
 }
+export type ActivationCheckCallback = (event: ActivationCheckEvent)=> Promise<boolean>;
 
 export interface ActivationCheckEvent {
 	noteId: string;
 	windowId: string;
 }
-
-export type ActivationCheckCallback = (event: ActivationCheckEvent)=> Promise<boolean>;
 export type UpdateCallback = (event: EditorUpdateEvent)=> Promise<void>;
 
 export type VisibleHandler = ()=> Promise<void>;

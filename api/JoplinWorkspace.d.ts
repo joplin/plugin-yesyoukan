@@ -25,6 +25,9 @@ interface NoteAlarmTriggerEvent {
 interface SyncCompleteEvent {
     withErrors: boolean;
 }
+interface WindowOpenEvent {
+    windowId: string;
+}
 type WorkspaceEventHandler<EventType> = (event: EventType) => void;
 type ItemChangeHandler = WorkspaceEventHandler<ItemChangeEvent>;
 type SyncStartHandler = () => void;
@@ -72,6 +75,14 @@ export default class JoplinWorkspace {
      */
     onSyncComplete(callback: WorkspaceEventHandler<SyncCompleteEvent>): Promise<Disposable>;
     /**
+     * Called when a secondary window is opened.
+     */
+    onWindowOpen(callback: WorkspaceEventHandler<WindowOpenEvent>): Promise<Disposable>;
+    /**
+     * Called when a secondary window is closed.
+     */
+    onWindowClose(callback: WorkspaceEventHandler<WindowOpenEvent>): Promise<Disposable>;
+    /**
      * Called just before the editor context menu is about to open. Allows
      * adding items to it.
      *
@@ -81,7 +92,7 @@ export default class JoplinWorkspace {
     /**
      * Gets the currently selected note. Will be `null` if no note is selected.
      */
-    selectedNote(): Promise<any>;
+    selectedNote(windowId?: string): Promise<any>;
     /**
      * Gets the currently selected folder. In some cases, for example during
      * search or when viewing a tag, no folder is actually selected in the user
