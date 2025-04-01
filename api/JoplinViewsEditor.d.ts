@@ -3,10 +3,6 @@ import { ActivationCheckCallback, ViewHandle, UpdateCallback } from './types';
 export interface EditorPluginProps {
     /** The ID of the window to show the editor plugin. Use `undefined` for the main window. */
     windowId: string | undefined;
-    /**
-     * Called to determine whether the custom editor supports the current note.
-     */
-    onActivationCheck: ActivationCheckCallback;
 }
 export interface SaveEditorContentProps {
     /**
@@ -62,6 +58,7 @@ export default class JoplinViewsEditors {
     private store;
     private plugin;
     private activationCheckHandlers_;
+    private unhandledActivationCheck_;
     constructor(plugin: Plugin, store: any);
     private controller;
     /**

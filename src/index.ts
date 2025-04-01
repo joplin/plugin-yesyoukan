@@ -26,18 +26,7 @@ const registerEditorPlugin = async (windowId: string|undefined) => {
 
 	const editors = joplin.views.editors;
 
-	const view = await editors.create("kanbanBoard", {
-		windowId,
-		onActivationCheck: async event => {
-			if (!event.noteId) return false;
-
-			const note = await joplin.data.get([ 'notes', event.noteId ], { fields: ['body'] });
-			logger.info('onActivationCheck: Handling note: ' + event.noteId);
-			const isBoard = noteIsBoard(note?.body ?? '');
-			logger.info('onActivationCheck: Note is board:', isBoard);
-			return isBoard;
-		},
-	});
+	const view = await editors.create("kanbanBoard", { windowId });
 	
 	await editors.setHtml(view, `<div id="root" class="platform-${versionInfo.platform}"></div>`);
 	await editors.addScript(view, './panel.js');
@@ -60,6 +49,16 @@ const registerEditorPlugin = async (windowId: string|undefined) => {
 				{ type: 'setNote', value: { id: event.noteId, body: event.newBody } },
 			);
 		}
+	});
+
+	await editors.onActivationCheck(view, async event => {
+		if (!event.noteId) return false;
+
+		const note = await joplin.data.get([ 'notes', event.noteId ], { fields: ['body'] });
+		logger.info('onActivationCheck: Handling note: ' + event.noteId);
+		const isBoard = noteIsBoard(note?.body ?? '');
+		logger.info('onActivationCheck: Note is board:', isBoard);
+		return isBoard;
 	});
 
 	const handlers = messageHandlers(view, windowId);
