@@ -83,9 +83,6 @@ export default class JoplinViewsPanels {
     /**
      * Assuming that the current panel is an editor plugin view, returns
      * whether the editor plugin view supports editing the current note.
-     *
-     * If `windowId` is not provided, this returns the activation state
-     * in the default window.
      */
     isActive(handle: ViewHandle): Promise<boolean>;
 }

@@ -41,6 +41,7 @@ export default async (
 
 				note = {
 					id: cardToRender.noteId,
+					parent_id: '',
 					title: cardToRender.cardTitle || '',
 					body: '',
 					is_todo: 0,
