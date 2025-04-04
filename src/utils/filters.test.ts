@@ -1,4 +1,4 @@
-import createCard from "./createCard";
+import { createCard } from "./cards";
 import { applyFilters } from "./filters";
 import { parseNote } from "./noteParser";
 import processRenderedCards from "./processRenderedCards";

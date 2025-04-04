@@ -48,6 +48,7 @@ export interface Props {
 	onCreateNoteFromCard: CardHandler;
 	onOpenAssociatedNote: CardHandler;
 	onEditSettings: CardHandler;
+	onDuplicate: CardHandler;
 	cardDoubleClickAction: CardDoubleClickAction;
 	isEditing: boolean;
 	platform: Platform;
@@ -150,6 +151,8 @@ export default (props:Props) => {
 			onEdit(CardDoubleClickAction.openInBoard);
 		} else if (event.itemId === 'delete') {
 			props.onDelete({ cardId: card.id });
+		} else if (event.itemId === 'duplicate') {
+			props.onDuplicate({ cardId: card.id });
 		} else if (event.itemId === 'scrollToCard') {
 			onSaveAndScrollToCard();
 		} else if (event.itemId === 'createNoteFromCard') {
@@ -187,6 +190,11 @@ export default (props:Props) => {
 		menuItems.push({
 			id: 'edit',
 			label: 'Edit',
+		});
+
+		menuItems.push({
+			id: 'duplicate',
+			label: 'Duplicate',
 		});
 
 		menuItems.push({

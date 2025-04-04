@@ -28,6 +28,8 @@ const setNoteHandler = async (messageNote:Note) => {
 	}
 }
 
+const noteFields = ['title', 'body', 'todo_due', 'todo_completed', 'is_todo'];
+
 const messageHandlers:Record<IpcMessageType, MessageHandler> = {
 
 	'isReady': null,
@@ -58,7 +60,7 @@ const messageHandlers:Record<IpcMessageType, MessageHandler> = {
 
 		return processRenderedCards(
 			cardsToRender,
-			noteId => joplin.data.get(['notes', noteId], { fields: ['title', 'body', 'todo_due', 'todo_completed', 'is_todo'] }),
+			noteId => joplin.data.get(['notes', noteId], { fields: noteFields }),
 			(markup, option) => joplin.commands.execute('renderMarkup', 1, markup, null, option),
 		);
 	},
@@ -130,6 +132,24 @@ const messageHandlers:Record<IpcMessageType, MessageHandler> = {
 
 	'deleteNote': async (message:IpcMessage) => {
 		await joplin.data.delete(['notes', message.value]);
+	},
+
+	'duplicateNote': async (message:IpcMessage) => {
+		const noteId = message.value as string;
+		const note = await joplin.data.get(['notes', noteId], {
+			fields: noteFields,
+		});
+
+		const tags = await joplin.data.get(['notes', noteId, 'tags']);
+		const tagTitles:string[] = tags.items.map(t => t.title);
+
+		const newNote = {
+			...note,
+			title: note.title + ' - Copy',
+			tags: tagTitles.join(','),
+		};
+
+		return await joplin.data.post(['notes'], null, newNote);
 	},
 }
 

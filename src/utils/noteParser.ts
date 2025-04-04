@@ -1,5 +1,6 @@
+import { escapeLinkUrl, escapeTitleText } from "./markdown";
 import { parseBoardSettings, parseCardSettings, parseStackSettings, SettingType } from "./settings";
-import { Board, BoardSettings, Card, CardSettings, PluginSettings, Stack, emptyBoard } from "./types";
+import { Board, BoardSettings, Card, CardSettings, Note, PluginSettings, Stack, emptyBoard } from "./types";
 import uuid from "./uuid";
 import Logger from '@joplin/utils/Logger';
 const fastDeepEqual = require('fast-deep-equal');
@@ -24,6 +25,13 @@ export const parseAsNoteLink = (s:string) => {
 	return {
 		title: m[1],
 		id: m[2],
+	}
+}
+
+export const serializeNoteToCard = (note:Note) => {
+	return {
+		title: `[${escapeTitleText(note.title)}](:/${escapeLinkUrl(note.id)})`,
+		body: '',
 	}
 }
 

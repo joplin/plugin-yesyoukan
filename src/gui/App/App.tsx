@@ -73,6 +73,7 @@ export default () => {
 		onDeleteCard,
 		onCardEditorCancel,
 		onAddCard,
+		onDuplicateCard,
 	} = useCardHandler({
 		board,
 		pushUndo,
@@ -188,6 +189,7 @@ export default () => {
 				onEditCardSettings={onEditCardSettings}
 				onAddCard={onAddCard}
 				onDeleteCard={onDeleteCard}
+				onDuplicateCard={onDuplicateCard}
 				onEditSettings={onEditStackSettings}
 				onDrop={onStackDrop}
 				isLast={index === board.stacks.length - 1}

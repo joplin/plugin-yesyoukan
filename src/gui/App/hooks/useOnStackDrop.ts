@@ -3,9 +3,9 @@ import { produce } from "immer";
 import { useCallback } from "react";
 import { StackDropEventHandler } from "../../../gui/StackViewer";
 import { findStack, getAllNoteIds } from "../../../utils/board";
-import createCard from "../../../utils/createCard";
 import { escapeLinkUrl, escapeTitleText } from "../../../utils/markdown";
 import { Board, Note, WebviewApi } from "../../../utils/types";
+import { createCard } from "../../../utils/cards";
 
 const logger = Logger.create('YesYouKan: useOnStackDrop');
 
