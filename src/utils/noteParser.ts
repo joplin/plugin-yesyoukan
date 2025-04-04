@@ -1,4 +1,5 @@
 import { escapeLinkUrl, escapeTitleText } from "./markdown";
+import { produce } from "immer";
 import { parseBoardSettings, parseCardSettings, parseStackSettings, SettingType } from "./settings";
 import { Board, BoardSettings, Card, CardSettings, Note, PluginSettings, Stack, emptyBoard } from "./types";
 import uuid from "./uuid";
@@ -171,32 +172,23 @@ export const serializeBoard = (board:Board) => {
 	return output.join('\n');
 }
 
+const normalizeBoardForComparison = (board:Board) => {
+	return produce(board, draft => {
+		for (const stack of draft.stacks) {
+			stack.id = '';
+			for (const card of stack.cards) {
+				card.id = '';
+			}
+		}
+	});
+}
+
 export const boardsEqual = (board1:Board, board2:Board) => {
 	if (board1.stacks.length !== board2.stacks.length) return false;
 	if (board1.noteId !== board2.noteId) return false;
 
-	const settingKeys = Object.keys(board1.settings).sort();
-	if (settingKeys.length !== Object.keys(board2.settings).length) return false;
-
-	for (const key of settingKeys) {
-		if (board1.settings[key] !== board2.settings[key]) return false;
-	}
-
-	for (const [index, stack1] of board1.stacks.entries()) {
-		const stack2 = board2.stacks[index];
-
-		if (stack1.title !== stack2.title) return false;
-		if (stack1.cards.length !== stack2.cards.length) return false;
-		if (!fastDeepEqual(stack1.settings, stack2.settings)) return false;
-
-		for (const [cardIndex, card1] of stack1.cards.entries()) {
-			const card2 = stack2.cards[cardIndex];
-
-			if (card1.title !== card2.title) return false;
-			if (card1.body !== card2.body) return false;
-			if (!fastDeepEqual(card1.settings, card2.settings)) return false;
-		}
-	}
-
-	return true;
+	return fastDeepEqual(
+		normalizeBoardForComparison(board1),
+		normalizeBoardForComparison(board2),
+	);
 }
