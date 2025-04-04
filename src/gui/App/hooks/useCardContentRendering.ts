@@ -1,6 +1,6 @@
 import { produce } from "immer";
 import { useEffect, useState } from "react";
-import { findCardIndex, getCardNotes } from "../../../utils/board";
+import { findCardIndex, getCardNoteIds } from "../../../utils/board";
 import getHash from "../../../utils/getHash";
 import { parseAsNoteLink } from "../../../utils/noteParser";
 import { Board, CardToRender, RenderedCard, Tag, WebviewApi } from "../../../utils/types";
@@ -19,7 +19,7 @@ export default (props:Props) => {
 		const fn = async () => {
 			const cardsToRender:Record<string, CardToRender> = {};
 			const bodyHtmlHashes:Record<string, string> = {};
-			const cardIdToNoteId = getCardNotes(props.board);
+			const cardIdToNoteId = getCardNoteIds(props.board);
 			const noteIds:string[] = [];
 
 			for (const stack of props.board.stacks) {

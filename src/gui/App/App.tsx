@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useCallback, useState, useMemo, useRef } from "react";
-import { Board, Note, WebviewApi, emptyBoard } from "../../utils/types";
+import { Board, Filters, Note, WebviewApi, emptyBoard, getDefaultFilters } from "../../utils/types";
 import StackViewer, { StackDropEventHandler, StackEvent, StackEventHandler } from "../StackViewer";
 import { DragDropContext, Droppable, OnDragEndResponder } from "@hello-pangea/dnd";
 import { ThemeProvider } from "@mui/material";
@@ -28,6 +28,10 @@ import useToolbarButtons from "./hooks/useToolbarButtons";
 import Logger from "@joplin/utils/Logger";
 import useOnStackDrop from "./hooks/useOnStackDrop";
 import useAppSettings from "./hooks/useAppSettings";
+import FilterDialog from "../filter/Dialog";
+import useCardTags from "./hooks/useCardTags";
+import { applyFilters } from "../../utils/filters";
+import { produce } from "immer";
 
 declare var webviewApi: WebviewApi;
 
@@ -39,6 +43,11 @@ export default () => {
 	const [board, setBoard] = useState<Board>(emptyBoard());
 	const afterSetNoteAction = useRef<AfterSetNoteAction|null>(null);
 	const [dialogConfig, setDialogConfig] = useState<DialogConfig|null>(null);
+	const [filterDialogShown, setFilterDialogShown] = useState(false);
+	
+	const filteredBoard = useMemo(() => {
+		return applyFilters(board);
+	}, [board]);
 
 	const effectiveBoardSettings = useEffectiveBoardSettings({
 		board,
@@ -141,13 +150,20 @@ export default () => {
 		stackWidth: effectiveBoardSettings.stackWidth,
 	});
 
+	const onFilter = useCallback(() => {
+		setFilterDialogShown(true);
+	}, []);
+
 	const toolbarButtons = useToolbarButtons({
 		historyRedoLength: history.redo.length,
 		historyUndoLength: history.undo.length,
 		onAddStack,
 		onRedoBoard,
 		onUndoBoard,
+		onFilter,
 	});
+
+	const cardTags = useCardTags({ board });
 
 	const onSettingsDialogClose = useCallback(() => {
 		setDialogConfig(null);
@@ -159,7 +175,7 @@ export default () => {
 		const dynamicWidth = effectiveBoardSettings.stackDynamicWidth ? board.stacks.length : 0;
 
 		const output:React.JSX.Element[] = [];
-		for (let [index, stack] of board.stacks.entries()) {
+		for (let [index, stack] of filteredBoard.stacks.entries()) {
 			output.push(<StackViewer
 				onDelete={onStackDelete}
 				onTitleChange={onStackTitleChange}
@@ -206,11 +222,36 @@ export default () => {
 		);
 	}
 
+	const renderFilterDialog = () => {
+		if (!filterDialogShown) return;
+
+		const uniqueTags = Array.from(
+			new Map(Object.values(cardTags).flat().map(tag => [tag.id, tag])).values()
+		);
+		
+		return (
+			<FilterDialog
+				onCancel={() => {
+					setFilterDialogShown(false);
+				}}
+				onSave={(filters:Filters) => {
+					setFilterDialogShown(false);
+					setBoard(produce(board, draft => {
+						draft.settings.filters = filters;
+					}));
+				}}
+				tags={uniqueTags}
+				filters={board.settings.filters}
+			/>
+		);
+	}
+
 	return (
 		<ThemeProvider theme={theme}>
 			<div className="app">
-				{renderSettingsDialog()}
 				<style>{appStyle}</style>
+				{renderSettingsDialog()}
+				{renderFilterDialog()}
 				<Toolbar buttons={toolbarButtons}/>
 				<div className="stacks">
 					<DragDropContext onDragEnd={onDragEnd}>

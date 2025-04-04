@@ -1,5 +1,5 @@
 import joplin from 'api';
-import { IpcMessage, Note, settingItems, settingSectionName } from './utils/types';
+import { IpcMessage, Note, pluginSettingItems, settingSectionName } from './utils/types';
 import { boardsEqual, noteIsBoard, parseNote } from './utils/noteParser';
 import Logger, { TargetType } from '@joplin/utils/Logger';
 import { MenuItemLocation } from 'api/types';
@@ -30,7 +30,7 @@ joplin.plugins.register({
 			label: 'YesYouKan',
 			iconName: 'fas fa-th-list',
 		});
-		await joplin.settings.registerSettings(settingItems);
+		await joplin.settings.registerSettings(pluginSettingItems);
 
 		const editors = joplin.views.editors;
 

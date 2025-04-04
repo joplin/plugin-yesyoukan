@@ -4,7 +4,7 @@ import {
 	Dialog, DialogTitle, DialogContent, DialogActions, Button,
 	TextField, Checkbox, FormControlLabel, MenuItem,
 } from '@mui/material';
-import { AppSettingItems, SettingItems, Settings } from '../../utils/types';
+import { PluginSettingItems, SettingItems, PluginSettings } from '../../utils/types';
 import ColorPicker from '../ColorPicker';
 import { Colors } from '../../utils/colors';
 import GenericControl from './GenericControl';
@@ -13,17 +13,17 @@ interface Props {
 	title: string;
 	settings: Record<string, any>;
 	settingItems: SettingItems;
-	onSave: (newSettings: Settings) => void;
+	onSave: (newSettings: PluginSettings) => void;
 	onClose: () => void;
 	isDarkMode: boolean;
 	backgroundColor: Colors;
 }
 
 const SettingsDialog: React.FC<Props> = (props:Props) => {
-	const [currentSettings, setCurrentSettings] = useState<Settings>(props.settings);
+	const [currentSettings, setCurrentSettings] = useState<PluginSettings>(props.settings);
 
 	// Handle value change for any setting
-	const handleChange = (key: keyof Settings, value: any) => {
+	const handleChange = (key: keyof PluginSettings, value: any) => {
 		setCurrentSettings((prevSettings) => {
 			if (value === undefined) {
 				const output = { ...prevSettings };
@@ -39,7 +39,7 @@ const SettingsDialog: React.FC<Props> = (props:Props) => {
 	};
 
 	// Dynamically render controls based on the type of the value in defaultSettings
-	const renderControl = (key: keyof Settings) => {
+	const renderControl = (key: keyof PluginSettings) => {
 		const currentValue = currentSettings[key];
 		const settingItem = props.settingItems[key];
 		const defaultValue = props.settingItems[key].value;
@@ -142,7 +142,7 @@ const SettingsDialog: React.FC<Props> = (props:Props) => {
 			<DialogContent>
 				{Object.keys(props.settingItems).map((key) => (
 					<div key={key} style={{ marginBottom: '16px' }}>
-						{renderControl(key as keyof Settings)}
+						{renderControl(key as keyof PluginSettings)}
 					</div>
 				))}
 			</DialogContent>

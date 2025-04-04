@@ -1,5 +1,5 @@
 import Logger from "@joplin/utils/Logger";
-import { CardToRender, IpcMessage, IpcMessageType, Note, RenderedCard, RenderResult, settingItems } from "./utils/types";
+import { CardToRender, IpcMessage, IpcMessageType, Note, RenderedCard, RenderResult, pluginSettingItems } from "./utils/types";
 import joplin from "api";
 import { boardsEqual, parseAsNoteLink, parseNote } from "./utils/noteParser";
 import { msleep } from "./utils/time";
@@ -97,7 +97,7 @@ const messageHandlers:Record<IpcMessageType, MessageHandler> = {
 	},
 
 	'getSettings': async (_message:IpcMessage) => {
-		return await (joplin.settings as any).values(Object.keys(settingItems));
+		return await (joplin.settings as any).values(Object.keys(pluginSettingItems));
 	},
 
 	'getAppSettings': async () => {

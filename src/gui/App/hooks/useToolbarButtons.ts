@@ -7,6 +7,7 @@ interface Props {
 	onUndoBoard: () => void;
 	onRedoBoard: () => void;
 	onAddStack: () => void;
+	onFilter: () => void;
 }
 
 export default (props:Props) => {
@@ -40,9 +41,18 @@ export default (props:Props) => {
 					props.onAddStack();
 				},
 			},
+
+			{
+				name: 'filter',
+				icon: 'filter',
+				title: 'Filter',
+				onClick: () => {
+					props.onFilter();
+				},
+			},
 		];		
 		return output;
-	}, [props.onUndoBoard, props.onRedoBoard, props.historyUndoLength, props.historyRedoLength, props.onAddStack]);
+	}, [props.onUndoBoard, props.onRedoBoard, props.historyUndoLength, props.historyRedoLength, props.onAddStack, props.onFilter]);
 
 	return toolbarButtons;
 }

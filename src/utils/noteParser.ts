@@ -1,5 +1,5 @@
-import { parseAppSettings, parseCardSettings, parseStackSettings, SettingType } from "./settings";
-import { Board, Card, CardSettings, Settings, Stack, emptyBoard } from "./types";
+import { parseBoardSettings, parseCardSettings, parseStackSettings, SettingType } from "./settings";
+import { Board, BoardSettings, Card, CardSettings, PluginSettings, Stack, emptyBoard } from "./types";
 import uuid from "./uuid";
 import Logger from '@joplin/utils/Logger';
 const fastDeepEqual = require('fast-deep-equal');
@@ -37,7 +37,7 @@ export const parseNote = async (noteId:string, noteBody:string) => {
 	let state:'idle'|'inStack'|'inCard'|'inBody'|'inSettings' = 'idle';
 	let previousState:string = '';
 	let rawSettings:Record<string, string> = {};
-	let kanbanRawSettings:Record<string, string> = {};
+	let boardRawSettings:Record<string, string> = {};
 	let settingBlockType = '';
 
 	let currentStack:Stack = null;
@@ -53,7 +53,7 @@ export const parseNote = async (noteId:string, noteBody:string) => {
 			state = previousState as any;
 
 			if (settingBlockType === 'kanban-settings') {
-				kanbanRawSettings = rawSettings;
+				boardRawSettings = rawSettings;
 			} else if (settingBlockType === 'card-settings') {
 				currentCard.settings = parseCardSettings(rawSettings, logger);
 			} else if (settingBlockType === 'stack-settings') {
@@ -103,24 +103,26 @@ export const parseNote = async (noteId:string, noteBody:string) => {
 		}
 	}
 
-	board.settings = parseAppSettings(kanbanRawSettings, logger);
+	board.settings = parseBoardSettings(boardRawSettings, logger);
 
 	return board;
 }
 
-const serializeSettings = (type:SettingType, header:string, settings:Settings | CardSettings) => {
+const serializeSettings = (type:SettingType, header:string, settings:PluginSettings | CardSettings | BoardSettings) => {
 	const sortedKeys = Object.keys(settings).sort();
 
 	const output:string[] = [];
 	output.push('```' + header);
-	if (type === SettingType.App) output.push('# Do not remove this block');
+	if (type === SettingType.Plugin) output.push('# Do not remove this block');
 	for (const key of sortedKeys) {
 		const value = settings[key];
 		let sValue = '';
 		if (typeof value === 'boolean') {
 			sValue = value === true ? 'true' : 'false';
-		} else {
+		} else if (typeof value === 'string') {
 			sValue = value.toString();
+		} else {
+			sValue = JSON.stringify(value);
 		}
 		output.push(key + ': ' + sValue);
 	}
@@ -155,7 +157,7 @@ export const serializeBoard = (board:Board) => {
 		}
 	}
 
-	output.push(serializeSettings(SettingType.App, 'kanban-settings', board.settings));
+	output.push(serializeSettings(SettingType.Plugin, 'kanban-settings', board.settings));
 	output.push('');
 
 	return output.join('\n');

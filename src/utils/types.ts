@@ -29,6 +29,16 @@ export interface Card {
 	is_todo: number;
 }
 
+export interface Filters {
+	tagIds: string[];
+}
+
+export const getDefaultFilters = ():Filters => {
+	return {
+		tagIds: [],
+	}
+}
+
 export interface AppSettings {
 	dateFormat: string;
 	timeFormat: string;
@@ -51,7 +61,7 @@ export interface Stack {
 export interface Board {
 	noteId: string;
 	stacks: Stack[];
-	settings: Settings;
+	settings: BoardSettings;
 }
 
 export interface State {
@@ -110,7 +120,7 @@ export enum CardDoubleClickAction {
 	openInNote = 'openInNote',
 }
 
-export interface Settings {
+export interface PluginSettings {
 	stackWidth?: number;
 	confirmKey?: ConfirmKey;
 	newlineKey?: NewlineKey;
@@ -126,12 +136,18 @@ export interface StackSettings {
 	backgroundColor?: string;
 }
 
-export type AppSettingItems = Record<keyof Settings, SettingItem>;
+export interface BoardSettings extends PluginSettings {
+	filters?: Filters;
+}
+
+export type PluginSettingItems = Record<keyof PluginSettings, SettingItem>;
+export type BoardSettingItems = Record<keyof BoardSettings, SettingItem>;
 export type CardSettingItems = Record<keyof CardSettings, SettingItem>;
 export type StackSettingItems = Record<keyof StackSettings, SettingItem>;
-export type SettingItems = AppSettingItems | CardSettingItems | StackSettingItems;
 
-export const settingItems:AppSettingItems = {
+export type SettingItems = PluginSettingItems | CardSettingItems | StackSettingItems | BoardSettingItems;
+
+export const pluginSettingItems:PluginSettingItems = {
 	stackWidth: {
 		label: 'Stack width',
 		type: SettingItemType.Int,
@@ -213,6 +229,17 @@ export const stackSettingItems:StackSettingItems = {
 		value: '',
 		section: settingSectionName,
 	},
+}
+
+export const boardSettingItems:BoardSettingItems = {
+	filters: {
+		label: 'Filters',
+		type: SettingItemType.Object,
+		public: false,
+		value: '',
+	},
+
+	...pluginSettingItems,
 }
 
 export interface RenderResultPluginAsset {
