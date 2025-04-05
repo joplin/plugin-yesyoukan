@@ -45,7 +45,7 @@ export default () => {
 	const [dialogConfig, setDialogConfig] = useState<DialogConfig|null>(null);
 	const [filterDialogShown, setFilterDialogShown] = useState(false);
 	
-	const filteredBoard = useMemo(() => {
+	const { board: filteredBoard, totalCardCount: filterTotalCardCount, visibleCardCount: filterVisibleCardCount } = useMemo(() => {
 		return applyFilters(board);
 	}, [board]);
 
@@ -158,6 +158,8 @@ export default () => {
 	const toolbarButtons = useToolbarButtons({
 		historyRedoLength: history.redo.length,
 		historyUndoLength: history.undo.length,
+		filterTotalCardCount,
+		filterVisibleCardCount,
 		onAddStack,
 		onRedoBoard,
 		onUndoBoard,
