@@ -58,7 +58,7 @@ describe('filters', () => {
 					tagIds: [],
 				}
 			}
-		}).stacks[0].cards.length).toBe(3);
+		}).board.stacks[0].cards.length).toBe(3);
 
 		expect(applyFilters({
 			...board,
@@ -67,7 +67,7 @@ describe('filters', () => {
 					tagIds: ['1'],
 				}
 			}
-		}).stacks[0].cards.map(c => c.id)).toEqual(['card1', 'card3']);
+		}).board.stacks[0].cards.map(c => c.id)).toEqual(['card1', 'card3']);
 
 		expect(applyFilters({
 			...board,
@@ -76,7 +76,7 @@ describe('filters', () => {
 					tagIds: ['1', '2'],
 				}
 			}
-		}).stacks[0].cards.map(c => c.id)).toEqual(['card1', 'card3']);
+		}).board.stacks[0].cards.map(c => c.id)).toEqual(['card1', 'card3']);
 
 		expect(applyFilters({
 			...board,
@@ -85,7 +85,7 @@ describe('filters', () => {
 					tagIds: ['2'],
 				}
 			}
-		}).stacks[0].cards.map(c => c.id)).toEqual(['card1']);
+		}).board.stacks[0].cards.map(c => c.id)).toEqual(['card1']);
 	});
 
 });
