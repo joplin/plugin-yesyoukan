@@ -1,10 +1,12 @@
 import joplin from 'api';
-import { IpcMessage, Note, pluginSettingItems, settingSectionName } from './utils/types';
-import { boardsEqual, noteIsBoard, parseNote } from './utils/noteParser';
+import { Board, LastStackAddedDates, IpcMessage, Note, pluginSettingItems, settingSectionName } from './utils/types';
+import { boardsEqual, noteIsBoard, parseNote, serializeBoard } from './utils/noteParser';
 import Logger, { TargetType } from '@joplin/utils/Logger';
 import { MenuItemLocation } from 'api/types';
 import { msleep } from './utils/time';
 import messageHandlers from './messageHandlers';
+import { processAutoArchiving, recordLastStackAddedDates } from './utils/autoArchive';
+import uuid from './utils/uuid';
 
 const globalLogger = new Logger();
 globalLogger.addTarget(TargetType.Console);
@@ -21,6 +23,74 @@ const newNoteBody = `# Backlog
 \`\`\`kanban-settings
 # Do not remove this block
 \`\`\``;
+
+const getArchiveNote = async():Promise<Note|null> => {
+	const archiveNoteId:string = await joplin.settings.value('archiveNoteId');
+	if (!archiveNoteId) return null;
+
+	const note = await joplin.data.get(['notes', archiveNoteId], { fields: ['id', 'body', 'deleted_time'] });
+	return note && !note.deleted_time ? note : null;
+}
+
+const handleAutoArchiving = async () => {
+	const settings = (await joplin.settings.values(['lastStackAddedDates', 'autoArchiveDelayDays']));
+	let lastStackAddedDates = settings.lastStackAddedDates as LastStackAddedDates;
+	const autoArchiveDelayDays = settings.autoArchiveDelayDays as number;
+
+	if (!autoArchiveDelayDays) return;
+
+	const note:Note = await joplin.workspace.selectedNote();
+	const board = await parseNote(note.id, note.body);
+
+	const archiveNote = await getArchiveNote();
+	let archiveBoard:Board;
+	
+	if (archiveNote) {
+		archiveBoard = await parseNote(archiveNote.id, archiveNote.body);
+	} else {
+		archiveBoard = {
+			noteId: '',
+			settings: {},
+			stacks: [
+				{
+					id: uuid(),
+					cards: [],
+					title: 'Archive',
+				},
+			],
+		}
+	}
+	
+	const newDates = recordLastStackAddedDates(board, lastStackAddedDates);
+
+	if (newDates !== lastStackAddedDates) {
+		await joplin.settings.setValue('lastStackAddedDates', newDates);
+		lastStackAddedDates = newDates;
+	}
+
+	const result = await processAutoArchiving(
+		board,
+		archiveBoard,
+		lastStackAddedDates,
+		autoArchiveDelayDays,
+	);
+
+	if (result.board === board) return;
+
+	logger.info('Some cards need to be archived - updating board and archive note bodies');
+
+	const noteBody = serializeBoard(result.board);
+	const archiveNoteBody = serializeBoard(result.archive);
+
+	if (archiveNote) {
+		await joplin.data.put(['notes', archiveNote.id], null, { body: archiveNoteBody });
+	} else {
+		const newNote = await joplin.data.post(['notes'], null, { title: note.title + ' - Archive', body: archiveNoteBody });
+		await joplin.settings.setValue('archiveNoteId', newNote.id);
+	}
+
+	await joplin.data.put(['notes', board.noteId], null, { body: noteBody });
+}
 
 joplin.plugins.register({
 	onStart: async function() {
@@ -44,10 +114,10 @@ joplin.plugins.register({
 		await editors.addScript(view, './vendor/coloris/coloris.js');
 
 		const updateFromSelectedNote = async () => {
-			const note = await joplin.workspace.selectedNote();
+			const note:Note = await joplin.workspace.selectedNote();
 			if (!note) return;
 
-			await editors.postMessage(view, { type: 'setNote', value: { id: note.id, body: note.body }});
+			editors.postMessage(view, { type: 'setNote', value: { id: note.id, body: note.body }});
 		}
 
 		await editors.onActivationCheck(view, async () => {
@@ -62,6 +132,7 @@ joplin.plugins.register({
 
 		await editors.onUpdate(view, async () => {
 			logger.info('onUpdate');
+			console.info('updateFromSelectedNote - ON UPDATE');
 			await updateFromSelectedNote();
 		});
 
@@ -90,6 +161,8 @@ joplin.plugins.register({
 			logger.info('PostMessagePlugin (Webview): Got message from webview:', message);
 
 			if (message.type === 'isReady') {
+				console.info('updateFromSelectedNote - IS READY');
+				await handleAutoArchiving();
 				await updateFromSelectedNote();
 				return;
 			}

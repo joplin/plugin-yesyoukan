@@ -121,12 +121,18 @@ export enum CardDoubleClickAction {
 	openInNote = 'openInNote',
 }
 
+// boardId: cardId: Date in ms
+export type LastStackAddedDates = Record<string, Record<string, number>>;
+
 export interface PluginSettings {
 	stackWidth?: number;
 	confirmKey?: ConfirmKey;
 	newlineKey?: NewlineKey;
 	stackDynamicWidth?: boolean;
 	cardDoubleClickAction?: CardDoubleClickAction;
+	autoArchiveDelayDays?: number;
+	lastStackAddedDates?: LastStackAddedDates;
+	archiveNoteId?: string;
 }
 
 export interface CardSettings {
@@ -208,6 +214,31 @@ export const pluginSettingItems:PluginSettingItems = {
 			[CardDoubleClickAction.openInBoard]: 'Open in board',
 			[CardDoubleClickAction.openInNote]: 'Open in note',
 		},
+		section: settingSectionName,
+	},
+
+	autoArchiveDelayDays: {
+		label: 'Auto-archive cards in the right-most stack after (days)',
+		description: 'Archived cards are moved to an archive board that is automatically created. Set the delay to 0 to disable the feature.',
+		type: SettingItemType.Int,
+		public: true,
+		value: 0,
+		section: settingSectionName,
+	},
+
+	lastStackAddedDates: {
+		label: '',
+		type: SettingItemType.Object,
+		public: false,
+		value: 0,
+		section: settingSectionName,
+	},
+
+	archiveNoteId: {
+		label: '',
+		type: SettingItemType.String,
+		public: false,
+		value: '',
 		section: settingSectionName,
 	},
 };

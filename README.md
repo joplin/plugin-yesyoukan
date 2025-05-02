@@ -93,6 +93,12 @@ Now if you open the Kanban board again, the card will diplay the due date and ti
 
 Cards and stacks can have a colour associated with them. To assign the colour, click on the kebab button **⋮** for the card or stack, and select the colour. Note that the colours are predefined so that they look bright enough on a light theme, and dark enough on a dark theme.
 
+## Auto-archiving
+
+The auto-archive feature enables the removal of old cards from the board. The final stack on the board represents the "Done" state. When a card is placed in this stack, the time of placement is recorded. After the duration specified in the auto-archive settings has passed, the card is archived.
+
+Archived cards are removed from the current board and transferred to a new "archive" board within the same notebook as the original board.
+
 ## Credits
 
 - Kanban icon created by [Muhammad_Usman](https://www.flaticon.com/authors/muhammad-usman)
