@@ -83,6 +83,11 @@ export default (props:Props) => {
 
 	const isNoteLink = !!parsedTitle && card.noteExists;
 
+	const cardHasChanged = useCallback(() => {
+		const newCard = stringToCard(card, editorRef.current.value);
+		return newCard.title !== card.title || newCard.body !== card.body;
+	}, [editorRef, card]);
+
 	const onEditorSubmit = useCallback(() => {
 		props.onEditorSubmit({
 			card: stringToCard(card, editorRef.current.value),
@@ -90,8 +95,13 @@ export default (props:Props) => {
 	}, [props.onEditorSubmit, card]);
 
 	const onEditorCancel = useCallback(() => {
-		props.onEditorCancel({ card })
-	}, []);
+		const ok = cardHasChanged() ? confirm('All your changes will be lost - continue?') : true;
+		if (!ok) {
+			return;
+		} else {
+			props.onEditorCancel({ card })
+		}
+	}, [cardHasChanged]);
 
 	const onEdit = useCallback((cardDoubleClickAction:CardDoubleClickAction|null = null) => {
 		if (!props.isEditing) {
