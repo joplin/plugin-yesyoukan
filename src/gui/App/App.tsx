@@ -32,6 +32,7 @@ import FilterDialog from "../filter/Dialog";
 import useCardTags from "./hooks/useCardTags";
 import { applyFilters } from "../../utils/filters";
 import { produce } from "immer";
+import useContextMenu from "./hooks/useContextMenu";
 
 declare var webviewApi: WebviewApi;
 
@@ -171,6 +172,10 @@ export default () => {
 	const onSettingsDialogClose = useCallback(() => {
 		setDialogConfig(null);
 	}, []);
+
+	useContextMenu({
+		webviewApi,
+	});
 
 	const appSettings = useAppSettings({ webviewApi });
 

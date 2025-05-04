@@ -101,6 +101,7 @@ type WebviewApiOnMessageHandler = (message:OnMessageMessage) => void;
 export interface WebviewApi {
 	postMessage<T>(message:IpcMessage): Promise<T>;
 	onMessage(handler:WebviewApiOnMessageHandler);
+	menuPopupFromTemplate(template:any[]);
 }
 
 export const emptyBoard = ():Board => {
