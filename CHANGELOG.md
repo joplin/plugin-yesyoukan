@@ -1,3 +1,13 @@
+# v1.0.15
+
+- Fixes #31: Clicking Checkbox card with associated note crashes Kanban editor
+- Fixes #32: Fixed card title top margin
+- Resolves #33: Add support for filering by tag
+- Resolves #44: Allow duplicating cards
+- Made board comparison more reliable to avoid unnecessary save operations
+- Display the number of cards that have been filtered out
+- Resolves #39: Auto archive completed items
+
 # v1.0.13
 
 - Fixes #26: Opening a card in note while body is being edited loses the changes
