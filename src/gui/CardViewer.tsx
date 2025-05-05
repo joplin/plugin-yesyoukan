@@ -82,6 +82,8 @@ export default (props:Props) => {
 	}, [card.title]);
 
 	const isNoteLink = !!parsedTitle && card.noteExists;
+	const isInTrash = !!card.deleted_time;
+	const isPermanentlyDeleted = !!parsedTitle && !card.noteExists;
 
 	const cardHasChanged = useCallback(() => {
 		const newCard = stringToCard(card, editorRef.current.value);
@@ -106,7 +108,11 @@ export default (props:Props) => {
 	const onEdit = useCallback((cardDoubleClickAction:CardDoubleClickAction|null = null) => {
 		if (!props.isEditing) {
 			if (isNoteLink) {
-				props.onOpenAssociatedNote({ cardId: card.id });
+				if (isInTrash) {
+					alert('This card has been deleted - move it outside of the trash to open it from here');
+				} else {
+					props.onOpenAssociatedNote({ cardId: card.id });
+				}
 			} else {
 				const actions:Record<CardDoubleClickAction, () => void> = {
 					[CardDoubleClickAction.openInBoard]: () => {
@@ -120,7 +126,7 @@ export default (props:Props) => {
 				actions[cardDoubleClickAction ? cardDoubleClickAction : props.cardDoubleClickAction]();
 			}
 		}
-	}, [props.isEditing, card, isNoteLink, props.cardDoubleClickAction, props.onOpenAssociatedNote]);
+	}, [props.isEditing, card, isNoteLink, props.cardDoubleClickAction, props.onOpenAssociatedNote, isInTrash]);
 
 	const onDoubleClick = useCallback(() => {
 		onEdit();
@@ -305,9 +311,10 @@ export default (props:Props) => {
 
 		if (props.isLast) classes.push('-last');
 		if (props.isEditing) classes.push('-editing');
+		if (isInTrash || isPermanentlyDeleted) classes.push('-deleted');
 
 		return classes;
-	}, [card.settings?.backgroundColor, props.isLast, props.isEditing]);
+	}, [card.settings?.backgroundColor, props.isLast, props.isEditing, isInTrash, isPermanentlyDeleted]);
 	
 	return (
 		<Draggable draggableId={card.id} index={props.index}>

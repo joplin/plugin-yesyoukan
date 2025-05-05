@@ -72,6 +72,7 @@ export default (props:Props) => {
 						card.is_todo = result.is_todo;
 						card.todo_completed = result.todo_completed;
 						card.todo_due = result.todo_due;
+						card.deleted_time = result.deleted_time;
 					}
 
 					for (const [noteId, tags] of Object.entries(noteIdToTags)) {

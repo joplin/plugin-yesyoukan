@@ -7,6 +7,7 @@ export interface Note {
 	todo_due: number;
 	todo_completed: number;
 	is_todo: number;
+	deleted_time: number;
 }
 
 export interface Tag {
@@ -27,6 +28,7 @@ export interface Card {
 	todo_due: number;
 	todo_completed: number;
 	is_todo: number;
+	deleted_time?: number;
 }
 
 export interface Filters {
@@ -311,4 +313,5 @@ export interface RenderedCard {
 	todo_due: number;
 	todo_completed: number;
 	is_todo: number;
+	deleted_time: number;
 }

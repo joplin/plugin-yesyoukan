@@ -28,7 +28,7 @@ const setNoteHandler = async (messageNote:Note) => {
 	}
 }
 
-const noteFields = ['title', 'body', 'todo_due', 'todo_completed', 'is_todo'];
+const noteFields = ['id', 'title', 'body', 'todo_due', 'todo_completed', 'is_todo', 'deleted_time'];
 
 const messageHandlers:Record<IpcMessageType, MessageHandler> = {
 
@@ -46,7 +46,7 @@ const messageHandlers:Record<IpcMessageType, MessageHandler> = {
 		const noteIds = message.value as string[];
 		const notes:Note[] = [];
 		for (const noteId of noteIds) {
-			notes.push(await joplin.data.get(['notes', noteId]));
+			notes.push(await joplin.data.get(['notes', noteId], { fields: noteFields }));
 		}
 		return notes;
 	},

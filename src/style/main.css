@@ -278,6 +278,10 @@ ul, ol {
 	&.-editing {
 		padding-bottom: 5px;
 	}
+
+	&.-deleted {
+		opacity: 0.5;
+	}
 }
 
 svg[data-icon] {
