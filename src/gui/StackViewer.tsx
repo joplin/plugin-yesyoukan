@@ -236,18 +236,20 @@ export default (props:Props) => {
 							{renderTitle()}
 							{renderHeadingButtons()}
 						</div>
-						<Droppable droppableId={props.value.id} type="card">
-							{(provided, snapshot) => {
-								const classes = ['cards'];
-								if (snapshot.isDraggingOver) classes.push('-dragging-over');
-								return (
-									<div className={classes.join(' ')} {...provided.droppableProps} ref={provided.innerRef}>
-										{renderCards()}
-										{provided.placeholder}
-									</div>
-								);
-							}}
-						</Droppable>
+						<div className="droppablewrapper">
+							<Droppable droppableId={props.value.id} type="card">
+								{(provided, snapshot) => {
+									const classes = ['cards'];
+									if (snapshot.isDraggingOver) classes.push('-dragging-over');
+									return (
+										<div className={classes.join(' ')} {...provided.droppableProps} ref={provided.innerRef}>
+											{renderCards()}
+											{provided.placeholder}
+										</div>
+									);
+								}}
+							</Droppable>
+						</div>
 					</div>
 				);
 			}}

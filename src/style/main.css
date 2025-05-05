@@ -64,7 +64,7 @@ ul, ol {
 	transition: background-color 300ms ease;
 	min-height: 200px;
 	overflow-x: hidden;
-	overflow-y: auto;
+	overflow-y: hidden;
 
 	> .stack-header {
 		display: flex;
@@ -120,6 +120,11 @@ ul, ol {
 			flex: 1;
 			padding-right: 4px;
 		}
+	}
+
+	> .droppablewrapper {
+		overflow-x: hidden;
+		overflow-y: auto;
 	}
 
 	&.-dragging {
