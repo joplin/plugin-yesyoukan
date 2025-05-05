@@ -75,6 +75,7 @@ export type IpcMessageType =
 	'getNotes' | // This returns any number of notes
 	'duplicateNote' |
 	'setNote' |
+	'setNoteProps' |
 	'isReady' |
 	'getSettings' |
 	'getAppSettings' |
@@ -136,6 +137,7 @@ export interface PluginSettings {
 	autoArchiveDelayDays?: number;
 	lastStackAddedDates?: LastStackAddedDates;
 	archiveNoteId?: string;
+	markAsCompletedLastStackCards?: boolean;
 }
 
 export interface CardSettings {
@@ -242,6 +244,14 @@ export const pluginSettingItems:PluginSettingItems = {
 		type: SettingItemType.String,
 		public: false,
 		value: '',
+		section: settingSectionName,
+	},
+
+	markAsCompletedLastStackCards: {
+		label: 'Mark as completed to-do cards that are dropped in the last stack',
+		type: SettingItemType.Bool,
+		public: true,
+		value: true,
 		section: settingSectionName,
 	},
 };

@@ -81,12 +81,17 @@ const messageHandlers:Record<IpcMessageType, MessageHandler> = {
 		await setNoteHandler(message.value as Note);
 	},
 
+	'setNoteProps': async (message:IpcMessage) => {
+		const { noteId, props } = message.value;
+		delete props.id;
+		if (!Object.keys(props).length) throw new Error('Cannot set empty props on note: ' + noteId);
+		await joplin.data.put(['notes', noteId], null, props);
+	},
+
 	'setNoteCheckbox': async (message:IpcMessage) => {
 		const { cardMessage, noteId } = message.value;
 		const note:Note = await joplin.data.get(['notes', noteId], { fields: ['body'] });
 		const newBody = toggleCheckbox(cardMessage, note.body);
-		console.info('BEFORE', note.body);
-		console.info('AFTER', newBody);
 		await joplin.data.put(['notes', noteId], null, { body: newBody });
 	},
 

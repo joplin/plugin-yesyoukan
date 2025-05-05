@@ -33,6 +33,7 @@ import useCardTags from "./hooks/useCardTags";
 import { applyFilters } from "../../utils/filters";
 import { produce } from "immer";
 import useContextMenu from "./hooks/useContextMenu";
+import useHandleLastStackDrop from "./hooks/useHandleLastStackDrop";
 
 declare var webviewApi: WebviewApi;
 
@@ -137,6 +138,13 @@ export default () => {
 		board,
 		pushUndo,
 		setBoard,
+	});
+
+	useHandleLastStackDrop({
+		board,
+		setBoard,
+		markAsCompletedLastStackCards: effectiveBoardSettings.markAsCompletedLastStackCards,
+		webviewApi,
 	});
 
 	const onStackDrop = useOnStackDrop({
