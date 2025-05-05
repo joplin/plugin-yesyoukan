@@ -31,6 +31,9 @@ const sharedControlStyle:any = {
 		paper: {
 			backgroundColor: getCssVariable('--joplin-background-color'),
 		},
+		noOptions: {
+			color: getCssVariable('--joplin-color'),
+		},
 	},
 };
 

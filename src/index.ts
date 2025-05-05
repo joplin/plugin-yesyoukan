@@ -132,7 +132,6 @@ joplin.plugins.register({
 
 		await editors.onUpdate(view, async () => {
 			logger.info('onUpdate');
-			console.info('updateFromSelectedNote - ON UPDATE');
 			await updateFromSelectedNote();
 		});
 
@@ -161,7 +160,6 @@ joplin.plugins.register({
 			logger.info('PostMessagePlugin (Webview): Got message from webview:', message);
 
 			if (message.type === 'isReady') {
-				console.info('updateFromSelectedNote - IS READY');
 				await handleAutoArchiving();
 				await updateFromSelectedNote();
 				return;

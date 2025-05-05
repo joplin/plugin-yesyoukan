@@ -101,7 +101,7 @@ export default (props:Props) => {
 		} else {
 			props.onEditorCancel({ card })
 		}
-	}, [cardHasChanged]);
+	}, [cardHasChanged, props.onEditorCancel, card]);
 
 	const onEdit = useCallback((cardDoubleClickAction:CardDoubleClickAction|null = null) => {
 		if (!props.isEditing) {
