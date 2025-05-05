@@ -282,6 +282,10 @@ ul, ol {
 	&.-deleted {
 		opacity: 0.5;
 	}
+
+	&.-overdue {
+		border: 2px solid rgb(179, 2, 2);
+	}
 }
 
 svg[data-icon] {

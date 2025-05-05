@@ -84,6 +84,8 @@ export default (props:Props) => {
 	const isNoteLink = !!parsedTitle && card.noteExists;
 	const isInTrash = !!card.deleted_time;
 	const isPermanentlyDeleted = !!parsedTitle && !card.noteExists;
+	const hasDueDate = card.is_todo && card.todo_due;
+	const isOverdue = hasDueDate && !card.todo_completed && card.todo_due <= Date.now();
 
 	const cardHasChanged = useCallback(() => {
 		const newCard = stringToCard(card, editorRef.current.value);
@@ -254,10 +256,7 @@ export default (props:Props) => {
 	}
 
 	const renderDueDate = () => {
-		if (!card.is_todo) return null;
-		if (!card.todo_due) return null;
-
-		const isOverdue = !card.todo_completed && card.todo_due <= Date.now();
+		if (!hasDueDate) return null;
 
 		const dateClasses = ['date'];
 		if (card.todo_completed) dateClasses.push('-done');
@@ -312,9 +311,10 @@ export default (props:Props) => {
 		if (props.isLast) classes.push('-last');
 		if (props.isEditing) classes.push('-editing');
 		if (isInTrash || isPermanentlyDeleted) classes.push('-deleted');
+		if (isOverdue) classes.push('-overdue');
 
 		return classes;
-	}, [card.settings?.backgroundColor, props.isLast, props.isEditing, isInTrash, isPermanentlyDeleted]);
+	}, [card.settings?.backgroundColor, props.isLast, props.isEditing, isInTrash, isPermanentlyDeleted, isOverdue]);
 	
 	return (
 		<Draggable draggableId={card.id} index={props.index}>
