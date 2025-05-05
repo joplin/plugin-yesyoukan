@@ -123,6 +123,7 @@ ul, ol {
 	}
 
 	> .droppablewrapper {
+		height: 100%;
 		overflow-x: hidden;
 		overflow-y: auto;
 	}
@@ -169,6 +170,7 @@ ul, ol {
 	flex-grow: 1;
     flex-shrink: 1;
     flex-basis: 0;
+	min-height: 100%;
 }
 
 .card {
