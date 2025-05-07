@@ -1,3 +1,13 @@
+# v1.0.16
+
+- Resolves #45: Allow right-clicking on a link inside a card to copy it
+- Resolves #47: Ask for confirmation when closing the editor would cause changing to be lost
+- Resolves #52: Improved various components in dark theme
+- Resolves #49: Make header of stacks sticky
+- Resolves #48: Handle case where an external note is deleted
+- Resolves #37: Change border of card when the date is due
+- Resolves #43: If note is a to-do and is placed in the last stack, mark it as completed
+
 # v1.0.15
 
 - Fixes #31: Clicking Checkbox card with associated note crashes Kanban editor
