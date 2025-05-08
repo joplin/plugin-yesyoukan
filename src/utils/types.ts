@@ -138,6 +138,7 @@ export interface PluginSettings {
 	lastStackAddedDates?: LastStackAddedDates;
 	archiveNoteId?: string;
 	markAsCompletedLastStackCards?: boolean;
+	addCardsToBeginningOfStack?: boolean;
 }
 
 export interface CardSettings {
@@ -252,6 +253,14 @@ export const pluginSettingItems:PluginSettingItems = {
 		type: SettingItemType.Bool,
 		public: true,
 		value: true,
+		section: settingSectionName,
+	},
+
+	addCardsToBeginningOfStack: {
+		label: 'Add new cards to beginning of stack',
+		type: SettingItemType.Bool,
+		public: true,
+		value: false,
 		section: settingSectionName,
 	},
 };

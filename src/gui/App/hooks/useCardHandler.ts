@@ -17,6 +17,7 @@ interface Props {
 	pushUndo: PushUndo;
 	webviewApi: WebviewApi;
 	setDialogConfig: (value: React.SetStateAction<DialogConfig>) => void;
+	addCardsToBeginningOfStack: boolean;
 }
 
 export default (props:Props) => {
@@ -73,14 +74,20 @@ export default (props:Props) => {
 
 		const newBoard = produce(props.board, draft => {
 			const stackIndex = findStackIndex(draft, event.stackId);
-			draft.stacks[stackIndex].cards.push({
+			const newCard = {
 				id: newCardId,
 				title: 'New card',
 				body: '',
 				is_todo: 0,
 				todo_completed: 0,
 				todo_due: 0,
-			});
+			}
+
+			if (props.addCardsToBeginningOfStack) {
+				draft.stacks[stackIndex].cards.unshift(newCard);
+			} else {
+				draft.stacks[stackIndex].cards.push(newCard);
+			}
 		});
 
 		props.setBoard(newBoard);
@@ -127,10 +134,17 @@ export default (props:Props) => {
 
 			const newBoard = produce(props.board, draft => {
 				const newCard = createCard();
-				draft.stacks[stackIndex].cards.push({
-					...newCard,
-					...serializeNoteToCard(newNote),
-				});
+				if (props.addCardsToBeginningOfStack) {
+					draft.stacks[stackIndex].cards.unshift({
+						...newCard,
+						...serializeNoteToCard(newNote),
+					});
+				} else {
+					draft.stacks[stackIndex].cards.push({
+						...newCard,
+						...serializeNoteToCard(newNote),
+					});
+				}
 			});
 
 			props.setBoard(newBoard);
@@ -138,7 +152,11 @@ export default (props:Props) => {
 			props.pushUndo(props.board);
 
 			const newBoard = produce(props.board, draft => {
-				draft.stacks[stackIndex].cards.push(duplicateCard(card));
+				if (props.addCardsToBeginningOfStack) {
+					draft.stacks[stackIndex].cards.unshift(duplicateCard(card));
+				} else {
+					draft.stacks[stackIndex].cards.push(duplicateCard(card));
+				}
 			});
 	
 			props.setBoard(newBoard);
