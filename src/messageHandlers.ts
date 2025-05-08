@@ -28,7 +28,7 @@ const setNoteHandler = async (messageNote:Note) => {
 	}
 }
 
-const noteFields = ['id', 'title', 'body', 'todo_due', 'todo_completed', 'is_todo', 'deleted_time'];
+const noteFields = ['id', 'title', 'body', 'todo_due', 'todo_completed', 'is_todo', 'deleted_time', 'parent_id'];
 
 const messageHandlers:Record<IpcMessageType, MessageHandler> = {
 
@@ -150,6 +150,7 @@ const messageHandlers:Record<IpcMessageType, MessageHandler> = {
 
 		const newNote = {
 			...note,
+			id: '',
 			title: note.title + ' - Copy',
 			tags: tagTitles.join(','),
 		};
