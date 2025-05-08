@@ -150,10 +150,11 @@ const messageHandlers:Record<IpcMessageType, MessageHandler> = {
 
 		const newNote = {
 			...note,
-			id: '',
 			title: note.title + ' - Copy',
 			tags: tagTitles.join(','),
 		};
+		
+		delete newNote.id;
 
 		return await joplin.data.post(['notes'], null, newNote);
 	},
