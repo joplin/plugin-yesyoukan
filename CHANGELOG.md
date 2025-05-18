@@ -1,7 +1,7 @@
 # v1.0.16
 
 - Resolves #45: Allow right-clicking on a link inside a card to copy it
-- Resolves #47: Ask for confirmation when closing the editor would cause changing to be lost
+- Resolves #47: Ask for confirmation when closing the editor would cause changes to be lost
 - Resolves #52: Improved various components in dark theme
 - Resolves #49: Make header of stacks sticky
 - Resolves #48: Handle case where an external note is deleted
