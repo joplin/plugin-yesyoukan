@@ -1,3 +1,8 @@
+# v1.0.17
+
+- Fixes #60: Scrollbar is broken on card content
+- Fixes #55: Using Duplicate on a Card from Note causes Uncaught Exception
+
 # v1.0.16
 
 - Resolves #45: Allow right-clicking on a link inside a card to copy it
