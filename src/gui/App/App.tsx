@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useCallback, useState, useMemo, useRef } from "react";
-import { Board, Note, WebviewApi, emptyBoard } from "../../utils/types";
+import { Board, Filters, Note, WebviewApi, emptyBoard, getDefaultFilters } from "../../utils/types";
 import StackViewer, { StackDropEventHandler, StackEvent, StackEventHandler } from "../StackViewer";
 import { DragDropContext, Droppable, OnDragEndResponder } from "@hello-pangea/dnd";
 import { ThemeProvider } from "@mui/material";
@@ -28,6 +28,12 @@ import useToolbarButtons from "./hooks/useToolbarButtons";
 import Logger from "@joplin/utils/Logger";
 import useOnStackDrop from "./hooks/useOnStackDrop";
 import useAppSettings from "./hooks/useAppSettings";
+import FilterDialog from "../filter/Dialog";
+import useCardTags from "./hooks/useCardTags";
+import { applyFilters } from "../../utils/filters";
+import { produce } from "immer";
+import useContextMenu from "./hooks/useContextMenu";
+import useHandleLastStackDrop from "./hooks/useHandleLastStackDrop";
 
 declare var webviewApi: WebviewApi;
 
@@ -39,6 +45,11 @@ export default () => {
 	const [board, setBoard] = useState<Board>(emptyBoard());
 	const afterSetNoteAction = useRef<AfterSetNoteAction|null>(null);
 	const [dialogConfig, setDialogConfig] = useState<DialogConfig|null>(null);
+	const [filterDialogShown, setFilterDialogShown] = useState(false);
+	
+	const { board: filteredBoard, totalCardCount: filterTotalCardCount, visibleCardCount: filterVisibleCardCount } = useMemo(() => {
+		return applyFilters(board);
+	}, [board]);
 
 	const effectiveBoardSettings = useEffectiveBoardSettings({
 		board,
@@ -64,6 +75,7 @@ export default () => {
 		onDeleteCard,
 		onCardEditorCancel,
 		onAddCard,
+		onDuplicateCard,
 	} = useCardHandler({
 		board,
 		pushUndo,
@@ -128,6 +140,13 @@ export default () => {
 		setBoard,
 	});
 
+	useHandleLastStackDrop({
+		board,
+		setBoard,
+		markAsCompletedLastStackCards: effectiveBoardSettings.markAsCompletedLastStackCards,
+		webviewApi,
+	});
+
 	const onStackDrop = useOnStackDrop({
 		board,
 		setBoard,
@@ -141,17 +160,30 @@ export default () => {
 		stackWidth: effectiveBoardSettings.stackWidth,
 	});
 
+	const onFilter = useCallback(() => {
+		setFilterDialogShown(true);
+	}, []);
+
 	const toolbarButtons = useToolbarButtons({
 		historyRedoLength: history.redo.length,
 		historyUndoLength: history.undo.length,
+		filterTotalCardCount,
+		filterVisibleCardCount,
 		onAddStack,
 		onRedoBoard,
 		onUndoBoard,
+		onFilter,
 	});
+
+	const cardTags = useCardTags({ board });
 
 	const onSettingsDialogClose = useCallback(() => {
 		setDialogConfig(null);
 	}, []);
+
+	useContextMenu({
+		webviewApi,
+	});
 
 	const appSettings = useAppSettings({ webviewApi });
 
@@ -159,7 +191,7 @@ export default () => {
 		const dynamicWidth = effectiveBoardSettings.stackDynamicWidth ? board.stacks.length : 0;
 
 		const output:React.JSX.Element[] = [];
-		for (let [index, stack] of board.stacks.entries()) {
+		for (let [index, stack] of filteredBoard.stacks.entries()) {
 			output.push(<StackViewer
 				onDelete={onStackDelete}
 				onTitleChange={onStackTitleChange}
@@ -172,6 +204,7 @@ export default () => {
 				onEditCardSettings={onEditCardSettings}
 				onAddCard={onAddCard}
 				onDeleteCard={onDeleteCard}
+				onDuplicateCard={onDuplicateCard}
 				onEditSettings={onEditStackSettings}
 				onDrop={onStackDrop}
 				isLast={index === board.stacks.length - 1}
@@ -206,11 +239,36 @@ export default () => {
 		);
 	}
 
+	const renderFilterDialog = () => {
+		if (!filterDialogShown) return;
+
+		const uniqueTags = Array.from(
+			new Map(Object.values(cardTags).flat().map(tag => [tag.id, tag])).values()
+		);
+		
+		return (
+			<FilterDialog
+				onCancel={() => {
+					setFilterDialogShown(false);
+				}}
+				onSave={(filters:Filters) => {
+					setFilterDialogShown(false);
+					setBoard(produce(board, draft => {
+						draft.settings.filters = filters;
+					}));
+				}}
+				tags={uniqueTags}
+				filters={board.settings.filters}
+			/>
+		);
+	}
+
 	return (
 		<ThemeProvider theme={theme}>
 			<div className="app">
-				{renderSettingsDialog()}
 				<style>{appStyle}</style>
+				{renderSettingsDialog()}
+				{renderFilterDialog()}
 				<Toolbar buttons={toolbarButtons}/>
 				<div className="stacks">
 					<DragDropContext onDragEnd={onDragEnd}>

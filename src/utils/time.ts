@@ -13,9 +13,32 @@ function initDayJs() {
 
 initDayJs();
 
-export const msleep = (ms: number) => {
-	return new Promise(resolve => setTimeout(resolve, ms));
-};
+export function msleep(ms: number) {
+	// It seems setTimeout can sometimes last less time than the provided
+	// interval:
+	//
+	// https://stackoverflow.com/a/50912029/561309
+	//
+	// This can cause issues in tests where we expect the actual duration to be
+	// the same as the provided interval or more, but not less. So the code
+	// below check that the elapsed time is no less than the provided interval,
+	// and if it is, it waits a bit longer.
+	const startTime = Date.now();
+	return new Promise((resolve) => {
+		setTimeout(() => {
+			if (Date.now() - startTime < ms) {
+				const iid = setInterval(() => {
+					if (Date.now() - startTime >= ms) {
+						clearInterval(iid);
+						resolve(null);
+					}
+				}, 2);
+			} else {
+				resolve(null);
+			}
+		}, ms);
+	});
+}
 
 export const formatDateTime = (ms:number, timeFormat:string) => {
 	return dayjs(new Date(ms)).format(timeFormat);

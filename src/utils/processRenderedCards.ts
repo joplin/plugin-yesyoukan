@@ -47,6 +47,7 @@ export default async (
 					is_todo: 0,
 					todo_completed: 0,
 					todo_due: 0,
+					deleted_time: 0,
 				}
 			}
 
@@ -117,6 +118,7 @@ export default async (
 			todo_due: note ? note.todo_due : 0,
 			todo_completed:  note ? note.todo_completed : 0,
 			is_todo: note ? note.is_todo : 0,
+			deleted_time: note ? note.deleted_time : 0,
 		}
 		
 		cardIndex++;

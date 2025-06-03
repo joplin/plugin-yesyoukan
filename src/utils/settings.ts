@@ -1,4 +1,4 @@
-import { CardSettings, Settings, StackSettings, cardSettingItems, settingItems } from "./types";
+import { BoardSettings, CardSettings, PluginSettings, SettingItems, StackSettings, boardSettingItems, cardSettingItems, pluginSettingItems, stackSettingItems } from "./types";
 import { LoggerWrapper } from '@joplin/utils/Logger';
 
 const parseBoolean = (s: string): boolean => {
@@ -8,7 +8,8 @@ const parseBoolean = (s: string): boolean => {
 };
 
 export enum SettingType {
-	App = 'app',
+	Plugin = 'plugin',
+	Board = 'board',
 	Card = 'card',
 	Stack = 'stack',
 }
@@ -16,7 +17,14 @@ export enum SettingType {
 function parseSettings(type:SettingType, rawSettings:Record<string, string>, logger:LoggerWrapper = null) {
 	const output = {};
 
-	const items = type === SettingType.App ? settingItems : cardSettingItems;
+	const settingTypeToSettingItems:Record<SettingType, SettingItems> = {
+		[SettingType.Plugin]: pluginSettingItems,
+		[SettingType.Board]: boardSettingItems,
+		[SettingType.Stack]: stackSettingItems,
+		[SettingType.Card]: cardSettingItems,
+	}
+
+	const items = settingTypeToSettingItems[type];
 
 	for (const [key, rawValue] of Object.entries(rawSettings)) {
 		if (!(key in items)) {
@@ -24,19 +32,23 @@ function parseSettings(type:SettingType, rawSettings:Record<string, string>, log
 			continue;
 		}
 
-		const value = items[key].value;
+		const valueType = items[key].type;
+
+		// const value = items[key].value;
 		
 		try {
-			if (typeof value === 'number') {
+			if (valueType === 1) {
 				const v = Number(rawValue);
 				if (isNaN(v)) throw new Error(`Invalid number value "${rawValue}"`);
 				(output as any)[key] = v;
-			} else if (typeof value === 'boolean') {
+			} else if (valueType === 3) {
 				(output as any)[key] = parseBoolean(rawValue);
-			} else if (typeof value === 'string') {
+			} else if (valueType === 2) {
 				(output as any)[key] = `${rawValue}`;
+			} else if (valueType === 5) {
+				(output as any)[key] = rawValue ? JSON.parse(rawValue) : {};
 			} else {
-				throw new Error(`Invalid setting default value type: ${typeof value}`);
+				throw new Error(`Invalid setting default value type: ${valueType}`);
 			}
 		} catch (error) {
 			error.message = `Could not parse key "${key}": ${error.message}`;
@@ -44,15 +56,15 @@ function parseSettings(type:SettingType, rawSettings:Record<string, string>, log
 		}
 	}
 
-	if (type === SettingType.App) {
-		return output as Settings;
+	if (type === SettingType.Plugin) {
+		return output as PluginSettings;
 	} else {
 		return output as CardSettings;
 	}
 }
 
-export const parseAppSettings = (rawSettings:Record<string, string>, logger:LoggerWrapper = null) => {
-	return parseSettings(SettingType.App, rawSettings, logger) as Settings;
+export const parseBoardSettings = (rawSettings:Record<string, string>, logger:LoggerWrapper = null) => {
+	return parseSettings(SettingType.Board, rawSettings, logger) as BoardSettings;
 }
 
 export const parseCardSettings = (rawSettings:Record<string, string>, logger:LoggerWrapper = null) => {

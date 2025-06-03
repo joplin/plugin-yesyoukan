@@ -6,18 +6,33 @@ const getCssVariable = (variableName: string) => {
 	return computedStyle_.getPropertyValue(variableName).trim();
 }
 
+const baseOverrideStyle:any = {
+	styleOverrides: {
+		root: {
+			color: getCssVariable('--joplin-color'),
+		},
+	},
+}
+
 const sharedControlStyle:any = {
 	styleOverrides: {
 		root: {
+			backgroundColor: getCssVariable('--joplin-background-color'),
 			'& .MuiOutlinedInput-notchedOutline': {
-				borderColor: getCssVariable('--joplin-divider-color'), // Set default border color
+				borderColor: getCssVariable('--joplin-divider-color'),
 			},
 			'&:hover .MuiOutlinedInput-notchedOutline': {
-				borderColor: getCssVariable('--joplin-color'), // Set hover color
+				borderColor: getCssVariable('--joplin-color'),
 			},
 			'&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-				borderColor: getCssVariable('--joplin-color'), // Set focused color
+				borderColor: getCssVariable('--joplin-color'),
 			},
+		},
+		paper: {
+			backgroundColor: getCssVariable('--joplin-background-color'),
+		},
+		noOptions: {
+			color: getCssVariable('--joplin-color'),
 		},
 	},
 };
@@ -55,6 +70,17 @@ const theme = createTheme({
 				},
 			},
 		},
+		MuiButtonBase: {
+			styleOverrides: {
+				root: {
+					color: getCssVariable('--joplin-color'),
+					'&.Mui-disabled': {
+						color: getCssVariable('--joplin-color'),
+						opacity: 0.4,
+					},
+				},
+			},
+		},
 		MuiButton: {
 			styleOverrides: {
 				root: {
@@ -86,15 +112,17 @@ const theme = createTheme({
 		MuiTextField: sharedControlStyle,
 		MuiSelect: sharedControlStyle,
 		MuiInputBase: sharedControlStyle,
+		MuiAutocomplete: sharedControlStyle,
+		MuiSvgIcon: baseOverrideStyle,
 		MuiFormLabel: {
 			styleOverrides: {
 				root: {
-					color: getCssVariable('--joplin-color'), // Set default label color
+					color: getCssVariable('--joplin-color'),
 					'&.Mui-focused': {
-						color: getCssVariable('--joplin-color'), // Set color when focused
+						color: getCssVariable('--joplin-color'),
 					},
 					'&.MuiFormLabel-filled': {
-						color: getCssVariable('--joplin-color'), // Set color when filled
+						color: getCssVariable('--joplin-color'),
 					},
 				},
 			},

@@ -1,3 +1,28 @@
+# v1.0.17
+
+- Fixes #60: Scrollbar is broken on card content
+- Fixes #55: Using Duplicate on a Card from Note causes Uncaught Exception
+
+# v1.0.16
+
+- Resolves #45: Allow right-clicking on a link inside a card to copy it
+- Resolves #47: Ask for confirmation when closing the editor would cause changes to be lost
+- Resolves #52: Improved various components in dark theme
+- Resolves #49: Make header of stacks sticky
+- Resolves #48: Handle case where an external note is deleted
+- Resolves #37: Change border of card when the date is due
+- Resolves #43: If note is a to-do and is placed in the last stack, mark it as completed
+
+# v1.0.15
+
+- Fixes #31: Clicking Checkbox card with associated note crashes Kanban editor
+- Fixes #32: Fixed card title top margin
+- Resolves #33: Add support for filering by tag
+- Resolves #44: Allow duplicating cards
+- Made board comparison more reliable to avoid unnecessary save operations
+- Display the number of cards that have been filtered out
+- Resolves #39: Auto archive completed items
+
 # v1.0.13
 
 - Fixes #26: Opening a card in note while body is being edited loses the changes

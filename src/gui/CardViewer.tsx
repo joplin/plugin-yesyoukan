@@ -48,6 +48,7 @@ export interface Props {
 	onCreateNoteFromCard: CardHandler;
 	onOpenAssociatedNote: CardHandler;
 	onEditSettings: CardHandler;
+	onDuplicate: CardHandler;
 	cardDoubleClickAction: CardDoubleClickAction;
 	isEditing: boolean;
 	platform: Platform;
@@ -81,6 +82,15 @@ export default (props:Props) => {
 	}, [card.title]);
 
 	const isNoteLink = !!parsedTitle && card.noteExists;
+	const isInTrash = !!card.deleted_time;
+	const isPermanentlyDeleted = !!parsedTitle && !card.noteExists;
+	const hasDueDate = card.is_todo && card.todo_due;
+	const isOverdue = hasDueDate && !card.todo_completed && card.todo_due <= Date.now();
+
+	const cardHasChanged = useCallback(() => {
+		const newCard = stringToCard(card, editorRef.current.value);
+		return newCard.title !== card.title || newCard.body !== card.body;
+	}, [editorRef, card]);
 
 	const onEditorSubmit = useCallback(() => {
 		props.onEditorSubmit({
@@ -89,13 +99,22 @@ export default (props:Props) => {
 	}, [props.onEditorSubmit, card]);
 
 	const onEditorCancel = useCallback(() => {
-		props.onEditorCancel({ card })
-	}, []);
+		const ok = cardHasChanged() ? confirm('All your changes will be lost - continue?') : true;
+		if (!ok) {
+			return;
+		} else {
+			props.onEditorCancel({ card })
+		}
+	}, [cardHasChanged, props.onEditorCancel, card]);
 
 	const onEdit = useCallback((cardDoubleClickAction:CardDoubleClickAction|null = null) => {
 		if (!props.isEditing) {
 			if (isNoteLink) {
-				props.onOpenAssociatedNote({ cardId: card.id });
+				if (isInTrash) {
+					alert('This card has been deleted - move it outside of the trash to open it from here');
+				} else {
+					props.onOpenAssociatedNote({ cardId: card.id });
+				}
 			} else {
 				const actions:Record<CardDoubleClickAction, () => void> = {
 					[CardDoubleClickAction.openInBoard]: () => {
@@ -109,7 +128,7 @@ export default (props:Props) => {
 				actions[cardDoubleClickAction ? cardDoubleClickAction : props.cardDoubleClickAction]();
 			}
 		}
-	}, [props.isEditing, card, isNoteLink, props.cardDoubleClickAction, props.onOpenAssociatedNote]);
+	}, [props.isEditing, card, isNoteLink, props.cardDoubleClickAction, props.onOpenAssociatedNote, isInTrash]);
 
 	const onDoubleClick = useCallback(() => {
 		onEdit();
@@ -150,6 +169,8 @@ export default (props:Props) => {
 			onEdit(CardDoubleClickAction.openInBoard);
 		} else if (event.itemId === 'delete') {
 			props.onDelete({ cardId: card.id });
+		} else if (event.itemId === 'duplicate') {
+			props.onDuplicate({ cardId: card.id });
 		} else if (event.itemId === 'scrollToCard') {
 			onSaveAndScrollToCard();
 		} else if (event.itemId === 'createNoteFromCard') {
@@ -187,6 +208,11 @@ export default (props:Props) => {
 		menuItems.push({
 			id: 'edit',
 			label: 'Edit',
+		});
+
+		menuItems.push({
+			id: 'duplicate',
+			label: 'Duplicate',
 		});
 
 		menuItems.push({
@@ -230,10 +256,7 @@ export default (props:Props) => {
 	}
 
 	const renderDueDate = () => {
-		if (!card.is_todo) return null;
-		if (!card.todo_due) return null;
-
-		const isOverdue = !card.todo_completed && card.todo_due <= Date.now();
+		if (!hasDueDate) return null;
 
 		const dateClasses = ['date'];
 		if (card.todo_completed) dateClasses.push('-done');
@@ -287,9 +310,11 @@ export default (props:Props) => {
 
 		if (props.isLast) classes.push('-last');
 		if (props.isEditing) classes.push('-editing');
+		if (isInTrash || isPermanentlyDeleted) classes.push('-deleted');
+		if (isOverdue) classes.push('-overdue');
 
 		return classes;
-	}, [card.settings?.backgroundColor, props.isLast, props.isEditing]);
+	}, [card.settings?.backgroundColor, props.isLast, props.isEditing, isInTrash, isPermanentlyDeleted, isOverdue]);
 	
 	return (
 		<Draggable draggableId={card.id} index={props.index}>

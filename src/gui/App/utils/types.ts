@@ -1,10 +1,10 @@
-import { CardSettings, SettingItems, Settings } from "../../../utils/types";
+import { CardSettings, SettingItems, PluginSettings } from "../../../utils/types";
 
 export interface DialogConfig {
 	title: string;
-	settings: Settings | CardSettings;
+	settings: PluginSettings | CardSettings;
 	settingItems: SettingItems;
-	onSave: (newSettings: Settings | CardSettings) => void;
+	onSave: (newSettings: PluginSettings | CardSettings) => void;
 }
 
 export interface AfterSetNoteAction {

@@ -7,10 +7,15 @@ interface Props {
 	onUndoBoard: () => void;
 	onRedoBoard: () => void;
 	onAddStack: () => void;
+	onFilter: () => void;
+	filterTotalCardCount: number;
+	filterVisibleCardCount: number;
 }
 
 export default (props:Props) => {
 	const toolbarButtons = useMemo(() => {
+		const hiddenCardCount = props.filterTotalCardCount - props.filterVisibleCardCount;
+
 		const output:ButtonProps[] = [
 			{
 				name: 'undo',
@@ -40,9 +45,19 @@ export default (props:Props) => {
 					props.onAddStack();
 				},
 			},
+
+			{
+				name: 'filter',
+				icon: 'filter',
+				title: 'Filter',
+				label: hiddenCardCount > 0 ? hiddenCardCount + ' hidden' : null,
+				onClick: () => {
+					props.onFilter();
+				},
+			},
 		];		
 		return output;
-	}, [props.onUndoBoard, props.onRedoBoard, props.historyUndoLength, props.historyRedoLength, props.onAddStack]);
+	}, [props.onUndoBoard, props.onRedoBoard, props.historyUndoLength, props.historyRedoLength, props.onAddStack, props.onFilter, props.filterTotalCardCount, props.filterVisibleCardCount]);
 
 	return toolbarButtons;
 }

@@ -8,6 +8,7 @@ export interface Note {
 	todo_due: number;
 	todo_completed: number;
 	is_todo: number;
+	deleted_time: number;
 }
 
 export interface Tag {
@@ -28,6 +29,17 @@ export interface Card {
 	todo_due: number;
 	todo_completed: number;
 	is_todo: number;
+	deleted_time?: number;
+}
+
+export interface Filters {
+	tagIds: string[];
+}
+
+export const getDefaultFilters = ():Filters => {
+	return {
+		tagIds: [],
+	}
 }
 
 export interface AppSettings {
@@ -52,7 +64,7 @@ export interface Stack {
 export interface Board {
 	noteId: string;
 	stacks: Stack[];
-	settings: Settings;
+	settings: BoardSettings;
 }
 
 export interface State {
@@ -62,7 +74,9 @@ export interface State {
 export type IpcMessageType =
 	'getNote' | // This returns the note associated with the board
 	'getNotes' | // This returns any number of notes
+	'duplicateNote' |
 	'setNote' |
+	'setNoteProps' |
 	'isReady' |
 	'getSettings' |
 	'getAppSettings' |
@@ -91,6 +105,7 @@ type WebviewApiOnMessageHandler = (message:OnMessageMessage) => void;
 export interface WebviewApi {
 	postMessage<T>(message:IpcMessage): Promise<T>;
 	onMessage(handler:WebviewApiOnMessageHandler);
+	menuPopupFromTemplate(template:any[]);
 }
 
 export const emptyBoard = ():Board => {
@@ -111,12 +126,19 @@ export enum CardDoubleClickAction {
 	openInNote = 'openInNote',
 }
 
-export interface Settings {
+// boardId: cardId: Date in ms
+export type LastStackAddedDates = Record<string, Record<string, number>>;
+
+export interface PluginSettings {
 	stackWidth?: number;
 	confirmKey?: ConfirmKey;
 	newlineKey?: NewlineKey;
 	stackDynamicWidth?: boolean;
 	cardDoubleClickAction?: CardDoubleClickAction;
+	autoArchiveDelayDays?: number;
+	lastStackAddedDates?: LastStackAddedDates;
+	archiveNoteId?: string;
+	markAsCompletedLastStackCards?: boolean;
 }
 
 export interface CardSettings {
@@ -127,12 +149,18 @@ export interface StackSettings {
 	backgroundColor?: string;
 }
 
-export type AppSettingItems = Record<keyof Settings, SettingItem>;
+export interface BoardSettings extends PluginSettings {
+	filters?: Filters;
+}
+
+export type PluginSettingItems = Record<keyof PluginSettings, SettingItem>;
+export type BoardSettingItems = Record<keyof BoardSettings, SettingItem>;
 export type CardSettingItems = Record<keyof CardSettings, SettingItem>;
 export type StackSettingItems = Record<keyof StackSettings, SettingItem>;
-export type SettingItems = AppSettingItems | CardSettingItems | StackSettingItems;
 
-export const settingItems:AppSettingItems = {
+export type SettingItems = PluginSettingItems | CardSettingItems | StackSettingItems | BoardSettingItems;
+
+export const pluginSettingItems:PluginSettingItems = {
 	stackWidth: {
 		label: 'Stack width',
 		type: SettingItemType.Int,
@@ -194,6 +222,39 @@ export const settingItems:AppSettingItems = {
 		},
 		section: settingSectionName,
 	},
+
+	autoArchiveDelayDays: {
+		label: 'Auto-archive cards in the right-most stack after (days)',
+		description: 'Archived cards are moved to an archive board that is automatically created. Set the delay to 0 to disable the feature.',
+		type: SettingItemType.Int,
+		public: true,
+		value: 0,
+		section: settingSectionName,
+	},
+
+	lastStackAddedDates: {
+		label: '',
+		type: SettingItemType.Object,
+		public: false,
+		value: 0,
+		section: settingSectionName,
+	},
+
+	archiveNoteId: {
+		label: '',
+		type: SettingItemType.String,
+		public: false,
+		value: '',
+		section: settingSectionName,
+	},
+
+	markAsCompletedLastStackCards: {
+		label: 'Mark as completed to-do cards that are dropped in the last stack',
+		type: SettingItemType.Bool,
+		public: true,
+		value: true,
+		section: settingSectionName,
+	},
 };
 
 export const cardSettingItems:CardSettingItems = {
@@ -214,6 +275,17 @@ export const stackSettingItems:StackSettingItems = {
 		value: '',
 		section: settingSectionName,
 	},
+}
+
+export const boardSettingItems:BoardSettingItems = {
+	filters: {
+		label: 'Filters',
+		type: SettingItemType.Object,
+		public: false,
+		value: '',
+	},
+
+	...pluginSettingItems,
 }
 
 export interface RenderResultPluginAsset {
@@ -252,4 +324,5 @@ export interface RenderedCard {
 	todo_due: number;
 	todo_completed: number;
 	is_todo: number;
+	deleted_time: number;
 }

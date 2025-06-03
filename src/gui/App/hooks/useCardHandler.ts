@@ -2,13 +2,14 @@ import * as React from 'react';
 import { produce } from "immer";
 import { useCallback, useState } from "react";
 import { EditorSubmitHandler as CardChangeEventHandler, DeleteEventHandler as CardDeleteEventHandler, EditorCancelHandler, EditorStartHandler, CardHandler } from "../../CardViewer";
-import { Board, cardSettingItems, CardSettings, WebviewApi } from "../../../utils/types";
+import { Board, cardSettingItems, CardSettings, Note, WebviewApi } from "../../../utils/types";
 import { PushUndo } from "./useHistory";
 import { findCard, findCardIndex, findStackIndex } from "../../../utils/board";
 import uuid from "../../../utils/uuid";
 import { AddCardEventHandler } from "../../../gui/StackViewer";
-import { parseAsNoteLink } from "../../../utils/noteParser";
+import { parseAsNoteLink, serializeNoteToCard } from "../../../utils/noteParser";
 import { DialogConfig } from "../utils/types";
+import { createCard, duplicateCard } from '../../../utils/cards';
 
 interface Props {
 	board: Board;
@@ -71,7 +72,7 @@ export default (props:Props) => {
 		const newCardId = uuid();
 
 		const newBoard = produce(props.board, draft => {
-			const stackIndex = findStackIndex(props.board, event.stackId);
+			const stackIndex = findStackIndex(draft, event.stackId);
 			draft.stacks[stackIndex].cards.push({
 				id: newCardId,
 				title: 'New card',
@@ -113,6 +114,37 @@ export default (props:Props) => {
 		props.setBoard(newBoard);
 	}, [props.board, props.pushUndo, props.setBoard, props.webviewApi]);
 
+	const onDuplicateCard = useCallback<CardDeleteEventHandler>(async (event) => {
+		const [stackIndex, cardIndex] = findCardIndex(props.board, event.cardId);
+		const card = props.board.stacks[stackIndex].cards[cardIndex];
+		const parsedTitle = parseAsNoteLink(card.title);
+
+		if (parsedTitle) {
+			const newNote = await props.webviewApi.postMessage<Note>({
+				type: 'duplicateNote',
+				value: parsedTitle.id,
+			});
+
+			const newBoard = produce(props.board, draft => {
+				const newCard = createCard();
+				draft.stacks[stackIndex].cards.push({
+					...newCard,
+					...serializeNoteToCard(newNote),
+				});
+			});
+
+			props.setBoard(newBoard);
+		} else {
+			props.pushUndo(props.board);
+
+			const newBoard = produce(props.board, draft => {
+				draft.stacks[stackIndex].cards.push(duplicateCard(card));
+			});
+	
+			props.setBoard(newBoard);
+		}
+	}, [props.board, props.pushUndo, props.setBoard, props.webviewApi]);
+
 	const onEditCardSettings = useCallback<CardHandler>(async (event) => {
 		const card = findCard(props.board, event.cardId);
 		props.setDialogConfig({
@@ -137,5 +169,6 @@ export default (props:Props) => {
 		onDeleteCard,
 		onCardEditorCancel,
 		onAddCard,
+		onDuplicateCard,
 	};
 }

@@ -1,5 +1,5 @@
 import { parseAsNoteLink } from "./noteParser";
-import { Board } from "./types";
+import { Board, Tag } from "./types";
 
 export const findCardIndex = (board:Board, cardId:string) => {
 	for (const [stackIndex, stack] of board.stacks.entries()) {
@@ -47,7 +47,7 @@ export const getCardTitleAndIndex = (board:Board, cardId:string) => {
 	}
 }
 
-export const getCardNotes = (board:Board) => {
+export const getCardNoteIds = (board:Board) => {
 	const output:Record<string, string> = {};
 	for (const [, stack] of board.stacks.entries()) {
 		for (const [, card] of stack.cards.entries()) {
@@ -55,6 +55,16 @@ export const getCardNotes = (board:Board) => {
 			if (noteLink) {
 				output[card.id] = noteLink.id;
 			}
+		}
+	}
+	return output;
+}
+
+export const getCardTags = (board:Board) => {
+	const output:Record<string, Tag[]> = {};
+	for (const [, stack] of board.stacks.entries()) {
+		for (const [, card] of stack.cards.entries()) {
+			if (card.tags && card.tags.length) output[card.id] = card.tags;
 		}
 	}
 	return output;

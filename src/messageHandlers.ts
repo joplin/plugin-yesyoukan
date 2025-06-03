@@ -1,10 +1,11 @@
 import Logger from "@joplin/utils/Logger";
-import { CardToRender, IpcMessage, IpcMessageType, Note, RenderedCard, RenderResult, settingItems } from "./utils/types";
+import { CardToRender, IpcMessage, IpcMessageType, Note, RenderedCard, RenderResult, pluginSettingItems } from "./utils/types";
 import joplin from "api";
 import { boardsEqual, parseAsNoteLink, parseNote } from "./utils/noteParser";
 import { msleep } from "./utils/time";
 import processRenderedCards from "./utils/processRenderedCards";
 import { toggleCheckbox } from "./utils/renderMarkupUtils";
+import noteFields from './utils/noteFields';
 import { ViewHandle } from "api/types";
 
 const logger = Logger.create('YesYouCan: messageHandler');
@@ -32,7 +33,10 @@ const setNoteHandler = async (editorHandle: ViewHandle, selectedNote: Note, mess
 	}
 }
 
-const messageHandlers = (editorHandle: string, getSelectedNote: LoadSelectedNoteCallback): Record<IpcMessageType, MessageHandler> => ({
+const messageHandlers = (
+	editorHandle: ViewHandle,
+	getSelectedNote: LoadSelectedNoteCallback,
+): Record<IpcMessageType, MessageHandler> => ({
 
 	'isReady': null,
 
@@ -48,7 +52,7 @@ const messageHandlers = (editorHandle: string, getSelectedNote: LoadSelectedNote
 		const noteIds = message.value as string[];
 		const notes:Note[] = [];
 		for (const noteId of noteIds) {
-			notes.push(await joplin.data.get(['notes', noteId]));
+			notes.push(await joplin.data.get(['notes', noteId], { fields: noteFields }));
 		}
 		return notes;
 	},
@@ -62,7 +66,7 @@ const messageHandlers = (editorHandle: string, getSelectedNote: LoadSelectedNote
 
 		return processRenderedCards(
 			cardsToRender,
-			noteId => joplin.data.get(['notes', noteId], { fields: ['title', 'body', 'todo_due', 'todo_completed', 'is_todo'] }),
+			noteId => joplin.data.get(['notes', noteId], { fields: noteFields }),
 			(markup, option) => joplin.commands.execute('renderMarkup', 1, markup, null, option),
 		);
 	},
@@ -83,12 +87,17 @@ const messageHandlers = (editorHandle: string, getSelectedNote: LoadSelectedNote
 		await setNoteHandler(editorHandle, await getSelectedNote(), message.value as Note);
 	},
 
+	'setNoteProps': async (message:IpcMessage) => {
+		const { noteId, props } = message.value;
+		delete props.id;
+		if (!Object.keys(props).length) throw new Error('Cannot set empty props on note: ' + noteId);
+		await joplin.data.put(['notes', noteId], null, props);
+	},
+
 	'setNoteCheckbox': async (message:IpcMessage) => {
 		const { cardMessage, noteId } = message.value;
 		const note:Note = await joplin.data.get(['notes', noteId], { fields: ['body'] });
 		const newBody = toggleCheckbox(cardMessage, note.body);
-		console.info('BEFORE', note.body);
-		console.info('AFTER', newBody);
 		await joplin.data.put(['notes', noteId], null, { body: newBody });
 	},
 
@@ -101,7 +110,7 @@ const messageHandlers = (editorHandle: string, getSelectedNote: LoadSelectedNote
 	},
 
 	'getSettings': async (_message:IpcMessage) => {
-		return await (joplin.settings as any).values(Object.keys(settingItems));
+		return await (joplin.settings as any).values(Object.keys(pluginSettingItems));
 	},
 
 	'getAppSettings': async () => {
@@ -134,6 +143,26 @@ const messageHandlers = (editorHandle: string, getSelectedNote: LoadSelectedNote
 
 	'deleteNote': async (message:IpcMessage) => {
 		await joplin.data.delete(['notes', message.value]);
+	},
+
+	'duplicateNote': async (message:IpcMessage) => {
+		const noteId = message.value as string;
+		const note = await joplin.data.get(['notes', noteId], {
+			fields: noteFields,
+		});
+
+		const tags = await joplin.data.get(['notes', noteId, 'tags']);
+		const tagTitles:string[] = tags.items.map(t => t.title);
+
+		const newNote = {
+			...note,
+			title: note.title + ' - Copy',
+			tags: tagTitles.join(','),
+		};
+		
+		delete newNote.id;
+
+		return await joplin.data.post(['notes'], null, newNote);
 	},
 });
 

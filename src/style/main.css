@@ -64,7 +64,7 @@ ul, ol {
 	transition: background-color 300ms ease;
 	min-height: 200px;
 	overflow-x: hidden;
-	overflow-y: auto;
+	overflow-y: hidden;
 
 	> .stack-header {
 		display: flex;
@@ -101,6 +101,8 @@ ul, ol {
 				width: 100%;
 				border-radius: 4px;
 				padding-right: 20px;
+				background-color: var(--joplin-background-color);
+				color: var(--joplin-color);
 			}
 
 			> .buttons {
@@ -118,6 +120,12 @@ ul, ol {
 			flex: 1;
 			padding-right: 4px;
 		}
+	}
+
+	> .droppablewrapper {
+		height: 100%;
+		overflow-x: hidden;
+		overflow-y: auto;
 	}
 
 	&.-dragging {
@@ -162,6 +170,7 @@ ul, ol {
 	flex-grow: 1;
     flex-shrink: 1;
     flex-basis: 0;
+	min-height: 100%;
 }
 
 .card {
@@ -181,6 +190,7 @@ ul, ol {
 		display: flex;
 		flex-direction: column;
 		max-height: 100%;
+		min-height: 100%;
 
 		> .tags {
 			display: flex;
@@ -231,6 +241,7 @@ ul, ol {
 				/* The title is rendered as HTML using `renderMarkup` and is going to be inside a
 				<P> tag with a bottom margin. So we need to clear it here. */
 				p {
+					margin-top: 0;
 					margin-bottom: 0;
 				}
 			}
@@ -255,6 +266,8 @@ ul, ol {
 				width: 100%;
 				border: 1px solid var(--joplin-divider-color);
 				line-height: 1.6em;
+				background-color: var(--joplin-background-color);
+				color: var(--joplin-color);
 			}
 		}
 
@@ -265,6 +278,14 @@ ul, ol {
 
 	&.-editing {
 		padding-bottom: 5px;
+	}
+
+	&.-deleted {
+		opacity: 0.5;
+	}
+
+	&.-overdue {
+		border: 2px solid rgb(179, 2, 2);
 	}
 }
 
