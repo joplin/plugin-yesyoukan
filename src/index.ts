@@ -75,7 +75,7 @@ const registerEditorPlugin = async () => {
 					return;
 				}
 
-				const messageHandler = messageHandlers[message.type];
+				const messageHandler = handlers[message.type];
 				if (messageHandler) return messageHandler(message);
 
 				logger.warn('Unknown message: ' + JSON.stringify(message));
