@@ -28,7 +28,6 @@ const registerEditorPlugin = async () => {
 	const versionInfo = await joplin.versionInfo();
 
 	const editors = joplin.views.editors;
-	const selectedNoteIds = new Map<ViewHandle, string>();
 
 	await editors.register('kanbanBoard', {
 		async onSetup(view) {
@@ -39,9 +38,10 @@ const registerEditorPlugin = async () => {
 			await editors.addScript(view, './vendor/coloris/coloris.css');
 			await editors.addScript(view, './vendor/coloris/coloris.js');
 
+			const selectedNoteIdRef = { current: '' };
 			const loadSelectedNote = async () => {
-				if (!selectedNoteIds.get(view)) return null;
-				const result = joplin.data.get(['notes', selectedNoteIds.get(view)], { fields: noteFields });
+				if (!selectedNoteIdRef.current) return null;
+				const result = joplin.data.get(['notes', selectedNoteIdRef.current], { fields: noteFields });
 				return result;
 			};
 
@@ -54,7 +54,7 @@ const registerEditorPlugin = async () => {
 			await editors.onUpdate(view, async (event) => {
 				logger.info('onUpdate');
 				if (event.noteId) {
-					selectedNoteIds.set(view, event.noteId);
+					selectedNoteIdRef.current = event.noteId;
 					await editors.postMessage(
 						view,
 						{ type: 'setNote', value: { id: event.noteId, body: event.newBody } },
@@ -62,7 +62,7 @@ const registerEditorPlugin = async () => {
 				}
 			});
 
-			const handlers = messageHandlers(view, loadSelectedNote);
+			const handlers = messageHandlers(view, loadSelectedNote, selectedNoteIdRef);
 			await editors.onMessage(view, async (message:IpcMessage) => {
 				// These messages are internal messages sent within the app webview and can be ignored
 				if ((message as any).kind === 'ReturnValueResponse') return;

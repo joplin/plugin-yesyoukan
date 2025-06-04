@@ -12,6 +12,7 @@ const logger = Logger.create('YesYouCan: messageHandler');
 
 type MessageHandler = (message:IpcMessage) => Promise<any>;
 type LoadSelectedNoteCallback = ()=> Promise<Note>;
+type SelectedNoteIdRef = { current: string };
 
 const setNoteHandler = async (editorHandle: ViewHandle, selectedNote: Note, messageNote:Note) => {
 	const newBoard = await parseNote(messageNote.id, messageNote.body);
@@ -36,6 +37,7 @@ const setNoteHandler = async (editorHandle: ViewHandle, selectedNote: Note, mess
 const messageHandlers = (
 	editorHandle: ViewHandle,
 	getSelectedNote: LoadSelectedNoteCallback,
+	selectedNoteIdRef: SelectedNoteIdRef,
 ): Record<IpcMessageType, MessageHandler> => ({
 
 	'isReady': null,
@@ -98,7 +100,14 @@ const messageHandlers = (
 		const { cardMessage, noteId } = message.value;
 		const note:Note = await joplin.data.get(['notes', noteId], { fields: ['body'] });
 		const newBody = toggleCheckbox(cardMessage, note.body);
-		await joplin.data.put(['notes', noteId], null, { body: newBody });
+		if (noteId === selectedNoteIdRef.current) {
+			await joplin.views.editors.saveNote(editorHandle, {
+				noteId,
+				body: newBody,
+			});
+		} else {
+			await joplin.data.put(['notes', noteId], null, { body: newBody });
+		}
 	},
 
 	'openItem': async (message:IpcMessage) => {
