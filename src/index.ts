@@ -2,10 +2,10 @@ import joplin from 'api';
 import { Board, LastStackAddedDates, IpcMessage, Note, pluginSettingItems, settingSectionName } from './utils/types';
 import { boardsEqual, noteIsBoard, parseNote, serializeBoard } from './utils/noteParser';
 import Logger, { TargetType } from '@joplin/utils/Logger';
-import { MenuItemLocation } from 'api/types';
-import { msleep } from './utils/time';
+import { MenuItemLocation, ViewHandle } from 'api/types';
 import messageHandlers from './messageHandlers';
 import { processAutoArchiving, recordLastStackAddedDates } from './utils/autoArchive';
+import noteFields from './utils/noteFields';
 import uuid from './utils/uuid';
 
 const globalLogger = new Logger();
@@ -23,6 +23,75 @@ const newNoteBody = `# Backlog
 \`\`\`kanban-settings
 # Do not remove this block
 \`\`\``;
+
+const registerEditorPlugin = async () => {
+	const versionInfo = await joplin.versionInfo();
+
+	const editors = joplin.views.editors;
+
+	await editors.register('kanbanBoard', {
+		async onSetup(view) {
+			await editors.setHtml(view, `<div id="root" class="platform-${versionInfo.platform}"></div>`);
+			await editors.addScript(view, './panel.js');
+			await editors.addScript(view, './style/reset.css');
+			await editors.addScript(view, './style/main.css');
+			await editors.addScript(view, './vendor/coloris/coloris.css');
+			await editors.addScript(view, './vendor/coloris/coloris.js');
+
+			const selectedNoteIdRef = { current: '' };
+			const loadSelectedNote = async () => {
+				if (!selectedNoteIdRef.current) return null;
+				const result = joplin.data.get(['notes', selectedNoteIdRef.current], { fields: noteFields });
+				return result;
+			};
+
+			const updateFromSelectedNote = async () => {
+				const note = await loadSelectedNote();
+				if (!note) return;
+				await editors.postMessage(view, { type: 'setNote', value: { id: note.id, body: note.body }});
+			};
+
+			await editors.onUpdate(view, async (event) => {
+				logger.info('onUpdate');
+				if (event.noteId) {
+					selectedNoteIdRef.current = event.noteId;
+					await editors.postMessage(
+						view,
+						{ type: 'setNote', value: { id: event.noteId, body: event.newBody } },
+					);
+				}
+			});
+
+			const handlers = messageHandlers(view, loadSelectedNote, selectedNoteIdRef);
+			await editors.onMessage(view, async (message:IpcMessage) => {
+				// These messages are internal messages sent within the app webview and can be ignored
+				if ((message as any).kind === 'ReturnValueResponse') return;
+
+				logger.info('PostMessagePlugin (Webview): Got message from webview:', message);
+
+				if (message.type === 'isReady') {
+					await handleAutoArchiving();
+					await updateFromSelectedNote();
+					return;
+				}
+
+				const messageHandler = handlers[message.type];
+				if (messageHandler) return messageHandler(message);
+
+				logger.warn('Unknown message: ' + JSON.stringify(message));
+			});
+		},
+		async onActivationCheck(event) {
+			if (!event.noteId) return false;
+
+			const note = await joplin.data.get([ 'notes', event.noteId ], { fields: ['body'] });
+			logger.info('onActivationCheck: Handling note: ' + event.noteId);
+			const isBoard = noteIsBoard(note?.body ?? '');
+			logger.info('onActivationCheck: Note is board:', isBoard);
+			return isBoard;
+		},
+	});
+};
 
 const getArchiveNote = async():Promise<Note|null> => {
 	const archiveNoteId:string = await joplin.settings.value('archiveNoteId');
@@ -94,46 +163,13 @@ const handleAutoArchiving = async () => {
 
 joplin.plugins.register({
 	onStart: async function() {
-		const versionInfo = await joplin.versionInfo();
-
 		await joplin.settings.registerSection(settingSectionName, {
 			label: 'YesYouKan',
 			iconName: 'fas fa-th-list',
 		});
 		await joplin.settings.registerSettings(pluginSettingItems);
 
-		const editors = joplin.views.editors;
-
-		const view = await editors.create("kanbanBoard");
-		
-		await editors.setHtml(view, `<div id="root" class="platform-${versionInfo.platform}"></div>`);
-		await editors.addScript(view, './panel.js');
-		await editors.addScript(view, './style/reset.css');
-		await editors.addScript(view, './style/main.css');
-		await editors.addScript(view, './vendor/coloris/coloris.css');
-		await editors.addScript(view, './vendor/coloris/coloris.js');
-
-		const updateFromSelectedNote = async () => {
-			const note:Note = await joplin.workspace.selectedNote();
-			if (!note) return;
-
-			editors.postMessage(view, { type: 'setNote', value: { id: note.id, body: note.body }});
-		}
-
-		await editors.onActivationCheck(view, async () => {
-			const note = await joplin.workspace.selectedNote();
-			if (!note) return false;
-
-			logger.info('onActivationCheck: Handling note: ' + note.id);
-			const isBoard = noteIsBoard(note ? note.body : '');
-			logger.info('onActivationCheck: Note is board:', isBoard);
-			return isBoard;
-		});
-
-		await editors.onUpdate(view, async () => {
-			logger.info('onUpdate');
-			await updateFromSelectedNote();
-		});
+		await registerEditorPlugin();
 
 		await joplin.commands.register({
 			name: 'createKanbanBoard',
@@ -141,34 +177,15 @@ joplin.plugins.register({
 			execute: async () => {
 				logger.info('Creating new Kanban note...');
 				await joplin.commands.execute('newNote', newNoteBody);
-
+	
 				// Wait for the note to be created and the UI to be updated before showing the
 				// editor
 				setTimeout(async () => {
 					await joplin.commands.execute('showEditorPlugin');
-					await updateFromSelectedNote();
 				}, 200);				
 			},
 		});
-
+	
 		await joplin.views.menuItems.create('createKanbanBoardMenuItem', 'createKanbanBoard', MenuItemLocation.Tools, { accelerator: 'CmdOrCtrl+Alt+Shift+K' });
-
-		editors.onMessage(view, async (message:IpcMessage) => {
-			// These messages are internal messages sent within the app webview and can be ignored
-			if ((message as any).kind === 'ReturnValueResponse') return;
-
-			logger.info('PostMessagePlugin (Webview): Got message from webview:', message);
-
-			if (message.type === 'isReady') {
-				await handleAutoArchiving();
-				await updateFromSelectedNote();
-				return;
-			}
-			
-			const messageHandler = messageHandlers[message.type];
-			if (messageHandler) return messageHandler(message);
-
-			logger.warn('Unknown message: ' + JSON.stringify(message));
-		});
 	},
 });
