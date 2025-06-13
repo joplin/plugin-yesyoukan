@@ -1,3 +1,7 @@
+# v1.0.18
+
+- Fixed auto-archiving
+
 # v1.0.17
 
 - Fixes #60: Scrollbar is broken on card content
