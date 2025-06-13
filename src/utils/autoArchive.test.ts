@@ -1,7 +1,5 @@
 import { processAutoArchiving, recordLastStackAddedDates } from "./autoArchive";
-import { getCardTitleAndIndex } from "./board";
-import { createCard } from "./cards";
-import { parseNote, serializeBoard } from "./noteParser";
+import { createCard, createCardHash } from "./cards";
 import { Day, msleep } from "./time";
 import { Board, LastStackAddedDates } from "./types";
 import uuid from "./uuid";
@@ -16,10 +14,10 @@ const createTestBoard = () => {
 				title: '',
 				cards: [
 					{
-						...createCard(),	
+						...createCard('one'),	
 					},
 					{
-						...createCard(),	
+						...createCard('two'),	
 					},
 				],
 			},
@@ -36,19 +34,19 @@ describe('autoArchive', () => {
 
 		const board = createTestBoard();
 
-		const cardId1 = board.stacks[0].cards[0].id;
-		const cardId2 = board.stacks[0].cards[1].id;
+		const cardHash1 = await createCardHash(board.stacks[0].cards[0]);
+		const cardHash2 = await createCardHash(board.stacks[0].cards[1]);
 
 		// -----------------------------------------------------------------------------------------
 		// Check that the dates are recorded for all the cards
 		// -----------------------------------------------------------------------------------------
 
 		const before = Date.now();
-		await msleep(10);
-		const result = recordLastStackAddedDates(board, lastStackAddedDates);
+		await msleep(200);
+		const result = await recordLastStackAddedDates(board, lastStackAddedDates);
 
-		expect(result['1234'][cardId1]).toBeGreaterThan(before);
-		expect(result['1234'][cardId2]).toBeGreaterThan(before);
+		expect(result['1234'][cardHash1]).toBeGreaterThan(before);
+		expect(result['1234'][cardHash2]).toBeGreaterThan(before);
 
 		// -----------------------------------------------------------------------------------------
 		// Check that, after adding one more card, the date is added for that card, and the previous
@@ -59,14 +57,14 @@ describe('autoArchive', () => {
 
 		board.stacks[0].cards.push(createCard());
 
-		const cardId3 = board.stacks[0].cards[2].id;
+		const cardHash3 = await createCardHash(board.stacks[0].cards[2]);
 
-		const newResult = recordLastStackAddedDates(board, result);
-		await msleep(10);
+		const newResult = await recordLastStackAddedDates(board, result);
+		await msleep(200);
 
-		expect(newResult['1234'][cardId1]).toBe(previousValue['1234'][cardId1]);
-		expect(newResult['1234'][cardId2]).toBe(previousValue['1234'][cardId2]);
-		expect(newResult['1234'][cardId3]).toBeGreaterThan(newResult['1234'][cardId1]);
+		expect(newResult['1234'][cardHash1]).toBe(previousValue['1234'][cardHash1]);
+		expect(newResult['1234'][cardHash2]).toBe(previousValue['1234'][cardHash2]);
+		expect(newResult['1234'][cardHash3]).toBeGreaterThan(newResult['1234'][cardHash1]);
 	});
 
 	it('should clear the recorded dates of previous stacks', async () => {
@@ -74,7 +72,7 @@ describe('autoArchive', () => {
 
 		const board = createTestBoard();
 
-		lastStackAddedDates = recordLastStackAddedDates(board, lastStackAddedDates);
+		lastStackAddedDates = await recordLastStackAddedDates(board, lastStackAddedDates);
 
 		board.stacks.push({
 			id: uuid(),
@@ -82,42 +80,42 @@ describe('autoArchive', () => {
 			title: 'new last',
 		});
 
-		lastStackAddedDates = recordLastStackAddedDates(board, lastStackAddedDates);
+		lastStackAddedDates = await recordLastStackAddedDates(board, lastStackAddedDates);
 
 		expect(lastStackAddedDates).toEqual({ '1234': {} });
 
 		const beforeTime = Date.now();
 		board.stacks[1].cards.push(createCard());
-		const cardId3 = board.stacks[1].cards[0].id;
+		const cardHash3 = await createCardHash(board.stacks[1].cards[0]);
 
-		lastStackAddedDates = recordLastStackAddedDates(board, lastStackAddedDates);
+		lastStackAddedDates = await recordLastStackAddedDates(board, lastStackAddedDates);
 
-		expect(lastStackAddedDates['1234'][cardId3]).toBeGreaterThanOrEqual(beforeTime);
+		expect(lastStackAddedDates['1234'][cardHash3]).toBeGreaterThanOrEqual(beforeTime);
 	});
 
 	it('should auto-archive cards', async () => {
 		const board = createTestBoard();
 		const archive = createTestBoard();
 		archive.stacks[0].cards = [];
-		const lastStackAddedDates = recordLastStackAddedDates(board, {});
+		const lastStackAddedDates = await recordLastStackAddedDates(board, {});
 
 		{
-			const result = processAutoArchiving(board, archive, lastStackAddedDates, 2);
+			const result = await processAutoArchiving(board, archive, lastStackAddedDates, 2);
 
 			expect(result.board).toBe(board);
 			expect(result.archive).toBe(archive);
 		}
 
-		const cardId1 = board.stacks[0].cards[0].id;
+		const cardHash1 = await createCardHash(board.stacks[0].cards[0]);
 
 		{
 			const newlastStackAddedDates = JSON.parse(JSON.stringify(lastStackAddedDates));
-			newlastStackAddedDates['1234'][cardId1] = Date.now() - 3 * Day;
+			newlastStackAddedDates['1234'][cardHash1] = Date.now() - 3 * Day;
 
-			const result = processAutoArchiving(board, archive, newlastStackAddedDates, 2);
+			const result = await processAutoArchiving(board, archive, newlastStackAddedDates, 2);
 
 			expect(result.board.stacks[0].cards.length).toBe(1);
-			expect(result.archive.stacks[0].cards[0].id).toBe(cardId1);
+			expect(await createCardHash(result.archive.stacks[0].cards[0])).toBe(cardHash1);
 		}
 	});
 

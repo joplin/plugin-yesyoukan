@@ -61,7 +61,7 @@ const handleAutoArchiving = async () => {
 		}
 	}
 	
-	const newDates = recordLastStackAddedDates(board, lastStackAddedDates);
+	const newDates = await recordLastStackAddedDates(board, lastStackAddedDates);
 
 	if (newDates !== lastStackAddedDates) {
 		await joplin.settings.setValue('lastStackAddedDates', newDates);
