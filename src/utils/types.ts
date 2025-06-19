@@ -2,6 +2,7 @@ import { SettingItem, SettingItemType } from "../../api/types";
 
 export interface Note {
 	id: string;
+	parent_id: string;
 	title: string;
 	body: string;
 	todo_due: number;
