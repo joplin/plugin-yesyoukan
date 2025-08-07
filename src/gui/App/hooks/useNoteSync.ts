@@ -6,7 +6,7 @@ import Logger from "@joplin/utils/Logger";
 import AsyncActionQueue from "../../../utils/AsyncActionQueue";
 import { AfterSetNoteAction } from "../utils/types";
 
-const logger = Logger.create('YesYouKan: useNoteLoader');
+const logger = Logger.create('YesYouKan: useNoteSync');
 
 const updateNoteQueue = new AsyncActionQueue(100);
 
@@ -63,7 +63,7 @@ export default (props:Props) => {
 						logger.info('Board has not changed - skipping update');
 						return current;
 					}
-					logger.info('Boad has changed - updating');
+					logger.info('Board has changed - updating');
 					props.clearUndo();
 					ignoreNextBoardUpdate.current = true;
 					return newBoard;
@@ -75,9 +75,11 @@ export default (props:Props) => {
 	}, [enabled]);
 
 	useEffect(() => {
+		logger.info('useEffect: ignoreNextBoardUpdate.current', ignoreNextBoardUpdate.current);
+
 		if (!ignoreNextBoardUpdate.current) {
 			updateNoteQueue.push(async () => {
-				logger.info('Boad has changed - updating note body...');
+				logger.info('Board has changed - updating note body...');
 				const noteBody = serializeBoard(props.board);
 				await props.webviewApi.postMessage({ type: 'setNote', value: { id: props.board.noteId, body: noteBody }});
 

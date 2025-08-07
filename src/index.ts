@@ -117,6 +117,7 @@ joplin.plugins.register({
 			const note:Note = await joplin.workspace.selectedNote();
 			if (!note) return;
 
+			logger.info('updateFromSelectedNote: posting "setNote"');
 			editors.postMessage(view, { type: 'setNote', value: { id: note.id, body: note.body }});
 		}
 
