@@ -24,11 +24,16 @@ const newNoteBody = `# Backlog
 # Do not remove this block
 \`\`\``;
 
-const getArchiveNote = async():Promise<Note|null> => {
-	const archiveNoteId:string = await joplin.settings.value('archiveNoteId');
+const getArchiveNote = async(noteId:string):Promise<Note|null> => {
+	const s = await joplin.settings.value('archiveNoteIds');
+	if (!s) return null;
+
+	const archiveNoteIds = JSON.parse(s);
+	const archiveNoteId = archiveNoteIds[noteId];
+
 	if (!archiveNoteId) return null;
 
-	const note = await joplin.data.get(['notes', archiveNoteId], { fields: ['id', 'body', 'deleted_time'] });
+	const note = await joplin.data.get(['notes', archiveNoteId], { fields: ['id', 'title', 'body', 'deleted_time', 'parent_id'] });
 	return note && !note.deleted_time ? note : null;
 }
 
@@ -39,15 +44,20 @@ const handleAutoArchiving = async () => {
 
 	if (!autoArchiveDelayDays) return;
 
-	const note:Note = await joplin.workspace.selectedNote();
-	const board = await parseNote(note.id, note.body);
+	const selectedNote:Note = await joplin.workspace.selectedNote();
 
-	const archiveNote = await getArchiveNote();
+	logger.info('Selected note:', selectedNote);
+
+	const board = await parseNote(selectedNote.id, selectedNote.body);
+
+	const archiveNote = await getArchiveNote(selectedNote.id);
 	let archiveBoard:Board;
 	
 	if (archiveNote) {
+		logger.info('Archive note exists:', archiveNote);
 		archiveBoard = await parseNote(archiveNote.id, archiveNote.body);
 	} else {
+		logger.info('Archive note does not already exist');
 		archiveBoard = {
 			noteId: '',
 			settings: {},
@@ -83,10 +93,19 @@ const handleAutoArchiving = async () => {
 	const archiveNoteBody = serializeBoard(result.archive);
 
 	if (archiveNote) {
+		logger.info('Updating archive note:', archiveNote);
 		await joplin.data.put(['notes', archiveNote.id], null, { body: archiveNoteBody });
 	} else {
-		const newNote = await joplin.data.post(['notes'], null, { title: note.title + ' - Archive', body: archiveNoteBody });
-		await joplin.settings.setValue('archiveNoteId', newNote.id);
+		const s = await joplin.settings.value('archiveNoteIds');
+		const archiveNoteIds = s ? JSON.parse(s) : {};
+		const newNote = await joplin.data.post(['notes'], null, {
+			title: selectedNote.title + ' - Archive',
+			body: archiveNoteBody,
+			parent_id: selectedNote.parent_id,
+		});
+		logger.info('Created new archive note:', newNote);
+		archiveNoteIds[selectedNote.id] = newNote.id;
+		await joplin.settings.setValue('archiveNoteIds', JSON.stringify(archiveNoteIds));
 	}
 
 	await joplin.data.put(['notes', board.noteId], null, { body: noteBody });

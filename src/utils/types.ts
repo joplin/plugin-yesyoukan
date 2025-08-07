@@ -3,6 +3,7 @@ import { SettingItem, SettingItemType } from "../../api/types";
 export interface Note {
 	id: string;
 	title: string;
+	parent_id: string;
 	body: string;
 	todo_due: number;
 	todo_completed: number;
@@ -137,7 +138,8 @@ export interface PluginSettings {
 	cardDoubleClickAction?: CardDoubleClickAction;
 	autoArchiveDelayDays?: number;
 	lastStackAddedDates?: LastStackAddedDates;
-	archiveNoteId?: string;
+	archiveNoteId?: string; // Deprecated in favor of archiveNoteIds
+	archiveNoteIds?: string;
 	markAsCompletedLastStackCards?: boolean;
 }
 
@@ -240,7 +242,16 @@ export const pluginSettingItems:PluginSettingItems = {
 		section: settingSectionName,
 	},
 
+	// Deprecated in favor of archiveNoteIds
 	archiveNoteId: {
+		label: '',
+		type: SettingItemType.String,
+		public: false,
+		value: '',
+		section: settingSectionName,
+	},
+
+	archiveNoteIds: {
 		label: '',
 		type: SettingItemType.String,
 		public: false,
