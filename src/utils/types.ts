@@ -15,6 +15,7 @@ export interface Tag {
 	title: string;
 }
 
+// IMPORTANT: Whenever changing the `Card` interface, don't forget to update `normalizeBoardForComparison()`
 export interface Card {
 	id: string;
 	title: string;
