@@ -1,3 +1,9 @@
+# v1.0.19
+
+- Fixes #64: Archive is not created in a correct notebook
+- Remove support for (broken) bi-directional note udpates
+- Resolves #65: Allow showing or hiding the card body
+
 # v1.0.18
 
 - Fixed auto-archiving
