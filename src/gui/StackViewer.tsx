@@ -43,6 +43,7 @@ interface Props {
 	platform: Platform;
 	isLast: boolean;
 	dynamicWidth: number;
+	showCardBody: boolean;
 	onCardEditorStart: CardEditorStartEventHandler;
 	onCardEditorSubmit: CardEditorSubmitEventHandler;
 	onCardEditorCancel: CardEditorCancelHandler;
@@ -192,6 +193,7 @@ export default (props:Props) => {
 				onOpenAssociatedNote={props.onOpenAssociatedNote}
 				onEditSettings={props.onEditCardSettings}
 				onDuplicate={props.onDuplicateCard}
+				showCardBody={props.showCardBody}
 				isLast={index === props.value.cards.length - 1}
 				platform={props.platform}
 				index={index}

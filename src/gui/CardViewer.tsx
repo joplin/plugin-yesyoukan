@@ -50,6 +50,7 @@ export interface Props {
 	onEditSettings: CardHandler;
 	onDuplicate: CardHandler;
 	cardDoubleClickAction: CardDoubleClickAction;
+	showCardBody: boolean;
 	isEditing: boolean;
 	platform: Platform;
 }
@@ -272,6 +273,8 @@ export default (props:Props) => {
 	}
 
 	const renderContent = () => {
+		const showCardBody = props.showCardBody;
+
 		if (!props.isEditing) {
 			return (
 				<div className="content">
@@ -280,7 +283,7 @@ export default (props:Props) => {
 					</div>
 					{renderTags()}
 					{renderDueDate()}
-					<p className="body" dangerouslySetInnerHTML={{ __html: card.bodyHtml} }></p>
+					<p className="body" dangerouslySetInnerHTML={{ __html: showCardBody ? card.bodyHtml : '' }}></p>
 				</div>
 			);
 		} else { // EDIT

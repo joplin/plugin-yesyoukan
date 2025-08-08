@@ -142,6 +142,7 @@ export interface PluginSettings {
 	archiveNoteId?: string; // Deprecated in favor of archiveNoteIds
 	archiveNoteIds?: string;
 	markAsCompletedLastStackCards?: boolean;
+	showCardBody?: boolean;
 }
 
 export interface CardSettings {
@@ -262,6 +263,14 @@ export const pluginSettingItems:PluginSettingItems = {
 
 	markAsCompletedLastStackCards: {
 		label: 'Mark as completed to-do cards that are dropped in the last stack',
+		type: SettingItemType.Bool,
+		public: true,
+		value: true,
+		section: settingSectionName,
+	},
+
+	showCardBody: {
+		label: 'Show card body',
 		type: SettingItemType.Bool,
 		public: true,
 		value: true,

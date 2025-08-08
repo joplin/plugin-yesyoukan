@@ -64,23 +64,17 @@ const SettingsDialog: React.FC<Props> = (props:Props) => {
 				/>
 			);
 		} else if (typeof defaultValue === 'boolean') {
-			throw new Error('No implemented: boolean');
-
 			return (
-				<div key={key} style={{ display: 'flex', alignItems: 'center', marginBottom: '16px' }}>
-					<FormControlLabel
-						control={
-							<Checkbox
-								value={currentValue || false}
-								onChange={(e) => handleChange(key, e.target.checked)}
-							/>
-						}
-						label={key}
-					/>
-				</div>
+				<GenericControl
+					{...baseGenericControlProps}
+					control={() => <Checkbox
+						checked={currentValue as boolean}
+						onChange={event => handleChange(key, event.currentTarget.checked)}
+					/>}
+				/>
 			);
 		} else if (typeof defaultValue === 'number') {
-			throw new Error('No implemented: number');
+			throw new Error('Not implemented: number');
 
 			return (
 				<div key={key} style={{ display: 'flex', alignItems: 'center', marginBottom: '16px' }}>
@@ -95,7 +89,7 @@ const SettingsDialog: React.FC<Props> = (props:Props) => {
 			);
 		} else if (typeof defaultValue === 'string') {
 			if (key === 'confirmKey') {
-				throw new Error('No implemented: confirmKey');
+				throw new Error('Not implemented: confirmKey');
 
 				// Special case for the "confirmKey" field since it has predefined options
 				return (
