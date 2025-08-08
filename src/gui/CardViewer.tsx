@@ -11,7 +11,7 @@ import { parseAsNoteLink } from "../utils/noteParser";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { formatDateTime } from "../utils/time";
 
-const logger = Logger.create('CardViewer');
+const logger = Logger.create('YesYouKan: CardViewer');
 
 export interface ChangeEvent {
 	card: Card;

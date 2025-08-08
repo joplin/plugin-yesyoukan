@@ -76,7 +76,8 @@ export type IpcMessageType =
 	'getNote' | // This returns the note associated with the board
 	'getNotes' | // This returns any number of notes
 	'duplicateNote' |
-	'setNote' |
+	'updateNoteFromBoard' |
+	'updateBoardFromNote' |
 	'setNoteProps' |
 	'isReady' |
 	'getSettings' |

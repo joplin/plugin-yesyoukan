@@ -35,6 +35,8 @@ const messageHandlers:Record<IpcMessageType, MessageHandler> = {
 	'isReady': null,
 
 	'cardMessage': null,
+
+	'updateBoardFromNote': null,
 	
 	'getNote': async (_message:IpcMessage) => {
 		const response = await joplin.workspace.selectedNote();
@@ -77,7 +79,7 @@ const messageHandlers:Record<IpcMessageType, MessageHandler> = {
 		return notesIdsToTags;
 	},
 
-	'setNote': async (message:IpcMessage) => {
+	'updateNoteFromBoard': async (message:IpcMessage) => {
 		await setNoteHandler(message.value as Note);
 	},
 

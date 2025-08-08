@@ -5,7 +5,7 @@ import { findCardIndex } from "./board";
 import Logger from "@joplin/utils/Logger";
 import { createCardHash, createCardHashes } from "./cards";
 
-const logger = Logger.create('autoArchive');
+const logger = Logger.create('YesYouKan: autoArchive');
 
 export const recordLastStackAddedDates = async (board: Board, lastStackAddedDates:LastStackAddedDates) => {
 	const cardHashes = await createCardHashes(board.stacks);
