@@ -23,11 +23,16 @@ const newNoteBody = `# Backlog
 # Do not remove this block
 \`\`\``;
 
-const getArchiveNote = async(noteId:string):Promise<Note|null> => {
+const getArchiveNoteIds = async() => {
 	const s = await joplin.settings.value('archiveNoteIds');
-	if (!s) return null;
+	if (!s) return [];
 
-	const archiveNoteIds = JSON.parse(s);
+	const archiveNoteIds = JSON.parse(s) as Record<string, string>;
+	return archiveNoteIds;
+}
+
+const getArchiveNote = async(noteId:string):Promise<Note|null> => {
+	const archiveNoteIds = await getArchiveNoteIds();
 	const archiveNoteId = archiveNoteIds[noteId];
 
 	if (!archiveNoteId) return null;
@@ -45,7 +50,13 @@ const handleAutoArchiving = async () => {
 
 	const selectedNote:Note = await joplin.workspace.selectedNote();
 
-	logger.info('Selected note:', selectedNote);
+	logger.info('handleAutoArchiving: Selected note:', selectedNote);
+
+	const existingArchiveIds = Object.values((await getArchiveNoteIds())) as string[];
+	if (existingArchiveIds.includes(selectedNote.id)) {
+		logger.info('handleAutoArchiving: Note is an archive - not running auto-archiving');
+		return null;
+	}
 
 	const board = await parseNote(selectedNote.id, selectedNote.body);
 
@@ -53,10 +64,10 @@ const handleAutoArchiving = async () => {
 	let archiveBoard:Board;
 	
 	if (archiveNote) {
-		logger.info('Archive note exists:', archiveNote);
+		logger.info('handleAutoArchiving: Archive note exists:', archiveNote);
 		archiveBoard = await parseNote(archiveNote.id, archiveNote.body);
 	} else {
-		logger.info('Archive note does not already exist');
+		logger.info('handleAutoArchiving: Archive note does not already exist');
 		archiveBoard = {
 			noteId: '',
 			settings: {},
@@ -98,13 +109,13 @@ const handleAutoArchiving = async () => {
 
 	if (result.board === board) return null;
 
-	logger.info('Some cards need to be archived - updating board and archive note bodies');
+	logger.info('handleAutoArchiving: Some cards need to be archived - updating board and archive note bodies');
 
 	const noteBody = serializeBoard(result.board);
 	const archiveNoteBody = serializeBoard(result.archive);
 
 	if (archiveNote) {
-		logger.info('Updating archive note:', archiveNote);
+		logger.info('handleAutoArchiving: Updating archive note:', archiveNote);
 		await joplin.data.put(['notes', archiveNote.id], null, { body: archiveNoteBody });
 	} else {
 		const s = await joplin.settings.value('archiveNoteIds');
@@ -114,7 +125,7 @@ const handleAutoArchiving = async () => {
 			body: archiveNoteBody,
 			parent_id: selectedNote.parent_id,
 		});
-		logger.info('Created new archive note:', newNote);
+		logger.info('handleAutoArchiving: Created new archive note:', newNote);
 		archiveNoteIds[selectedNote.id] = newNote.id;
 		await joplin.settings.setValue('archiveNoteIds', JSON.stringify(archiveNoteIds));
 	}

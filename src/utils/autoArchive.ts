@@ -1,9 +1,9 @@
-import { Board, Card, LastStackAddedDates } from "./types"
+import { Board, LastStackAddedDates } from "./types";
 import { Day } from "./time";
 import { produce } from "immer";
 import { findCardIndex } from "./board";
 import Logger from "@joplin/utils/Logger";
-import { createCardHash, createCardHashes } from "./cards";
+import { createCardHashes } from "./cards";
 
 const logger = Logger.create('YesYouKan: autoArchive');
 
