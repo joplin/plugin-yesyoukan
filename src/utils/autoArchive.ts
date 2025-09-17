@@ -33,6 +33,21 @@ export const recordLastStackAddedDates = async (board: Board, lastStackAddedDate
 				}
 			}
 		}
+
+		const validHashes:string[] = [];
+		for (const [, hash] of Object.entries(cardHashes)) {
+			validHashes.push(hash);
+		}
+
+		// Now remove all the info for hashes that don't have a matching note (card has been deleted
+		// or changed)
+		for (const [, cardHashes] of Object.entries(draft)) {
+			for (const [cardHash, ] of Object.entries(cardHashes)) {
+				if (!validHashes.includes(cardHash)) {
+					delete cardHashes[cardHash]; 
+				}
+			}
+		}
 	});
 }
 

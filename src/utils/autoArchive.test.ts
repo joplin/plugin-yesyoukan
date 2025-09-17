@@ -30,7 +30,7 @@ const createTestBoard = () => {
 describe('autoArchive', () => {
 	
 	it('should record the last stack added dates', async () => {
-		const lastStackAddedDates:LastStackAddedDates = {};
+		let lastStackAddedDates:LastStackAddedDates = {};
 
 		const board = createTestBoard();
 
@@ -42,29 +42,46 @@ describe('autoArchive', () => {
 		// -----------------------------------------------------------------------------------------
 
 		const before = Date.now();
-		await msleep(200);
-		const result = await recordLastStackAddedDates(board, lastStackAddedDates);
+		await msleep(500);
+		lastStackAddedDates = await recordLastStackAddedDates(board, lastStackAddedDates);
 
-		expect(result['1234'][cardHash1]).toBeGreaterThan(before);
-		expect(result['1234'][cardHash2]).toBeGreaterThan(before);
+		expect(lastStackAddedDates['1234'][cardHash1]).toBeGreaterThan(before);
+		expect(lastStackAddedDates['1234'][cardHash2]).toBeGreaterThan(before);
 
 		// -----------------------------------------------------------------------------------------
 		// Check that, after adding one more card, the date is added for that card, and the previous
 		// card dates are not modified
 		// -----------------------------------------------------------------------------------------
 
-		const previousValue = result;
+		let previousValue = lastStackAddedDates;
 
 		board.stacks[0].cards.push(createCard());
 
 		const cardHash3 = await createCardHash(board.stacks[0].cards[2]);
 
-		const newResult = await recordLastStackAddedDates(board, result);
-		await msleep(200);
+		await msleep(500);
+		lastStackAddedDates = await recordLastStackAddedDates(board, lastStackAddedDates);
 
-		expect(newResult['1234'][cardHash1]).toBe(previousValue['1234'][cardHash1]);
-		expect(newResult['1234'][cardHash2]).toBe(previousValue['1234'][cardHash2]);
-		expect(newResult['1234'][cardHash3]).toBeGreaterThan(newResult['1234'][cardHash1]);
+		expect(lastStackAddedDates['1234'][cardHash1]).toBe(previousValue['1234'][cardHash1]);
+		expect(lastStackAddedDates['1234'][cardHash2]).toBe(previousValue['1234'][cardHash2]);
+		expect(lastStackAddedDates['1234'][cardHash3]).toBeGreaterThan(lastStackAddedDates['1234'][cardHash1]);
+
+		// -----------------------------------------------------------------------------------------
+		// Check that if a card is deleted, its hash is cleared
+		// -----------------------------------------------------------------------------------------
+
+		previousValue = lastStackAddedDates;
+		board.stacks[0].cards[1].title = 'two - mod';
+		lastStackAddedDates = await recordLastStackAddedDates(board, lastStackAddedDates);
+
+		// Check that we still have 3 hashes - previously we would have 4 due to the old hash not
+		// being deleted
+		expect(Object.keys(lastStackAddedDates['1234']).length).toBe(3);
+
+		// Check that only the hash for card 2 has been changed
+		expect(lastStackAddedDates['1234'][cardHash1]).toBe(previousValue['1234'][cardHash1]);
+		expect(lastStackAddedDates['1234'][cardHash2]).not.toBe(previousValue['1234'][cardHash2]);
+		expect(lastStackAddedDates['1234'][cardHash3]).toBe(previousValue['1234'][cardHash3]);
 	});
 
 	it('should clear the recorded dates of previous stacks', async () => {

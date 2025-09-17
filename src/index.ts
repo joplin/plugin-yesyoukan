@@ -1,9 +1,8 @@
 import joplin from 'api';
 import { Board, LastStackAddedDates, IpcMessage, Note, pluginSettingItems, settingSectionName } from './utils/types';
-import { boardsEqual, noteIsBoard, parseNote, serializeBoard } from './utils/noteParser';
+import { noteIsBoard, parseNote, serializeBoard } from './utils/noteParser';
 import Logger, { TargetType } from '@joplin/utils/Logger';
 import { MenuItemLocation } from 'api/types';
-import { msleep } from './utils/time';
 import messageHandlers from './messageHandlers';
 import { processAutoArchiving, recordLastStackAddedDates } from './utils/autoArchive';
 import uuid from './utils/uuid';
@@ -77,6 +76,18 @@ const handleAutoArchiving = async () => {
 		await joplin.settings.setValue('lastStackAddedDates', newDates);
 		lastStackAddedDates = newDates;
 	}
+
+	// Keep this to display the list of hashes:
+
+	// const logInfo:Record<string, string> = {};
+	// for (const [noteId, cardHashes] of Object.entries(lastStackAddedDates)) {
+	// 	for (const [cardHash, timestamp] of Object.entries(cardHashes)) {
+	// 		logInfo[noteId + '_' + cardHash] = dayjs(timestamp).format();
+	// 	}
+	// }
+
+	// logger.info('lastStackAddedDates:');
+	// logger.info(logInfo);
 
 	const result = await processAutoArchiving(
 		board,
