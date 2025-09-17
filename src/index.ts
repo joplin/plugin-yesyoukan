@@ -42,7 +42,7 @@ const handleAutoArchiving = async () => {
 	let lastStackAddedDates = settings.lastStackAddedDates as LastStackAddedDates;
 	const autoArchiveDelayDays = settings.autoArchiveDelayDays as number;
 
-	if (!autoArchiveDelayDays) return;
+	if (!autoArchiveDelayDays) return null;
 
 	const selectedNote:Note = await joplin.workspace.selectedNote();
 
@@ -85,7 +85,7 @@ const handleAutoArchiving = async () => {
 		autoArchiveDelayDays,
 	);
 
-	if (result.board === board) return;
+	if (result.board === board) return null;
 
 	logger.info('Some cards need to be archived - updating board and archive note bodies');
 
@@ -108,7 +108,7 @@ const handleAutoArchiving = async () => {
 		await joplin.settings.setValue('archiveNoteIds', JSON.stringify(archiveNoteIds));
 	}
 
-	await joplin.data.put(['notes', board.noteId], null, { body: noteBody });
+	return { id: board.noteId, body: noteBody };
 }
 
 joplin.plugins.register({
@@ -134,11 +134,11 @@ joplin.plugins.register({
 
 		let previousNoteId = '';
 
-		const updateFromSelectedNote = async () => {
+		const updateFromSelectedNote = async (forceIt:boolean = false) => {
 			const note:Note = await joplin.workspace.selectedNote();
 			if (!note) return;
 
-			if (note.id === previousNoteId) {
+			if (note.id === previousNoteId && !forceIt) {
 				// Currently we only update the board from the note when the user has switched to a
 				// different note. We don't update if, for example, the note is changed via external
 				// editor, sync or data API. This is a bit of an edge case anyway and supporting
@@ -208,8 +208,11 @@ joplin.plugins.register({
 			logger.info('PostMessagePlugin (Webview): Got message from webview:', message);
 
 			if (message.type === 'isReady') {
-				await handleAutoArchiving();
-				await updateFromSelectedNote();
+				const modifiedNote = await handleAutoArchiving();
+				if (modifiedNote) {
+					await joplin.data.put(['notes', modifiedNote.id], null, { body: modifiedNote.body });
+					await updateFromSelectedNote(true);
+				}
 				return;
 			}
 			
