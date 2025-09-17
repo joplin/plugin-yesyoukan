@@ -4,7 +4,7 @@ import uuid from "./uuid";
 import { PromisePool } from '@supercharge/promise-pool'
 
 export const createCard =  (title:string = null, body:string = null) => {
-	if (title === null) title = 'New card';
+	if (title === null) title = '';
 	if (body === null) body = '';
 
 	const card:Card = {

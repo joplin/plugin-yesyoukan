@@ -272,6 +272,12 @@ export default (props:Props) => {
 		);
 	}
 
+	const renderText = (card:Card) => {
+		const output = [card.title];
+		if (card.body) output.push(card.body);
+		return output.join('\n\n');
+	}
+
 	const renderContent = () => {
 		const showCardBody = props.showCardBody;
 
@@ -294,7 +300,7 @@ export default (props:Props) => {
 							ref={editorRef}
 							className="note-editor"
 							onKeyDown={onEditorKeyDown}
-							defaultValue={card.title + '\n\n' + card.body}
+							defaultValue={renderText(card)}
 						></textarea>
 						<ConfirmButtons onConfirm={onEditorSubmit} onCancel={onEditorCancel} />
 					</div>
