@@ -1,3 +1,10 @@
+# v1.1.1
+
+- Fix auto-archiving
+- Resolves #68: Newly created cards are empty instead of having the placeholder title "New card"
+- Auto-archive: Remove old card hashes to avoid huge setting values being saved
+- Do not process archive notes with auto-archiving
+
 # v1.0.19
 
 - Fixes #64: Archive is not created in a correct notebook
