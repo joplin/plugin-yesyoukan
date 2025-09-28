@@ -82,7 +82,7 @@ export default () => {
 		setBoard,
 		setDialogConfig,
 		webviewApi,
-		addCardsToBeginningOfStack: effectiveBoardSettings.addCardsToBeginningOfStack,
+		cardInsertLocation: effectiveBoardSettings.cardInsertLocation,
 	});
 
 	const {
