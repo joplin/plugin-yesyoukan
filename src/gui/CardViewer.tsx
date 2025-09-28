@@ -11,7 +11,7 @@ import { parseAsNoteLink } from "../utils/noteParser";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { formatDateTime } from "../utils/time";
 
-const logger = Logger.create('CardViewer');
+const logger = Logger.create('YesYouKan: CardViewer');
 
 export interface ChangeEvent {
 	card: Card;
@@ -50,6 +50,7 @@ export interface Props {
 	onEditSettings: CardHandler;
 	onDuplicate: CardHandler;
 	cardDoubleClickAction: CardDoubleClickAction;
+	showCardBody: boolean;
 	isEditing: boolean;
 	platform: Platform;
 }
@@ -271,7 +272,15 @@ export default (props:Props) => {
 		);
 	}
 
+	const renderText = (card:Card) => {
+		const output = [card.title];
+		if (card.body) output.push(card.body);
+		return output.join('\n\n');
+	}
+
 	const renderContent = () => {
+		const showCardBody = props.showCardBody;
+
 		if (!props.isEditing) {
 			return (
 				<div className="content">
@@ -280,7 +289,7 @@ export default (props:Props) => {
 					</div>
 					{renderTags()}
 					{renderDueDate()}
-					<p className="body" dangerouslySetInnerHTML={{ __html: card.bodyHtml} }></p>
+					<p className="body" dangerouslySetInnerHTML={{ __html: showCardBody ? card.bodyHtml : '' }}></p>
 				</div>
 			);
 		} else { // EDIT
@@ -291,7 +300,7 @@ export default (props:Props) => {
 							ref={editorRef}
 							className="note-editor"
 							onKeyDown={onEditorKeyDown}
-							defaultValue={card.title + '\n\n' + card.body}
+							defaultValue={renderText(card)}
 						></textarea>
 						<ConfirmButtons onConfirm={onEditorSubmit} onCancel={onEditorCancel} />
 					</div>

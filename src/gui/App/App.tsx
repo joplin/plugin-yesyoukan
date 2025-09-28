@@ -207,6 +207,7 @@ export default () => {
 				onDeleteCard={onDeleteCard}
 				onDuplicateCard={onDuplicateCard}
 				onEditSettings={onEditStackSettings}
+				showCardBody={effectiveBoardSettings.showCardBody}
 				onDrop={onStackDrop}
 				isLast={index === board.stacks.length - 1}
 				dynamicWidth={dynamicWidth}

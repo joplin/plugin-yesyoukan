@@ -1,7 +1,29 @@
+# v1.1.2
+
+- Fix auto-archiving
+- Resolves #68: Newly created cards are empty instead of having the placeholder title "New card"
+- Auto-archive: Remove old card hashes to avoid huge setting values being saved
+- Do not process archive notes with auto-archiving
+
+# v1.0.19
+
+- Fixes #64: Archive is not created in a correct notebook
+- Remove support for (broken) bi-directional note udpates
+- Resolves #65: Allow showing or hiding the card body
+
+# v1.0.18
+
+- Fixed auto-archiving
+
+# v1.0.17
+
+- Fixes #60: Scrollbar is broken on card content
+- Fixes #55: Using Duplicate on a Card from Note causes Uncaught Exception
+
 # v1.0.16
 
 - Resolves #45: Allow right-clicking on a link inside a card to copy it
-- Resolves #47: Ask for confirmation when closing the editor would cause changing to be lost
+- Resolves #47: Ask for confirmation when closing the editor would cause changes to be lost
 - Resolves #52: Improved various components in dark theme
 - Resolves #49: Make header of stacks sticky
 - Resolves #48: Handle case where an external note is deleted

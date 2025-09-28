@@ -28,13 +28,15 @@ const setNoteHandler = async (messageNote:Note) => {
 	}
 }
 
-const noteFields = ['id', 'title', 'body', 'todo_due', 'todo_completed', 'is_todo', 'deleted_time'];
+const noteFields = ['id', 'title', 'body', 'todo_due', 'todo_completed', 'is_todo', 'deleted_time', 'parent_id'];
 
 const messageHandlers:Record<IpcMessageType, MessageHandler> = {
 
 	'isReady': null,
 
 	'cardMessage': null,
+
+	'updateBoardFromNote': null,
 	
 	'getNote': async (_message:IpcMessage) => {
 		const response = await joplin.workspace.selectedNote();
@@ -77,7 +79,7 @@ const messageHandlers:Record<IpcMessageType, MessageHandler> = {
 		return notesIdsToTags;
 	},
 
-	'setNote': async (message:IpcMessage) => {
+	'updateNoteFromBoard': async (message:IpcMessage) => {
 		await setNoteHandler(message.value as Note);
 	},
 
@@ -153,6 +155,8 @@ const messageHandlers:Record<IpcMessageType, MessageHandler> = {
 			title: note.title + ' - Copy',
 			tags: tagTitles.join(','),
 		};
+		
+		delete newNote.id;
 
 		return await joplin.data.post(['notes'], null, newNote);
 	},

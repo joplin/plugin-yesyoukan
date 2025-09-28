@@ -176,19 +176,68 @@ const normalizeBoardForComparison = (board:Board) => {
 	return produce(board, draft => {
 		for (const stack of draft.stacks) {
 			stack.id = '';
-			for (const card of stack.cards) {
-				card.id = '';
+			for (const [index, card] of stack.cards.entries()) {
+				stack.cards[index] = {
+					id: '',
+					title: card.title,
+					body: card.body || '',
+					is_todo: card.is_todo || 0,
+					todo_completed: card.todo_completed || 0,
+					todo_due: card.todo_due || 0,
+					settings: card.settings || {},
+					tags: card.tags || [],
+					deleted_time: card.deleted_time || 0,
+				}
 			}
 		}
 	});
 }
 
-export const boardsEqual = (board1:Board, board2:Board) => {
+// export const boardsEqualOld = (board1:Board, board2:Board) => {
+// 	if (board1.stacks.length !== board2.stacks.length) return false;
+// 	if (board1.noteId !== board2.noteId) return false;
+
+// 	const settingKeys = Object.keys(board1.settings).sort();
+// 	if (settingKeys.length !== Object.keys(board2.settings).length) return false;
+
+// 	for (const key of settingKeys) {
+// 		if (board1.settings[key] !== board2.settings[key]) return false;
+// 	}
+
+// 	for (const [index, stack1] of board1.stacks.entries()) {
+// 		const stack2 = board2.stacks[index];
+
+// 		if (stack1.title !== stack2.title) return false;
+// 		if (stack1.cards.length !== stack2.cards.length) return false;
+// 		if (!fastDeepEqual(stack1.settings, stack2.settings)) return false;
+
+// 		for (const [cardIndex, card1] of stack1.cards.entries()) {
+// 			const card2 = stack2.cards[cardIndex];
+
+// 			if (card1.title !== card2.title) return false;
+// 			if (card1.body !== card2.body) return false;
+// 			if (!fastDeepEqual(card1.settings, card2.settings)) return false;
+// 		}
+// 	}
+
+// 	return true;
+// }
+
+const boardsEqualNew = (board1:Board, board2:Board) => {
 	if (board1.stacks.length !== board2.stacks.length) return false;
 	if (board1.noteId !== board2.noteId) return false;
 
-	return fastDeepEqual(
-		normalizeBoardForComparison(board1),
-		normalizeBoardForComparison(board2),
-	);
+	const normalizedBoard1 = normalizeBoardForComparison(board1);
+	const normalizedBoard2 = normalizeBoardForComparison(board2);
+
+	const outputNew = fastDeepEqual(normalizedBoard1, normalizedBoard2);
+
+	return outputNew;
+}
+
+export const boardsEqual = (board1:Board, board2:Board) => {
+	const outputNew = boardsEqualNew(board1, board2);
+	// const outputOld = boardsEqualOld(board1, board2);
+
+	return outputNew;
 }

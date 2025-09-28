@@ -76,7 +76,7 @@ export default (props:Props) => {
 			const stackIndex = findStackIndex(draft, event.stackId);
 			const newCard = {
 				id: newCardId,
-				title: 'New card',
+				title: '',
 				body: '',
 				is_todo: 0,
 				todo_completed: 0,

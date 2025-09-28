@@ -6,7 +6,7 @@ import Logger from "@joplin/utils/Logger";
 import AsyncActionQueue from "../../../utils/AsyncActionQueue";
 import { AfterSetNoteAction } from "../utils/types";
 
-const logger = Logger.create('YesYouKan: useNoteLoader');
+const logger = Logger.create('YesYouKan: useNoteSync');
 
 const updateNoteQueue = new AsyncActionQueue(100);
 
@@ -55,7 +55,7 @@ export default (props:Props) => {
 
 			if (!enabled) return;
 
-			if (message.type === 'setNote') {
+			if (message.type === 'updateBoardFromNote') {
 				const note = message.value as Note;
 				const newBoard = await parseNote(note.id, note.body);
 				props.setBoard(current => {
@@ -63,7 +63,32 @@ export default (props:Props) => {
 						logger.info('Board has not changed - skipping update');
 						return current;
 					}
-					logger.info('Boad has changed - updating');
+					logger.info('Board has changed - updating');
+
+					// const mergeBoards = (parsedBoard:Board, currentBoard:Board) => {
+					// 	return produce(parsedBoard, draft => {
+					// 		for (const stack of draft.stacks) {
+					// 			for (const [index, card] of stack.cards.entries()) {
+					// 				const linkedNote = parseAsNoteLink(card.title);
+					// 				if (!linkedNote) continue;
+					
+					// 				try {
+					// 					const existingCard = findCard(currentBoard, card.id);
+						
+					// 					stack.cards[index] = {
+					// 						...existingCard,
+					// 						...card,
+					// 					}
+					// 				} catch (error) {
+					// 					// nothing
+					// 				}
+					// 			}
+					// 		}
+					// 	});
+					// }
+
+					// const mergedBoard = mergeBoards(newBoard, current);
+					
 					props.clearUndo();
 					ignoreNextBoardUpdate.current = true;
 					return newBoard;
@@ -75,11 +100,13 @@ export default (props:Props) => {
 	}, [enabled]);
 
 	useEffect(() => {
+		logger.info('useEffect: ignoreNextBoardUpdate.current', ignoreNextBoardUpdate.current);
+
 		if (!ignoreNextBoardUpdate.current) {
 			updateNoteQueue.push(async () => {
-				logger.info('Boad has changed - updating note body...');
+				logger.info('Board has changed - updating note body...');
 				const noteBody = serializeBoard(props.board);
-				await props.webviewApi.postMessage({ type: 'setNote', value: { id: props.board.noteId, body: noteBody }});
+				await props.webviewApi.postMessage({ type: 'updateNoteFromBoard', value: { id: props.board.noteId, body: noteBody }});
 
 				if (props.afterSetNoteAction.current) {
 					const action = props.afterSetNoteAction.current;
