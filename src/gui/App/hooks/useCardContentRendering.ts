@@ -53,13 +53,6 @@ export default (props:Props) => {
 
 			if (cancelled) return;
 
-			const getCardIdByNoteId = (id: string) => {
-				for (const [cardId, noteId] of Object.entries(cardIdToNoteId)) {
-					if (id === noteId) return cardId;
-				}
-				throw new Error('Invalid card ID: ' + id);
-			}
-
 			props.setBoard(current => {
 				return produce(current, draft => {
 					for (const [cardId, result] of Object.entries(rendered)) {
@@ -76,9 +69,12 @@ export default (props:Props) => {
 					}
 
 					for (const [noteId, tags] of Object.entries(noteIdToTags)) {
-						const cardId = getCardIdByNoteId(noteId);
-						const [stackIndex, cardIndex] = findCardIndex(props.board, cardId);
-						draft.stacks[stackIndex].cards[cardIndex].tags = tags;
+						for (const [cardId, mappedNoteId] of Object.entries(cardIdToNoteId)) {
+							if (mappedNoteId === noteId) {
+								const [stackIndex, cardIndex] = findCardIndex(props.board, cardId);
+								draft.stacks[stackIndex].cards[cardIndex].tags = tags;
+							}
+						}
 					}
 				});
 			});
