@@ -2,7 +2,7 @@ import joplin from 'api';
 import { Board, LastStackAddedDates, IpcMessage, Note, pluginSettingItems, settingSectionName } from './utils/types';
 import { noteIsBoard, parseNote, serializeBoard } from './utils/noteParser';
 import Logger, { TargetType } from '@joplin/utils/Logger';
-import { MenuItemLocation } from 'api/types';
+import { MenuItemLocation, ToolbarButtonLocation } from 'api/types';
 import messageHandlers from './messageHandlers';
 import { processAutoArchiving, recordLastStackAddedDates } from './utils/autoArchive';
 import uuid from './utils/uuid';
@@ -208,6 +208,7 @@ joplin.plugins.register({
 		await joplin.commands.register({
 			name: 'createKanbanBoard',
 			label: 'Create Kanban board',
+			iconName: 'fas fa-th-list',
 			execute: async () => {
 				logger.info('Creating new Kanban note...');
 				await joplin.commands.execute('newNote', newNoteBody);
@@ -221,7 +222,20 @@ joplin.plugins.register({
 			},
 		});
 
-		await joplin.views.menuItems.create('createKanbanBoardMenuItem', 'createKanbanBoard', MenuItemLocation.Tools, { accelerator: 'CmdOrCtrl+Alt+Shift+K' });
+		// Register menu and toolbar entries
+		await joplin.views.menus.create(
+			'YesYouKanMenu',
+			'YesYouKan',
+			[
+        {commandName: 'createKanbanBoard', accelerator: 'CmdOrCtrl+Alt+Shift+K' }
+			],
+			MenuItemLocation.Tools
+		);
+		await joplin.views.toolbarButtons.create(
+			'createKanbanboardBtn',
+			'createKanbanBoard',
+			ToolbarButtonLocation.NoteToolbar
+		);
 
 		editors.onMessage(view, async (message:IpcMessage) => {
 			// These messages are internal messages sent within the app webview and can be ignored
