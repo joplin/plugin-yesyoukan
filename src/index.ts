@@ -13,7 +13,7 @@ Logger.initializeGlobalLogger(globalLogger);
 
 const logger = Logger.create('YesYouCan: Index');
 
-const newNoteBody = `# Backlog
+const newNoteBody = `# Todo
 
 # In progress
 
