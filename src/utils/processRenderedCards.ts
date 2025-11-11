@@ -41,13 +41,13 @@ export default async (
 
 				note = {
 					id: cardToRender.noteId,
-					parent_id: '',
 					title: cardToRender.cardTitle || '',
 					body: '',
 					is_todo: 0,
 					todo_completed: 0,
 					todo_due: 0,
 					deleted_time: 0,
+					parent_id: '',
 				}
 			}
 

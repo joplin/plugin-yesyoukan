@@ -224,7 +224,7 @@ joplin.plugins.register({
 			execute: async () => {
 				logger.info('Creating new Kanban note...');
 				await joplin.commands.execute('newNote', newNoteBody);
-	
+
 				// Wait for the note to be created and the UI to be updated before showing the
 				// editor
 				setTimeout(async () => {
@@ -232,7 +232,7 @@ joplin.plugins.register({
 				}, 200);				
 			},
 		});
-	
+
 		await joplin.views.menuItems.create('createKanbanBoardMenuItem', 'createKanbanBoard', MenuItemLocation.Tools, { accelerator: 'CmdOrCtrl+Alt+Shift+K' });
 	},
 });
