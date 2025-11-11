@@ -2,7 +2,7 @@ import joplin from 'api';
 import { Board, LastStackAddedDates, IpcMessage, Note, pluginSettingItems, settingSectionName } from './utils/types';
 import { noteIsBoard, parseNote, serializeBoard } from './utils/noteParser';
 import Logger, { TargetType } from '@joplin/utils/Logger';
-import { MenuItemLocation, ViewHandle } from 'api/types';
+import { MenuItemLocation } from 'api/types';
 import messageHandlers from './messageHandlers';
 import { processAutoArchiving, recordLastStackAddedDates } from './utils/autoArchive';
 import noteFields from './utils/noteFields';
@@ -40,13 +40,19 @@ const registerEditorPlugin = async () => {
 
 			const selectedNoteIdRef = { current: '' };
 			const loadSelectedNote = async () => {
-				if (!selectedNoteIdRef.current) return null;
+				if (!selectedNoteIdRef.current) {
+					// In some cases selectedNoteIdRef isn't set during the initial load of the editor.
+					// (If the first `onUpdate` is emitted after the webview emits a ready event). In this
+					// case, default to the note in the selected window:
+					return await joplin.workspace.selectedNote();
+				}
+
 				const result = joplin.data.get(['notes', selectedNoteIdRef.current], { fields: noteFields });
 				return result;
 			};
 
 			const updateFromSelectedNote = async () => {
-				const note:Note = await joplin.workspace.selectedNote();
+				const note:Note = await loadSelectedNote();
 				if (!note) return;
 
 				logger.info('updateFromSelectedNote: posting "updateNoteFromBoard"');
