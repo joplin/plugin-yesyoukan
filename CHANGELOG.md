@@ -1,3 +1,20 @@
+# v1.1.2
+
+- Fix auto-archiving
+- Resolves #68: Newly created cards are empty instead of having the placeholder title "New card"
+- Auto-archive: Remove old card hashes to avoid huge setting values being saved
+- Do not process archive notes with auto-archiving
+
+# v1.0.19
+
+- Fixes #64: Archive is not created in a correct notebook
+- Remove support for (broken) bi-directional note udpates
+- Resolves #65: Allow showing or hiding the card body
+
+# v1.0.18
+
+- Fixed auto-archiving
+
 # v1.0.17
 
 - Fixes #60: Scrollbar is broken on card content

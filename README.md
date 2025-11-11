@@ -99,6 +99,12 @@ The auto-archive feature enables the removal of old cards from the board. The fi
 
 Archived cards are removed from the current board and transferred to a new "archive" board within the same notebook as the original board.
 
+## Unidirectional updates
+
+While a board is open, any change to the underlying note that does not originate from the plugin will be ignored. It means that if the note is updated via external editing, the data API or even sync, changes may be lost. This is not currently supported and it is unlikely it will be. As a workaround, if you expect the current note to be changed via sync, you can open a different note, then go back to it to view the latest changes. Supporting this is a bit of an edge case, brings a lot of complexity and most of the time is not necessary.
+
+Essentially it means that the plugin updates are unidirectional - the board will update the underlying note, but not the other way around.
+
 ## Credits
 
 - Kanban icon created by [Muhammad_Usman](https://www.flaticon.com/authors/muhammad-usman)

@@ -1,6 +1,6 @@
 import Logger from "@joplin/utils/Logger";
 
-const logger = Logger.create('renderMarkupUtils');
+const logger = Logger.create('YesYouKan: renderMarkupUtils');
 
 function toggleCheckboxLine(ipcMessage: string, noteBody: string) {
 	const newBody = noteBody.split('\n');

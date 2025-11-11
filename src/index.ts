@@ -1,6 +1,6 @@
 import joplin from 'api';
 import { Board, LastStackAddedDates, IpcMessage, Note, pluginSettingItems, settingSectionName } from './utils/types';
-import { boardsEqual, noteIsBoard, parseNote, serializeBoard } from './utils/noteParser';
+import { noteIsBoard, parseNote, serializeBoard } from './utils/noteParser';
 import Logger, { TargetType } from '@joplin/utils/Logger';
 import { MenuItemLocation, ViewHandle } from 'api/types';
 import messageHandlers from './messageHandlers';
@@ -45,10 +45,39 @@ const registerEditorPlugin = async () => {
 				return result;
 			};
 
-			const updateFromSelectedNote = async () => {
-				const note = await loadSelectedNote();
+			const updateFromSelectedNote = async (forceIt:boolean = false) => {
+				const note:Note = await joplin.workspace.selectedNote();
 				if (!note) return;
-				await editors.postMessage(view, { type: 'setNote', value: { id: note.id, body: note.body }});
+
+				let previousNoteId = '';
+				if (note.id === previousNoteId && !forceIt) {
+					// Currently we only update the board from the note when the user has switched to a
+					// different note. We don't update if, for example, the note is changed via external
+					// editor, sync or data API. This is a bit of an edge case anyway and supporting
+					// this means bi-directional updates which turn out to be very complicated and just
+					// not working. The main issue is with the board being updated asynchronoulsy when
+					// it contains "notes as cards", so we have this:
+					//
+					// - New card is added to the board
+					// - Underlying note is updated
+					// - Which triggers a board update
+					// - We then compare the current board and the board generated from the note.
+					//   Normally they should be identical, so the update should be skipped. But because
+					//   "cards as notes" contain additional metadata, which is fetch asynchronously,
+					//   it's going to be different.
+					// - So we update the board from the note, which triggers a full refresh and, for
+					//   example, clear scroll position or any open editor.
+					//
+					// Getting all this to work properly would be complex, will require ongoing
+					// maintenance and will be difficult to detect since it touches app integration and
+					// there won't be automated tests. So overall it doesn't seem worth it.
+					logger.warn('Skipping update: Note has not changed');
+					return;
+				}
+
+				logger.info('updateFromSelectedNote: posting "setNote"');
+				previousNoteId = note.id;
+				editors.postMessage(view, { type: 'updateBoardFromNote', value: { id: note.id, body: note.body }});
 			};
 
 			await editors.onUpdate(view, async (event) => {
@@ -70,8 +99,11 @@ const registerEditorPlugin = async () => {
 				logger.info('PostMessagePlugin (Webview): Got message from webview:', message);
 
 				if (message.type === 'isReady') {
-					await handleAutoArchiving();
-					await updateFromSelectedNote();
+					const modifiedNote = await handleAutoArchiving();
+					if (modifiedNote) {
+						await joplin.data.put(['notes', modifiedNote.id], null, { body: modifiedNote.body });
+						await updateFromSelectedNote(true);
+					}
 					return;
 				}
 
@@ -93,11 +125,21 @@ const registerEditorPlugin = async () => {
 	});
 };
 
-const getArchiveNote = async():Promise<Note|null> => {
-	const archiveNoteId:string = await joplin.settings.value('archiveNoteId');
+const getArchiveNoteIds = async() => {
+	const s = await joplin.settings.value('archiveNoteIds');
+	if (!s) return [];
+
+	const archiveNoteIds = JSON.parse(s) as Record<string, string>;
+	return archiveNoteIds;
+};
+
+const getArchiveNote = async(noteId:string):Promise<Note|null> => {
+	const archiveNoteIds = await getArchiveNoteIds();
+	const archiveNoteId = archiveNoteIds[noteId];
+
 	if (!archiveNoteId) return null;
 
-	const note = await joplin.data.get(['notes', archiveNoteId], { fields: ['id', 'body', 'deleted_time'] });
+	const note = await joplin.data.get(['notes', archiveNoteId], { fields: ['id', 'title', 'body', 'deleted_time', 'parent_id'] });
 	return note && !note.deleted_time ? note : null;
 }
 
@@ -106,17 +148,28 @@ const handleAutoArchiving = async () => {
 	let lastStackAddedDates = settings.lastStackAddedDates as LastStackAddedDates;
 	const autoArchiveDelayDays = settings.autoArchiveDelayDays as number;
 
-	if (!autoArchiveDelayDays) return;
+	if (!autoArchiveDelayDays) return null;
 
-	const note:Note = await joplin.workspace.selectedNote();
-	const board = await parseNote(note.id, note.body);
+	const selectedNote:Note = await joplin.workspace.selectedNote();
 
-	const archiveNote = await getArchiveNote();
+	logger.info('handleAutoArchiving: Selected note:', selectedNote);
+
+	const existingArchiveIds = Object.values((await getArchiveNoteIds())) as string[];
+	if (existingArchiveIds.includes(selectedNote.id)) {
+		logger.info('handleAutoArchiving: Note is an archive - not running auto-archiving');
+		return null;
+	}
+
+	const board = await parseNote(selectedNote.id, selectedNote.body);
+
+	const archiveNote = await getArchiveNote(selectedNote.id);
 	let archiveBoard:Board;
 	
 	if (archiveNote) {
+		logger.info('handleAutoArchiving: Archive note exists:', archiveNote);
 		archiveBoard = await parseNote(archiveNote.id, archiveNote.body);
 	} else {
+		logger.info('handleAutoArchiving: Archive note does not already exist');
 		archiveBoard = {
 			noteId: '',
 			settings: {},
@@ -130,12 +183,24 @@ const handleAutoArchiving = async () => {
 		}
 	}
 	
-	const newDates = recordLastStackAddedDates(board, lastStackAddedDates);
+	const newDates = await recordLastStackAddedDates(board, lastStackAddedDates);
 
 	if (newDates !== lastStackAddedDates) {
 		await joplin.settings.setValue('lastStackAddedDates', newDates);
 		lastStackAddedDates = newDates;
 	}
+
+	// Keep this to display the list of hashes:
+
+	// const logInfo:Record<string, string> = {};
+	// for (const [noteId, cardHashes] of Object.entries(lastStackAddedDates)) {
+	// 	for (const [cardHash, timestamp] of Object.entries(cardHashes)) {
+	// 		logInfo[noteId + '_' + cardHash] = dayjs(timestamp).format();
+	// 	}
+	// }
+
+	// logger.info('lastStackAddedDates:');
+	// logger.info(logInfo);
 
 	const result = await processAutoArchiving(
 		board,
@@ -144,21 +209,30 @@ const handleAutoArchiving = async () => {
 		autoArchiveDelayDays,
 	);
 
-	if (result.board === board) return;
+	if (result.board === board) return null;
 
-	logger.info('Some cards need to be archived - updating board and archive note bodies');
+	logger.info('handleAutoArchiving: Some cards need to be archived - updating board and archive note bodies');
 
 	const noteBody = serializeBoard(result.board);
 	const archiveNoteBody = serializeBoard(result.archive);
 
 	if (archiveNote) {
+		logger.info('handleAutoArchiving: Updating archive note:', archiveNote);
 		await joplin.data.put(['notes', archiveNote.id], null, { body: archiveNoteBody });
 	} else {
-		const newNote = await joplin.data.post(['notes'], null, { title: note.title + ' - Archive', body: archiveNoteBody });
-		await joplin.settings.setValue('archiveNoteId', newNote.id);
+		const s = await joplin.settings.value('archiveNoteIds');
+		const archiveNoteIds = s ? JSON.parse(s) : {};
+		const newNote = await joplin.data.post(['notes'], null, {
+			title: selectedNote.title + ' - Archive',
+			body: archiveNoteBody,
+			parent_id: selectedNote.parent_id,
+		});
+		logger.info('handleAutoArchiving: Created new archive note:', newNote);
+		archiveNoteIds[selectedNote.id] = newNote.id;
+		await joplin.settings.setValue('archiveNoteIds', JSON.stringify(archiveNoteIds));
 	}
 
-	await joplin.data.put(['notes', board.noteId], null, { body: noteBody });
+	return { id: board.noteId, body: noteBody };
 }
 
 joplin.plugins.register({

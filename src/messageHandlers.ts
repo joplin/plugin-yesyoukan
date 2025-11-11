@@ -43,6 +43,8 @@ const messageHandlers = (
 	'isReady': null,
 
 	'cardMessage': null,
+
+	'updateBoardFromNote': null,
 	
 	'getNote': async (_message:IpcMessage) => {
 		const response = await getSelectedNote();
@@ -85,7 +87,7 @@ const messageHandlers = (
 		return notesIdsToTags;
 	},
 
-	'setNote': async (message:IpcMessage) => {
+	'updateNoteFromBoard': async (message:IpcMessage) => {
 		await setNoteHandler(editorHandle, await getSelectedNote(), message.value as Note);
 	},
 

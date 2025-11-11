@@ -48,6 +48,7 @@ export default async (
 					todo_completed: 0,
 					todo_due: 0,
 					deleted_time: 0,
+					parent_id: '',
 				}
 			}
 

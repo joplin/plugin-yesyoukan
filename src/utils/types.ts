@@ -4,6 +4,7 @@ export interface Note {
 	id: string;
 	parent_id: string;
 	title: string;
+	parent_id: string;
 	body: string;
 	todo_due: number;
 	todo_completed: number;
@@ -16,6 +17,7 @@ export interface Tag {
 	title: string;
 }
 
+// IMPORTANT: Whenever changing the `Card` interface, don't forget to update `normalizeBoardForComparison()`
 export interface Card {
 	id: string;
 	title: string;
@@ -75,7 +77,8 @@ export type IpcMessageType =
 	'getNote' | // This returns the note associated with the board
 	'getNotes' | // This returns any number of notes
 	'duplicateNote' |
-	'setNote' |
+	'updateNoteFromBoard' |
+	'updateBoardFromNote' |
 	'setNoteProps' |
 	'isReady' |
 	'getSettings' |
@@ -137,8 +140,10 @@ export interface PluginSettings {
 	cardDoubleClickAction?: CardDoubleClickAction;
 	autoArchiveDelayDays?: number;
 	lastStackAddedDates?: LastStackAddedDates;
-	archiveNoteId?: string;
+	archiveNoteId?: string; // Deprecated in favor of archiveNoteIds
+	archiveNoteIds?: string;
 	markAsCompletedLastStackCards?: boolean;
+	showCardBody?: boolean;
 }
 
 export interface CardSettings {
@@ -240,7 +245,16 @@ export const pluginSettingItems:PluginSettingItems = {
 		section: settingSectionName,
 	},
 
+	// Deprecated in favor of archiveNoteIds
 	archiveNoteId: {
+		label: '',
+		type: SettingItemType.String,
+		public: false,
+		value: '',
+		section: settingSectionName,
+	},
+
+	archiveNoteIds: {
 		label: '',
 		type: SettingItemType.String,
 		public: false,
@@ -250,6 +264,14 @@ export const pluginSettingItems:PluginSettingItems = {
 
 	markAsCompletedLastStackCards: {
 		label: 'Mark as completed to-do cards that are dropped in the last stack',
+		type: SettingItemType.Bool,
+		public: true,
+		value: true,
+		section: settingSectionName,
+	},
+
+	showCardBody: {
+		label: 'Show card body',
 		type: SettingItemType.Bool,
 		public: true,
 		value: true,
