@@ -83,17 +83,33 @@ ul, ol {
 			max-height: 40px;
 			padding-left: 12px;
 			padding-right: 0;
+			width: 100%;
 
 			> .titleedit,
 			> .title {
 				font-weight: bold;
-				font-size: 1.5em;
+				/* font-size: 1.5em; */
 				font-size: calc(var(--joplin-font-size) * 1.5);
-				white-space: nowrap;	
+				white-space: nowrap;
 			}
 
 			> .title {
 				border: 1px solid transparent;
+				text-overflow: ellipsis;
+                overflow: hidden;
+                white-space: nowrap;
+                flex: 1 1 auto;
+                margin: 0;
+                min-width: 0;
+			}
+
+			> .counter {
+				flex: 0 0 auto;
+				margin-left: 8px;
+				white-space: nowrap;
+				font-size: calc(var(--joplin-font-size) * 1.2);
+				font-weight: bold;
+				opacity: 0.7;
 			}
 
 			> .titleedit {

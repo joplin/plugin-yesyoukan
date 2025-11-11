@@ -143,6 +143,7 @@ export interface PluginSettings {
 	archiveNoteIds?: string;
 	markAsCompletedLastStackCards?: boolean;
 	showCardBody?: boolean;
+	showCardCounter?: boolean;
 }
 
 export interface CardSettings {
@@ -271,6 +272,14 @@ export const pluginSettingItems:PluginSettingItems = {
 
 	showCardBody: {
 		label: 'Show card body',
+		type: SettingItemType.Bool,
+		public: true,
+		value: true,
+		section: settingSectionName,
+	},
+
+	showCardCounter: {
+		label: 'Show card counter',
 		type: SettingItemType.Bool,
 		public: true,
 		value: true,
