@@ -45,38 +45,11 @@ const registerEditorPlugin = async () => {
 				return result;
 			};
 
-			const updateFromSelectedNote = async (forceIt:boolean = false) => {
+			const updateFromSelectedNote = async () => {
 				const note:Note = await joplin.workspace.selectedNote();
 				if (!note) return;
 
-				let previousNoteId = '';
-				if (note.id === previousNoteId && !forceIt) {
-					// Currently we only update the board from the note when the user has switched to a
-					// different note. We don't update if, for example, the note is changed via external
-					// editor, sync or data API. This is a bit of an edge case anyway and supporting
-					// this means bi-directional updates which turn out to be very complicated and just
-					// not working. The main issue is with the board being updated asynchronoulsy when
-					// it contains "notes as cards", so we have this:
-					//
-					// - New card is added to the board
-					// - Underlying note is updated
-					// - Which triggers a board update
-					// - We then compare the current board and the board generated from the note.
-					//   Normally they should be identical, so the update should be skipped. But because
-					//   "cards as notes" contain additional metadata, which is fetch asynchronously,
-					//   it's going to be different.
-					// - So we update the board from the note, which triggers a full refresh and, for
-					//   example, clear scroll position or any open editor.
-					//
-					// Getting all this to work properly would be complex, will require ongoing
-					// maintenance and will be difficult to detect since it touches app integration and
-					// there won't be automated tests. So overall it doesn't seem worth it.
-					logger.warn('Skipping update: Note has not changed');
-					return;
-				}
-
-				logger.info('updateFromSelectedNote: posting "setNote"');
-				previousNoteId = note.id;
+				logger.info('updateFromSelectedNote: posting "updateNoteFromBoard"');
 				editors.postMessage(view, { type: 'updateBoardFromNote', value: { id: note.id, body: note.body }});
 			};
 
@@ -86,7 +59,7 @@ const registerEditorPlugin = async () => {
 					selectedNoteIdRef.current = event.noteId;
 					await editors.postMessage(
 						view,
-						{ type: 'setNote', value: { id: event.noteId, body: event.newBody } },
+						{ type: 'updateBoardFromNote', value: { id: event.noteId, body: event.newBody } },
 					);
 				}
 			});
@@ -102,7 +75,7 @@ const registerEditorPlugin = async () => {
 					const modifiedNote = await handleAutoArchiving();
 					if (modifiedNote) {
 						await joplin.data.put(['notes', modifiedNote.id], null, { body: modifiedNote.body });
-						await updateFromSelectedNote(true);
+						await updateFromSelectedNote();
 					}
 					return;
 				}
