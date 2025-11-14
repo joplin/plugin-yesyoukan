@@ -148,6 +148,7 @@ export interface PluginSettings {
 	markAsCompletedLastStackCards?: boolean;
 	showCardBody?: boolean;
 	cardInsertLocation?: CardInsertLocation;
+	showCardCounter?: boolean;
 }
 
 export interface CardSettings {
@@ -291,7 +292,14 @@ export const pluginSettingItems:PluginSettingItems = {
 		options: {
 			[CardInsertLocation.Top]: 'Top of stack',
 			[CardInsertLocation.Bottom]: 'Bottom of stack',
-		},
+		}
+	},
+		
+	showCardCounter: {
+		label: 'Show card counter',
+		type: SettingItemType.Bool,
+		public: true,
+		value: true,
 		section: settingSectionName,
 	},
 };
