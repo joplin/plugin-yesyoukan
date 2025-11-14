@@ -60,6 +60,7 @@ interface Props {
 	onDrop: StackDropEventHandler;
 	cardDoubleClickAction: CardDoubleClickAction;
 	appSettings: AppSettings;
+	showCardCounter: boolean;
 }
 
 export default (props:Props) => {
@@ -135,11 +136,17 @@ export default (props:Props) => {
 		props.onAddCard({ stackId: props.value.id });
 	}, [props.onAddCard, props.value.id]);
 
+	const renderTitleCounter = () => {
+		if (!props.showCardCounter) return null;
+		return <div className="counter">({props.value.cards.length})</div>;
+	}
+
 	const renderTitle = () => {
 		if (!isEditing) {
 			return (
 				<div className="title-wrapper">
 					<h2 className="title">{props.value.title}</h2>
+					{renderTitleCounter()}
 				</div>
 			);
 		} else {
