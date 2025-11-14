@@ -5,13 +5,16 @@ import { boardsEqual, parseAsNoteLink, parseNote } from "./utils/noteParser";
 import { msleep } from "./utils/time";
 import processRenderedCards from "./utils/processRenderedCards";
 import { toggleCheckbox } from "./utils/renderMarkupUtils";
+import noteFields from './utils/noteFields';
+import { ViewHandle } from "api/types";
 
 const logger = Logger.create('YesYouCan: messageHandler');
 
 type MessageHandler = (message:IpcMessage) => Promise<any>;
+type LoadSelectedNoteCallback = ()=> Promise<Note>;
+type SelectedNoteIdRef = { current: string };
 
-const setNoteHandler = async (messageNote:Note) => {
-	const selectedNote = await joplin.workspace.selectedNote();
+const setNoteHandler = async (editorHandle: ViewHandle, selectedNote: Note, messageNote:Note) => {
 	const newBoard = await parseNote(messageNote.id, messageNote.body);
 	const currentBoard = await parseNote(selectedNote.id, selectedNote.body);
 
@@ -24,13 +27,18 @@ const setNoteHandler = async (messageNote:Note) => {
 		logger.info('NOT updating note - board has not changed');
 	} else {
 		logger.info('Updating note - board has changed');
-		await joplin.data.put(['notes', messageNote.id], null, { body: messageNote.body });
+		await joplin.views.editors.saveNote(editorHandle, {
+			noteId: messageNote.id,
+			body: messageNote.body,
+		});
 	}
 }
 
-const noteFields = ['id', 'title', 'body', 'todo_due', 'todo_completed', 'is_todo', 'deleted_time', 'parent_id'];
-
-const messageHandlers:Record<IpcMessageType, MessageHandler> = {
+const messageHandlers = (
+	editorHandle: ViewHandle,
+	getSelectedNote: LoadSelectedNoteCallback,
+	selectedNoteIdRef: SelectedNoteIdRef,
+): Record<IpcMessageType, MessageHandler> => ({
 
 	'isReady': null,
 
@@ -39,7 +47,7 @@ const messageHandlers:Record<IpcMessageType, MessageHandler> = {
 	'updateBoardFromNote': null,
 	
 	'getNote': async (_message:IpcMessage) => {
-		const response = await joplin.workspace.selectedNote();
+		const response = await getSelectedNote();
 		logger.info('PostMessagePlugin (Webview): Responding with:', response);
 		return { id: response.id, body: response.body };
 	},
@@ -80,7 +88,7 @@ const messageHandlers:Record<IpcMessageType, MessageHandler> = {
 	},
 
 	'updateNoteFromBoard': async (message:IpcMessage) => {
-		await setNoteHandler(message.value as Note);
+		await setNoteHandler(editorHandle, await getSelectedNote(), message.value as Note);
 	},
 
 	'setNoteProps': async (message:IpcMessage) => {
@@ -94,7 +102,14 @@ const messageHandlers:Record<IpcMessageType, MessageHandler> = {
 		const { cardMessage, noteId } = message.value;
 		const note:Note = await joplin.data.get(['notes', noteId], { fields: ['body'] });
 		const newBody = toggleCheckbox(cardMessage, note.body);
-		await joplin.data.put(['notes', noteId], null, { body: newBody });
+		if (noteId === selectedNoteIdRef.current) {
+			await joplin.views.editors.saveNote(editorHandle, {
+				noteId,
+				body: newBody,
+			});
+		} else {
+			await joplin.data.put(['notes', noteId], null, { body: newBody });
+		}
 	},
 
 	'openItem': async (message:IpcMessage) => {
@@ -126,7 +141,7 @@ const messageHandlers:Record<IpcMessageType, MessageHandler> = {
 	},
 
 	'createNote': async (message:IpcMessage) => {
-		const selectedNote = await joplin.workspace.selectedNote();
+		const selectedNote = await getSelectedNote();
 
 		const newNote = await joplin.data.post(['notes'], null, {
 			parent_id: selectedNote.parent_id,
@@ -160,6 +175,6 @@ const messageHandlers:Record<IpcMessageType, MessageHandler> = {
 
 		return await joplin.data.post(['notes'], null, newNote);
 	},
-}
+});
 
 export default messageHandlers;

@@ -80,6 +80,8 @@ export default class JoplinWorkspace {
     filterEditorContextMenu(handler: FilterHandler<EditContextMenuFilterObject>): void;
     /**
      * Gets the currently selected note. Will be `null` if no note is selected.
+     *
+     * On desktop, this returns the selected note in the focused window.
      */
     selectedNote(): Promise<any>;
     /**

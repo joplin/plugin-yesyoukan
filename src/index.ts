@@ -5,6 +5,7 @@ import Logger, { TargetType } from '@joplin/utils/Logger';
 import { MenuItemLocation } from 'api/types';
 import messageHandlers from './messageHandlers';
 import { processAutoArchiving, recordLastStackAddedDates } from './utils/autoArchive';
+import noteFields from './utils/noteFields';
 import uuid from './utils/uuid';
 
 const globalLogger = new Logger();
@@ -23,13 +24,93 @@ const newNoteBody = `# Backlog
 # Do not remove this block
 \`\`\``;
 
+const registerEditorPlugin = async () => {
+	const versionInfo = await joplin.versionInfo();
+
+	const editors = joplin.views.editors;
+
+	await editors.register('kanbanBoard', {
+		async onSetup(view) {
+			await editors.setHtml(view, `<div id="root" class="platform-${versionInfo.platform}"></div>`);
+			await editors.addScript(view, './panel.js');
+			await editors.addScript(view, './style/reset.css');
+			await editors.addScript(view, './style/main.css');
+			await editors.addScript(view, './vendor/coloris/coloris.css');
+			await editors.addScript(view, './vendor/coloris/coloris.js');
+
+			const selectedNoteIdRef = { current: '' };
+			const loadSelectedNote = async () => {
+				if (!selectedNoteIdRef.current) {
+					// In some cases selectedNoteIdRef isn't set during the initial load of the editor.
+					// (If the first `onUpdate` is emitted after the webview emits a ready event). In this
+					// case, default to the note in the selected window:
+					return await joplin.workspace.selectedNote();
+				}
+
+				const result = joplin.data.get(['notes', selectedNoteIdRef.current], { fields: noteFields });
+				return result;
+			};
+
+			const updateFromSelectedNote = async () => {
+				const note:Note = await loadSelectedNote();
+				if (!note) return;
+
+				logger.info('updateFromSelectedNote: posting "updateNoteFromBoard"');
+				editors.postMessage(view, { type: 'updateBoardFromNote', value: { id: note.id, body: note.body }});
+			};
+
+			await editors.onUpdate(view, async (event) => {
+				logger.info('onUpdate');
+				if (event.noteId) {
+					selectedNoteIdRef.current = event.noteId;
+					await editors.postMessage(
+						view,
+						{ type: 'updateBoardFromNote', value: { id: event.noteId, body: event.newBody } },
+					);
+				}
+			});
+
+			const handlers = messageHandlers(view, loadSelectedNote, selectedNoteIdRef);
+			await editors.onMessage(view, async (message:IpcMessage) => {
+				// These messages are internal messages sent within the app webview and can be ignored
+				if ((message as any).kind === 'ReturnValueResponse') return;
+
+				logger.info('PostMessagePlugin (Webview): Got message from webview:', message);
+
+				if (message.type === 'isReady') {
+					const modifiedNote = await handleAutoArchiving();
+					if (modifiedNote) {
+						await joplin.data.put(['notes', modifiedNote.id], null, { body: modifiedNote.body });
+						await updateFromSelectedNote();
+					}
+					return;
+				}
+
+				const messageHandler = handlers[message.type];
+				if (messageHandler) return messageHandler(message);
+
+				logger.warn('Unknown message: ' + JSON.stringify(message));
+			});
+		},
+		async onActivationCheck(event) {
+			if (!event.noteId) return false;
+
+			const note = await joplin.data.get([ 'notes', event.noteId ], { fields: ['body'] });
+			logger.info('onActivationCheck: Handling note: ' + event.noteId);
+			const isBoard = noteIsBoard(note?.body ?? '');
+			logger.info('onActivationCheck: Note is board:', isBoard);
+			return isBoard;
+		},
+	});
+};
+
 const getArchiveNoteIds = async() => {
 	const s = await joplin.settings.value('archiveNoteIds');
 	if (!s) return [];
 
 	const archiveNoteIds = JSON.parse(s) as Record<string, string>;
 	return archiveNoteIds;
-}
+};
 
 const getArchiveNote = async(noteId:string):Promise<Note|null> => {
 	const archiveNoteIds = await getArchiveNoteIds();
@@ -135,75 +216,13 @@ const handleAutoArchiving = async () => {
 
 joplin.plugins.register({
 	onStart: async function() {
-		const versionInfo = await joplin.versionInfo();
-
 		await joplin.settings.registerSection(settingSectionName, {
 			label: 'YesYouKan',
 			iconName: 'fas fa-th-list',
 		});
 		await joplin.settings.registerSettings(pluginSettingItems);
 
-		const editors = joplin.views.editors;
-
-		const view = await editors.create("kanbanBoard");
-		
-		await editors.setHtml(view, `<div id="root" class="platform-${versionInfo.platform}"></div>`);
-		await editors.addScript(view, './panel.js');
-		await editors.addScript(view, './style/reset.css');
-		await editors.addScript(view, './style/main.css');
-		await editors.addScript(view, './vendor/coloris/coloris.css');
-		await editors.addScript(view, './vendor/coloris/coloris.js');
-
-		let previousNoteId = '';
-
-		const updateFromSelectedNote = async (forceIt:boolean = false) => {
-			const note:Note = await joplin.workspace.selectedNote();
-			if (!note) return;
-
-			if (note.id === previousNoteId && !forceIt) {
-				// Currently we only update the board from the note when the user has switched to a
-				// different note. We don't update if, for example, the note is changed via external
-				// editor, sync or data API. This is a bit of an edge case anyway and supporting
-				// this means bi-directional updates which turn out to be very complicated and just
-				// not working. The main issue is with the board being updated asynchronoulsy when
-				// it contains "notes as cards", so we have this:
-				//
-				// - New card is added to the board
-				// - Underlying note is updated
-				// - Which triggers a board update
-				// - We then compare the current board and the board generated from the note.
-				//   Normally they should be identical, so the update should be skipped. But because
-				//   "cards as notes" contain additional metadata, which is fetch asynchronously,
-				//   it's going to be different.
-				// - So we update the board from the note, which triggers a full refresh and, for
-				//   example, clear scroll position or any open editor.
-				//
-				// Getting all this to work properly would be complex, will require ongoing
-				// maintenance and will be difficult to detect since it touches app integration and
-				// there won't be automated tests. So overall it doesn't seem worth it.
-				logger.warn('Skipping update: Note has not changed');
-				return;
-			}
-
-			logger.info('updateFromSelectedNote: posting "setNote"');
-			previousNoteId = note.id;
-			editors.postMessage(view, { type: 'updateBoardFromNote', value: { id: note.id, body: note.body }});
-		}
-
-		await editors.onActivationCheck(view, async () => {
-			const note = await joplin.workspace.selectedNote();
-			if (!note) return false;
-
-			logger.info('onActivationCheck: Handling note: ' + note.id);
-			const isBoard = noteIsBoard(note ? note.body : '');
-			logger.info('onActivationCheck: Note is board:', isBoard);
-			return isBoard;
-		});
-
-		await editors.onUpdate(view, async () => {
-			logger.info('onUpdate');
-			await updateFromSelectedNote();
-		});
+		await registerEditorPlugin();
 
 		await joplin.commands.register({
 			name: 'createKanbanBoard',
@@ -216,32 +235,10 @@ joplin.plugins.register({
 				// editor
 				setTimeout(async () => {
 					await joplin.commands.execute('showEditorPlugin');
-					await updateFromSelectedNote();
 				}, 200);				
 			},
 		});
 
 		await joplin.views.menuItems.create('createKanbanBoardMenuItem', 'createKanbanBoard', MenuItemLocation.Tools, { accelerator: 'CmdOrCtrl+Alt+Shift+K' });
-
-		editors.onMessage(view, async (message:IpcMessage) => {
-			// These messages are internal messages sent within the app webview and can be ignored
-			if ((message as any).kind === 'ReturnValueResponse') return;
-
-			logger.info('PostMessagePlugin (Webview): Got message from webview:', message);
-
-			if (message.type === 'isReady') {
-				const modifiedNote = await handleAutoArchiving();
-				if (modifiedNote) {
-					await joplin.data.put(['notes', modifiedNote.id], null, { body: modifiedNote.body });
-					await updateFromSelectedNote(true);
-				}
-				return;
-			}
-			
-			const messageHandler = messageHandlers[message.type];
-			if (messageHandler) return messageHandler(message);
-
-			logger.warn('Unknown message: ' + JSON.stringify(message));
-		});
 	},
 });
