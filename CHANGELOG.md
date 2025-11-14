@@ -1,3 +1,10 @@
+# v1.1.3
+
+- Added option to display a card counter on each stack (enabled by default)
+- Add support for Cmd or Ctrl + double-click on a card
+- Resolves #41: Multi-window support in the desktop app
+- Fixes #79: Tags only show on first instance of Card
+
 # v1.1.2
 
 - Fix auto-archiving
