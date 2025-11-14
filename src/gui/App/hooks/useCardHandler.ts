@@ -2,7 +2,7 @@ import * as React from 'react';
 import { produce } from "immer";
 import { useCallback, useState } from "react";
 import { EditorSubmitHandler as CardChangeEventHandler, DeleteEventHandler as CardDeleteEventHandler, EditorCancelHandler, EditorStartHandler, CardHandler } from "../../CardViewer";
-import { Board, CardInsertLocation, cardSettingItems, CardSettings, Note, WebviewApi } from "../../../utils/types";
+import { Board, Card, CardInsertLocation, cardSettingItems, CardSettings, Note, WebviewApi } from "../../../utils/types";
 import { PushUndo } from "./useHistory";
 import { findCard, findCardIndex, findStackIndex } from "../../../utils/board";
 import uuid from "../../../utils/uuid";
@@ -43,8 +43,8 @@ export default (props:Props) => {
 	}
 
 	const insertCardByLocation = (
-		cards: Board["stacks"][number]["cards"],
-		card: Board["stacks"][number]["cards"][number],
+		cards: Card[],
+		card: Card,
 		location: CardInsertLocation
 	) => {
 		if (location === CardInsertLocation.Top) {

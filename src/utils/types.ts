@@ -284,7 +284,6 @@ export const pluginSettingItems:PluginSettingItems = {
 
 	cardInsertLocation: {
 		label: 'Add new cards to',
-		description: 'Choose whether new cards are added to the top or bottom of the stack.',
 		type: SettingItemType.String,
 		isEnum: true,
 		public: true,
