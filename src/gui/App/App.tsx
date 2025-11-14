@@ -219,6 +219,7 @@ export default () => {
 				newlineKey={effectiveBoardSettings.newlineKey}
 				editedCardIds={editedCardIds}
 				cardDoubleClickAction={effectiveBoardSettings.cardDoubleClickAction}
+				cardDoubleClickAltAction={effectiveBoardSettings.cardDoubleClickAltAction}
 				showCardCounter={effectiveBoardSettings.showCardCounter}
 			/>);
 		}

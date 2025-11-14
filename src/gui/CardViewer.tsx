@@ -50,6 +50,7 @@ export interface Props {
 	onEditSettings: CardHandler;
 	onDuplicate: CardHandler;
 	cardDoubleClickAction: CardDoubleClickAction;
+	cardDoubleClickAltAction: CardDoubleClickAction;
 	showCardBody: boolean;
 	isEditing: boolean;
 	platform: Platform;
@@ -108,7 +109,7 @@ export default (props:Props) => {
 		}
 	}, [cardHasChanged, props.onEditorCancel, card]);
 
-	const onEdit = useCallback((cardDoubleClickAction:CardDoubleClickAction|null = null) => {
+	const onEdit = useCallback((cardDoubleClickAction:CardDoubleClickAction) => {
 		if (!props.isEditing) {
 			if (isNoteLink) {
 				if (isInTrash) {
@@ -131,8 +132,9 @@ export default (props:Props) => {
 		}
 	}, [props.isEditing, card, isNoteLink, props.cardDoubleClickAction, props.onOpenAssociatedNote, isInTrash]);
 
-	const onDoubleClick = useCallback(() => {
-		onEdit();
+	const onDoubleClick:React.MouseEventHandler = useCallback((event) => {
+		const action = event.ctrlKey || event.metaKey ? props.cardDoubleClickAltAction : props.cardDoubleClickAction;
+		onEdit(action);
 	}, [onEdit]);
 
 	useEffect(() => {

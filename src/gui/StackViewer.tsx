@@ -59,6 +59,7 @@ interface Props {
 	onDeleteCard: CardDeleteEventHandler;
 	onDrop: StackDropEventHandler;
 	cardDoubleClickAction: CardDoubleClickAction;
+	cardDoubleClickAltAction: CardDoubleClickAction;
 	appSettings: AppSettings;
 	showCardCounter: boolean;
 }
@@ -210,6 +211,7 @@ export default (props:Props) => {
 				newlineKey={props.newlineKey}
 				isEditing={props.editedCardIds.includes(card.id)}
 				cardDoubleClickAction={props.cardDoubleClickAction}
+				cardDoubleClickAltAction={props.cardDoubleClickAltAction}
 				appSettings={props.appSettings}
 			/>);
 		}

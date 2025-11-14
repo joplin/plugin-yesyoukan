@@ -137,6 +137,7 @@ export interface PluginSettings {
 	newlineKey?: NewlineKey;
 	stackDynamicWidth?: boolean;
 	cardDoubleClickAction?: CardDoubleClickAction;
+	cardDoubleClickAltAction?: CardDoubleClickAction;
 	autoArchiveDelayDays?: number;
 	lastStackAddedDates?: LastStackAddedDates;
 	archiveNoteId?: string; // Deprecated in favor of archiveNoteIds
@@ -221,6 +222,20 @@ export const pluginSettingItems:PluginSettingItems = {
 		isEnum: true,
 		public: true,
 		value: CardDoubleClickAction.openInBoard,
+		options: {
+			[CardDoubleClickAction.openInBoard]: 'Open in board',
+			[CardDoubleClickAction.openInNote]: 'Open in note',
+		},
+		section: settingSectionName,
+	},
+
+	cardDoubleClickAltAction: {
+		label: 'Card double-click action with modifier key',
+		description: 'Action to perform when double-clicking a card while holding Cmd (macOS) or Ctrl (Windows/Linux)',
+		type: SettingItemType.String,
+		isEnum: true,
+		public: true,
+		value: CardDoubleClickAction.openInNote,
 		options: {
 			[CardDoubleClickAction.openInBoard]: 'Open in board',
 			[CardDoubleClickAction.openInNote]: 'Open in note',
