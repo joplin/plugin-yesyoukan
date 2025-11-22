@@ -6,7 +6,7 @@ interface Props {
 	onEditorSubmit():void;
 	onEditorCancel():void;
 	confirmKey: ConfirmKey;
-	newlineKey: NewlineKey;
+	newlineKey: NewlineKey|null; // If null, it means the component does not support newlines (eg. a plain text input)
 	tabKeyEnabled: boolean;
 }
 
@@ -24,11 +24,12 @@ const keyToValidationKey = (event:React.KeyboardEvent<unknown>):ValidationKey|nu
 	return null;
 }
 
-const keyToAction = (event:React.KeyboardEvent<unknown>, confirmKey:ConfirmKey, newlineKey:NewlineKey):Action => {
+const keyToAction = (event:React.KeyboardEvent<unknown>, confirmKey:ConfirmKey, newlineKey:NewlineKey|null):Action => {
 	if (event.key === 'Escape') return Action.Cancel;
 
 	const validationKey = keyToValidationKey(event);
 
+	if (validationKey && !newlineKey) return Action.Confirm;
 	if (confirmKey === validationKey) return Action.Confirm;
 	if (newlineKey === validationKey) return Action.Newline;
 

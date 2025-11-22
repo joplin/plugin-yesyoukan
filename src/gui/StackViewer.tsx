@@ -94,8 +94,8 @@ export default (props:Props) => {
 	const onEditorKeyDown = useOnEditorKeyDown({
 		onEditorSubmit,
 		onEditorCancel,
-		confirmKey: props.confirmKey,
-		newlineKey: props.newlineKey,
+		confirmKey: 'Enter',
+		newlineKey: null,
 		tabKeyEnabled: false,
 	});
 
