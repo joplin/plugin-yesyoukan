@@ -284,7 +284,7 @@ export const pluginSettingItems:PluginSettingItems = {
 	},
 
 	cardInsertLocation: {
-		label: 'Add new cards to',
+		label: 'New card placement',
 		type: SettingItemType.String,
 		isEnum: true,
 		public: true,
