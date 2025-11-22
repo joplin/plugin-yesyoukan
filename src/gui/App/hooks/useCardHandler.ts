@@ -2,7 +2,7 @@ import * as React from 'react';
 import { produce } from "immer";
 import { useCallback, useState } from "react";
 import { EditorSubmitHandler as CardChangeEventHandler, DeleteEventHandler as CardDeleteEventHandler, EditorCancelHandler, EditorStartHandler, CardHandler } from "../../CardViewer";
-import { Board, cardSettingItems, CardSettings, Note, WebviewApi } from "../../../utils/types";
+import { Board, Card, CardInsertLocation, cardSettingItems, CardSettings, Note, WebviewApi } from "../../../utils/types";
 import { PushUndo } from "./useHistory";
 import { findCard, findCardIndex, findStackIndex } from "../../../utils/board";
 import uuid from "../../../utils/uuid";
@@ -17,6 +17,7 @@ interface Props {
 	pushUndo: PushUndo;
 	webviewApi: WebviewApi;
 	setDialogConfig: (value: React.SetStateAction<DialogConfig>) => void;
+	cardInsertLocation: CardInsertLocation;
 }
 
 export default (props:Props) => {
@@ -39,6 +40,18 @@ export default (props:Props) => {
 				if (index >= 0) draft.splice(index, 1);
 			});
 		});
+	}
+
+	const insertCardByLocation = (
+		cards: Card[],
+		card: Card,
+		location: CardInsertLocation
+	) => {
+		if (location === CardInsertLocation.Top) {
+			cards.unshift(card);
+		} else {
+			cards.push(card);
+		}
 	}
 
 	const onCardEditorStart = useCallback<EditorStartHandler>((event) => {
@@ -73,14 +86,17 @@ export default (props:Props) => {
 
 		const newBoard = produce(props.board, draft => {
 			const stackIndex = findStackIndex(draft, event.stackId);
-			draft.stacks[stackIndex].cards.push({
+			const newCard = {
 				id: newCardId,
 				title: '',
 				body: '',
 				is_todo: 0,
 				todo_completed: 0,
 				todo_due: 0,
-			});
+			}
+
+			insertCardByLocation(draft.stacks[stackIndex].cards, newCard, props.cardInsertLocation);
+
 		});
 
 		props.setBoard(newBoard);
@@ -127,10 +143,14 @@ export default (props:Props) => {
 
 			const newBoard = produce(props.board, draft => {
 				const newCard = createCard();
-				draft.stacks[stackIndex].cards.push({
-					...newCard,
-					...serializeNoteToCard(newNote),
-				});
+				insertCardByLocation(
+					draft.stacks[stackIndex].cards, 
+					{
+						...newCard,
+						...serializeNoteToCard(newNote),
+					},
+					props.cardInsertLocation
+				);
 			});
 
 			props.setBoard(newBoard);
@@ -138,7 +158,9 @@ export default (props:Props) => {
 			props.pushUndo(props.board);
 
 			const newBoard = produce(props.board, draft => {
-				draft.stacks[stackIndex].cards.push(duplicateCard(card));
+				insertCardByLocation(draft.stacks[stackIndex].cards,
+					duplicateCard(card),
+					props.cardInsertLocation);
 			});
 	
 			props.setBoard(newBoard);

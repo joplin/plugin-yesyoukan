@@ -82,6 +82,7 @@ export default () => {
 		setBoard,
 		setDialogConfig,
 		webviewApi,
+		cardInsertLocation: effectiveBoardSettings.cardInsertLocation,
 	});
 
 	const {

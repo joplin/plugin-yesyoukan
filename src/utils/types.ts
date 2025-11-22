@@ -127,6 +127,10 @@ export enum CardDoubleClickAction {
 	openInBoard = 'openInBoard',
 	openInNote = 'openInNote',
 }
+export enum CardInsertLocation {
+	Top = 'top',
+	Bottom = 'bottom',
+}
 
 // boardId: cardId: Date in ms
 export type LastStackAddedDates = Record<string, Record<string, number>>;
@@ -144,6 +148,7 @@ export interface PluginSettings {
 	archiveNoteIds?: string;
 	markAsCompletedLastStackCards?: boolean;
 	showCardBody?: boolean;
+	cardInsertLocation?: CardInsertLocation;
 	showCardCounter?: boolean;
 }
 
@@ -293,6 +298,18 @@ export const pluginSettingItems:PluginSettingItems = {
 		section: settingSectionName,
 	},
 
+	cardInsertLocation: {
+		label: 'New card placement',
+		type: SettingItemType.String,
+		isEnum: true,
+		public: true,
+		value: CardInsertLocation.Bottom,
+		options: {
+			[CardInsertLocation.Top]: 'Top of stack',
+			[CardInsertLocation.Bottom]: 'Bottom of stack',
+		}
+	},
+		
 	showCardCounter: {
 		label: 'Show card counter',
 		type: SettingItemType.Bool,
