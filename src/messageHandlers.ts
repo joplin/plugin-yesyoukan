@@ -147,6 +147,7 @@ const messageHandlers = (
 			parent_id: selectedNote.parent_id,
 			title: message.value.title,
 			body: message.value.body,
+			is_todo: message.value.is_todo ? 1 : 0,
 		});
 
 		return newNote;

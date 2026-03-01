@@ -46,6 +46,7 @@ export interface Props {
 	onDelete: DeleteEventHandler;
 	onScrollToCard: CardHandler;
 	onCreateNoteFromCard: CardHandler;
+	onCreateTodoFromCard: CardHandler;
 	onOpenAssociatedNote: CardHandler;
 	onEditSettings: CardHandler;
 	onDuplicate: CardHandler;
@@ -178,6 +179,8 @@ export default (props:Props) => {
 			onSaveAndScrollToCard();
 		} else if (event.itemId === 'createNoteFromCard') {
 			props.onCreateNoteFromCard({ cardId: card.id });
+		} else if (event.itemId === 'createTodoFromCard') {
+			props.onCreateTodoFromCard({ cardId: card.id });
 		} else if (event.itemId === 'editSettings') {
 			props.onEditSettings({ cardId: card.id });
 		} else {
@@ -199,6 +202,11 @@ export default (props:Props) => {
 			menuItems.push({
 				id: 'createNoteFromCard',
 				label: 'Create note from card...',
+			});
+
+			menuItems.push({
+				id: 'createTodoFromCard',
+				label: 'Create to-do from card...',
 			});
 		}
 

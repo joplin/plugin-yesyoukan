@@ -49,6 +49,7 @@ interface Props {
 	onCardEditorCancel: CardEditorCancelHandler;
 	onScrollToCard: CardHandler;
 	onCreateNoteFromCard: CardHandler;
+	onCreateTodoFromCard: CardHandler;
 	onOpenAssociatedNote: CardHandler;
 	onEditCardSettings: CardHandler;
 	onTitleChange: TitleChangeEventHandler;
@@ -198,6 +199,7 @@ export default (props:Props) => {
 				onDelete={props.onDeleteCard}
 				onScrollToCard={props.onScrollToCard}
 				onCreateNoteFromCard={props.onCreateNoteFromCard}
+				onCreateTodoFromCard={props.onCreateTodoFromCard}
 				onOpenAssociatedNote={props.onOpenAssociatedNote}
 				onEditSettings={props.onEditCardSettings}
 				onDuplicate={props.onDuplicateCard}

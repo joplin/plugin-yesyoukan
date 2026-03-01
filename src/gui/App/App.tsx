@@ -118,7 +118,7 @@ export default () => {
 		clearUndo,
 	});
 
-	const onCreateNoteFromCard = useOnCreateNoteFromCard({
+	const { onCreateNoteFromCard, onCreateTodoFromCard } = useOnCreateNoteFromCard({
 		afterSetNoteAction,
 		board,
 		setBoard,
@@ -201,6 +201,7 @@ export default () => {
 				onCardEditorCancel={onCardEditorCancel}
 				onScrollToCard={onScrollToCard}
 				onCreateNoteFromCard={onCreateNoteFromCard}
+				onCreateTodoFromCard={onCreateTodoFromCard}
 				onOpenAssociatedNote={onOpenAssociatedNote}
 				onEditCardSettings={onEditCardSettings}
 				onAddCard={onAddCard}

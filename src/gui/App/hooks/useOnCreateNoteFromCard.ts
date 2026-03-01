@@ -14,19 +14,20 @@ interface Props {
 }
 
 export default (props:Props) => {
-	const onCreateNoteFromCard = useCallback<CardHandler>(async (event) => {
-		const card = findCard(props.board, event.cardId);
+	const createNoteOrTodoFromCard = useCallback(async (cardId: string, isTodo: boolean) => {
+		const card = findCard(props.board, cardId);
 
 		const newNote = await props.webviewApi.postMessage<Note>({
 			type: 'createNote',
-			value: { 
+			value: {
 				title: card.title,
 				body: card.body,
+				is_todo: isTodo,
 			}
 		});
 
 		const newBoard = produce(props.board, draft => {
-			const [stackIndex, cardIndex] = findCardIndex(draft, event.cardId);
+			const [stackIndex, cardIndex] = findCardIndex(draft, cardId);
 			const card = draft.stacks[stackIndex].cards[cardIndex];
 			draft.stacks[stackIndex].cards[cardIndex] = {
 				...card,
@@ -42,5 +43,13 @@ export default (props:Props) => {
 		props.setBoard(newBoard);
 	}, [props.board]);
 
-	return onCreateNoteFromCard;
+	const onCreateNoteFromCard = useCallback<CardHandler>(async (event) => {
+		await createNoteOrTodoFromCard(event.cardId, false);
+	}, [createNoteOrTodoFromCard]);
+
+	const onCreateTodoFromCard = useCallback<CardHandler>(async (event) => {
+		await createNoteOrTodoFromCard(event.cardId, true);
+	}, [createNoteOrTodoFromCard]);
+
+	return { onCreateNoteFromCard, onCreateTodoFromCard };
 }
