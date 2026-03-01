@@ -131,6 +131,10 @@ const messageHandlers = (
 		};
 	},
 
+	'getPluginAssetDir': async () => {
+		return joplin.settings.globalValue('pluginAssetDir');
+	},
+
 	'scrollToCard': async (message:IpcMessage) => {
 		await joplin.commands.execute('showEditorPlugin', null, false);
 		await msleep(500);

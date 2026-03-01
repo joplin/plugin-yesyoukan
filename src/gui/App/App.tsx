@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useCallback, useState, useMemo, useRef } from "react";
+import { useCallback, useState, useMemo, useRef, useEffect } from "react";
 import { Board, Filters, Note, WebviewApi, emptyBoard, getDefaultFilters } from "../../utils/types";
 import StackViewer, { StackDropEventHandler, StackEvent, StackEventHandler } from "../StackViewer";
 import { DragDropContext, Droppable, OnDragEndResponder } from "@hello-pangea/dnd";
@@ -61,11 +61,55 @@ export default () => {
 		setBoard,
 	});
 
-	const { cssStrings } = useCardContentRendering({
+	const { cssStrings, pluginAssets } = useCardContentRendering({
 		board,
 		setBoard,
 		webviewApi,
 	});
+
+	const [pluginAssetDir, setPluginAssetDir] = useState<string>('');
+
+	// Fetch the plugin asset directory path on mount
+	useEffect(() => {
+		const fetchPluginAssetDir = async () => {
+			const dir = await webviewApi.postMessage<string>({ type: 'getPluginAssetDir' });
+			setPluginAssetDir(dir);
+		};
+		void fetchPluginAssetDir();
+	}, []);
+
+	// Load plugin assets (CSS files like KaTeX) as external stylesheets.
+	// These are loaded via file:// URLs from the pluginAssetDir.
+	useEffect(() => {
+		if (!pluginAssetDir) return;
+
+		const loadedLinks: HTMLLinkElement[] = [];
+
+		for (const asset of pluginAssets) {
+			if (asset.mime !== 'text/css') continue;
+
+			// Check if already loaded
+			const existingLink = document.querySelector(`link[data-plugin-asset="${asset.name}"]`);
+			if (existingLink) continue;
+
+			// Construct file:// URL using the pluginAssetDir
+			// asset.name is the relative path like "katex/katex.css"
+			const url = `file://${pluginAssetDir}/${asset.name}`;
+
+			const link = document.createElement('link');
+			link.rel = 'stylesheet';
+			link.href = url;
+			link.setAttribute('data-plugin-asset', asset.name);
+			document.head.appendChild(link);
+			loadedLinks.push(link);
+		}
+
+		return () => {
+			for (const link of loadedLinks) {
+				link.remove();
+			}
+		};
+	}, [pluginAssets, pluginAssetDir]);
 
 	const {
 		editedCardIds,

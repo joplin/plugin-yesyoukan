@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { findCardIndex, getCardNoteIds } from "../../../utils/board";
 import getHash from "../../../utils/getHash";
 import { parseAsNoteLink } from "../../../utils/noteParser";
-import { Board, CardToRender, RenderedCard, Tag, WebviewApi } from "../../../utils/types";
+import { Board, CardToRender, RenderedCard, RenderResultPluginAsset, Tag, WebviewApi } from "../../../utils/types";
 
 interface Props {
 	board: Board;
@@ -13,7 +13,8 @@ interface Props {
 
 export default (props:Props) => {
 	const [cssStrings, setCssStrings] = useState([]);
-	
+	const [pluginAssets, setPluginAssets] = useState<RenderResultPluginAsset[]>([]);
+
 	useEffect(() => {
 		let cancelled = false;
 		const fn = async () => {
@@ -90,6 +91,20 @@ export default (props:Props) => {
 					}
 				});
 			});
+
+			setPluginAssets(current => {
+				return produce(current, draft => {
+					for (const [, result] of Object.entries(rendered)) {
+						for (const asset of result.body.pluginAssets) {
+							// Only include non-absolute paths (built-in assets like KaTeX)
+							// and avoid duplicates
+							if (!asset.pathIsAbsolute && !draft.some(a => a.name === asset.name)) {
+								draft.push(asset);
+							}
+						}
+					}
+				});
+			});
 		}
 
 		void fn();
@@ -99,5 +114,5 @@ export default (props:Props) => {
 		}
 	}, [props.board, props.setBoard]);
 
-	return { cssStrings };
+	return { cssStrings, pluginAssets };
 }

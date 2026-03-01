@@ -82,6 +82,7 @@ export type IpcMessageType =
 	'isReady' |
 	'getSettings' |
 	'getAppSettings' |
+	'getPluginAssetDir' |
 	'renderBodies' |
 	'openItem' |
 	'cardMessage' |
