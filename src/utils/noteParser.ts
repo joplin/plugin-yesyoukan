@@ -37,84 +37,91 @@ export const serializeNoteToCard = (note:Note) => {
 }
 
 export const parseNote = async (noteId:string, noteBody:string) => {
-	const lines = noteBody.split('\n').map(l => l.trimEnd());
+	try {
+		const lines = noteBody.split('\n').map(l => l.trimEnd());
 
-	const board:Board = emptyBoard();
+		const board:Board = emptyBoard();
 
-	board.noteId = noteId;
+		board.noteId = noteId;
 
-	let state:'idle'|'inStack'|'inCard'|'inBody'|'inSettings' = 'idle';
-	let previousState:string = '';
-	let rawSettings:Record<string, string> = {};
-	let boardRawSettings:Record<string, string> = {};
-	let settingBlockType = '';
+		let state:'idle'|'inStack'|'inCard'|'inBody'|'inSettings' = 'idle';
+		let previousState:string = '';
+		let rawSettings:Record<string, string> = {};
+		let boardRawSettings:Record<string, string> = {};
+		let settingBlockType = '';
 
-	let currentStack:Stack = null;
-	let currentCard:Card = null;
+		let currentStack:Stack = null;
+		let currentCard:Card = null;
 
-	for (const line of lines) {
-		if (line === '```kanban-settings' || line === '```card-settings' || line === '```stack-settings') {
-			previousState = state;
-			state = 'inSettings';
-			settingBlockType = line.substring(3);
-			rawSettings = {};
-		} else if (state === 'inSettings' && line === '```') {
-			state = previousState as any;
+		for (const line of lines) {
+			if (line === '```kanban-settings' || line === '```card-settings' || line === '```stack-settings') {
+				previousState = state;
+				state = 'inSettings';
+				settingBlockType = line.substring(3);
+				rawSettings = {};
+			} else if (state === 'inSettings' && line === '```') {
+				state = previousState as any;
 
-			if (settingBlockType === 'kanban-settings') {
-				boardRawSettings = rawSettings;
-			} else if (settingBlockType === 'card-settings') {
-				currentCard.settings = parseCardSettings(rawSettings, logger);
-			} else if (settingBlockType === 'stack-settings') {
-				currentStack.settings = parseStackSettings(rawSettings, logger);
+				if (settingBlockType === 'kanban-settings') {
+					boardRawSettings = rawSettings;
+				} else if (settingBlockType === 'card-settings') {
+					currentCard.settings = parseCardSettings(rawSettings, logger);
+				} else if (settingBlockType === 'stack-settings') {
+					currentStack.settings = parseStackSettings(rawSettings, logger);
+				}
+			} else if (state === 'inSettings') {
+				if (line.startsWith('#')) continue;
+				const [key, value] = parseSettingLine(line);
+				rawSettings[key] = value;
+			} else if (line.startsWith('# ')) {
+				state = 'inStack';
+
+				currentStack = {
+					id: uuid(),
+					title: line.substring(2),
+					cards: [],
+				}
+
+				board.stacks.push(currentStack);
+			} else if (line.startsWith('## ')) {
+				state = 'inCard';
+
+				currentCard = {
+					id: uuid(),
+					title: line.substring(3),
+					body: '',
+					is_todo: 0,
+					todo_completed: 0,
+					todo_due: 0,
+				};
+
+				currentStack.cards.push(currentCard);
+			} else if (!!line && state === 'inCard') {
+				state = 'inBody';
+
+				if (currentCard.body) currentCard.body += '\n';
+				currentCard.body += line;
+			} else if (state === 'inBody') {
+				if (currentCard.body) currentCard.body += '\n';
+				currentCard.body += line;
 			}
-		} else if (state === 'inSettings') {
-			if (line.startsWith('#')) continue;
-			const [key, value] = parseSettingLine(line);
-			rawSettings[key] = value;
-		} else if (line.startsWith('# ')) {
-			state = 'inStack';
+		}
 
-			currentStack = {
-				id: uuid(),
-				title: line.substring(2),
-				cards: [],
+		for (const stack of board.stacks) {
+			for (const card of stack.cards) {
+				card.body = card.body.trim();
 			}
-
-			board.stacks.push(currentStack);
-		} else if (line.startsWith('## ')) {
-			state = 'inCard';
-
-			currentCard = {
-				id: uuid(),
-				title: line.substring(3),
-				body: '',
-				is_todo: 0,
-				todo_completed: 0,
-				todo_due: 0,
-			};
-
-			currentStack.cards.push(currentCard);
-		} else if (!!line && state === 'inCard') {
-			state = 'inBody';
-
-			if (currentCard.body) currentCard.body += '\n';
-			currentCard.body += line;
-		} else if (state === 'inBody') {
-			if (currentCard.body) currentCard.body += '\n';
-			currentCard.body += line;
 		}
+
+		board.settings = parseBoardSettings(boardRawSettings, logger);
+
+		return board;
+	} catch (error) {
+		logger.warn('Could not parse note body, returning empty board:', error, 'On body:', noteBody);
+		const board = emptyBoard();
+		board.noteId = noteId;
+		return board;
 	}
-
-	for (const stack of board.stacks) {
-		for (const card of stack.cards) {
-			card.body = card.body.trim();
-		}
-	}
-
-	board.settings = parseBoardSettings(boardRawSettings, logger);
-
-	return board;
 }
 
 const serializeSettings = (type:SettingType, header:string, settings:PluginSettings | CardSettings | BoardSettings) => {
