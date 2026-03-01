@@ -139,4 +139,134 @@ describe('processRenderedCards', () => {
 		expect(renderedCard1.body.html.includes('cardPostMessage(&quot;' + cardIds[1] + '&quot;)'));
 	});
 
+	it('should handle cards with unclosed code blocks', async () => {
+		// This markdown has an unclosed code block which could cause the dividers
+		// to be absorbed into a <pre><code> block instead of being wrapped in <p> tags
+		const markdownWithUnclosedCodeBlock = `# To Do
+
+## Broken card
+
+\`\`\`javascript
+const x = 1;
+
+## Another card
+
+This card comes after
+
+# Done
+
+\`\`\`kanban-settings
+# Do not remove this block
+\`\`\`
+`;
+
+		const board = await parseNote('', markdownWithUnclosedCodeBlock);
+		const cardsToRender: Record<string, CardToRender> = {};
+
+		for (const stack of board.stacks) {
+			for (const card of stack.cards) {
+				cardsToRender[card.id] = {
+					source: 'card',
+					cardBody: card.body,
+					cardTitle: card.title,
+					noteId: '',
+				};
+			}
+		}
+
+		// Simulate what the markdown renderer might produce when code blocks interfere with dividers
+		// The divider ends up inside the <pre> block instead of being a <p>
+		const problematicHtml = `<div id="rendered-md"><p>Broken card</p>
+<p>YESYOUKANTITLEBODYMARKER</p>
+<pre><code class="language-javascript">const x = 1;
+
+YESYOUKANCARDDIVIDER
+
+Another card
+
+YESYOUKANTITLEBODYMARKER
+
+This card comes after
+</code></pre>
+</div>`;
+
+		// This should not throw an error - it should handle the missing splits gracefully
+		const result = await processRenderedCards(
+			cardsToRender,
+			async (_noteId: string) => null,
+			async (_markup: string, _options: any) => ({
+				cssStrings: [],
+				html: problematicHtml,
+				pluginAssets: [],
+			})
+		);
+
+		// The result should exist and have entries for the cards
+		expect(result).toBeDefined();
+		const cardIds = Object.keys(result);
+		expect(cardIds.length).toBeGreaterThan(0);
+
+		// Each card should have title and body (even if empty due to parsing issues)
+		for (const cardId of cardIds) {
+			expect(result[cardId]).toBeDefined();
+			expect(result[cardId].title).toBeDefined();
+			expect(result[cardId].body).toBeDefined();
+		}
+	});
+
+	it('should render code blocks with backticks correctly', async () => {
+		const markdownWithCodeBlock = `# To Do
+
+## Card with code
+
+\`\`\`javascript
+const x = 1;
+\`\`\`
+
+# Done
+
+\`\`\`kanban-settings
+# Do not remove this block
+\`\`\`
+`;
+
+		const board = await parseNote('', markdownWithCodeBlock);
+		const cardsToRender: Record<string, CardToRender> = {};
+
+		for (const stack of board.stacks) {
+			for (const card of stack.cards) {
+				cardsToRender[card.id] = {
+					source: 'card',
+					cardBody: card.body,
+					cardTitle: card.title,
+					noteId: '',
+				};
+			}
+		}
+
+		// Simulate proper rendering with backticks escaped and then unescaped
+		const properHtml = `<div id="rendered-md"><p>Card with code</p>
+<p>YESYOUKANTITLEBODYMARKER</p>
+<pre><code class="language-javascript">const x = 1;
+</code></pre>
+</div>`;
+
+		const result = await processRenderedCards(
+			cardsToRender,
+			async (_noteId: string) => null,
+			async (_markup: string, _options: any) => ({
+				cssStrings: [],
+				html: properHtml,
+				pluginAssets: [],
+			})
+		);
+
+		expect(result).toBeDefined();
+		const cardIds = Object.keys(result);
+		expect(cardIds.length).toBe(1);
+
+		const card = result[cardIds[0]];
+		expect(card.body.html).toContain('const x = 1;');
+	});
+
 });

@@ -6,9 +6,16 @@ const logger = Logger.create('YesYouCan: processRenderedCards');
 export const cardIdPlaceHolder = 'YESYOUCANCARDIDTHATNEEDSTOBECHANGED';
 export const titleBodyDivider = 'YESYOUKANTITLEBODYMARKER';
 export const cardDivider = 'YESYOUKANCARDDIVIDER';
+const backtickEscape = 'YESYOUKANBACKTICK';
+const backtickEscapeRegex = new RegExp(backtickEscape, 'g');
 
 const cardIdRegex = new RegExp(cardIdPlaceHolder, 'g');
 const checkboxRegex = new RegExp('checkboxclick:(unchecked|checked):([0-9]+)', 'g');
+
+// Escape backticks to prevent markdown code blocks from interfering with our dividers
+const escapeBackticks = (s: string) => s.replace(/`/g, backtickEscape);
+// Unescape backticks in the rendered HTML
+const unescapeBackticks = (s: string) => s.replace(backtickEscapeRegex, '`');
 
 export default async (
 	cardsToRender:Record<string, CardToRender>,
@@ -59,10 +66,10 @@ export default async (
 		}
 
 		if (bigDoc.length) bigDoc.push(cardDivider);
-		
-		bigDoc.push(titleToRender);
+
+		bigDoc.push(escapeBackticks(titleToRender));
 		bigDoc.push(titleBodyDivider);
-		bigDoc.push(bodyToRender);
+		bigDoc.push(escapeBackticks(bodyToRender));
 
 		// Title Card 1
 		//
@@ -98,8 +105,10 @@ export default async (
 
 	let cardIndex:number = 0;
 	for (const [cardId, ] of Object.entries(cardsToRender)) {
-		const doc = bigDocSplitted[cardIndex];
-		let [titleHtml, bodyHtml] = doc.split('<p>' + titleBodyDivider + '</p>').map(s => s.trim());
+		const doc = bigDocSplitted[cardIndex] || '';
+		const splitDoc = doc.split('<p>' + titleBodyDivider + '</p>').map(s => s.trim());
+		let titleHtml = splitDoc[0] || '';
+		let bodyHtml = splitDoc[1] || '';
 		const cardLineIndex = cardLineIndexes[cardId];
 		const bodyLineIndex = cardLineIndex + 4;
 
@@ -108,6 +117,10 @@ export default async (
 		bodyHtml = bodyHtml.replace(checkboxRegex, (_s:string, checkedStatus:string, lineNumber:string) => {
 			return `checkboxclick:${checkedStatus}:${Number(lineNumber) - bodyLineIndex}`;
 		});
+
+		// Restore escaped backticks
+		titleHtml = unescapeBackticks(titleHtml);
+		bodyHtml = unescapeBackticks(bodyHtml);
 
 		const note = cardIdToNotes[cardId];
 
