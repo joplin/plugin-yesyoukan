@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useCallback, useState, useMemo, useRef, useEffect } from "react";
+import { useCallback, useState, useMemo, useRef, useEffect, useReducer } from "react";
 import { Board, Filters, Note, WebviewApi, emptyBoard, getDefaultFilters } from "../../utils/types";
 import StackViewer, { StackDropEventHandler, StackEvent, StackEventHandler } from "../StackViewer";
 import { DragDropContext, Droppable, OnDragEndResponder } from "@hello-pangea/dnd";
@@ -198,11 +198,20 @@ export default () => {
 		webviewApi,
 	});
 
+	const [showCardBody, toggleShowCardBody] = useReducer((prev) => !prev, effectiveBoardSettings.showCardBody !== false);
+
+	useEffect(() => {
+		if (effectiveBoardSettings.showCardBody !== undefined && effectiveBoardSettings.showCardBody !== showCardBody) {
+			toggleShowCardBody();
+		}
+	}, [effectiveBoardSettings.showCardBody]);
+
 	const appStyle = useStyle({
 		backgroundColors,
 		cssStrings,
 		stackDynamicWidth: effectiveBoardSettings.stackDynamicWidth,
 		stackWidth: effectiveBoardSettings.stackWidth,
+		cardMaxHeight: effectiveBoardSettings.cardMaxHeight ?? 15,
 	});
 
 	const onFilter = useCallback(() => {
@@ -218,6 +227,8 @@ export default () => {
 		onRedoBoard,
 		onUndoBoard,
 		onFilter,
+		onToggleShowCardBody: toggleShowCardBody,
+		showCardBody,
 	});
 
 	const cardTags = useCardTags({ board });
@@ -252,7 +263,7 @@ export default () => {
 				onDeleteCard={onDeleteCard}
 				onDuplicateCard={onDuplicateCard}
 				onEditSettings={onEditStackSettings}
-				showCardBody={effectiveBoardSettings.showCardBody}
+				showCardBody={showCardBody}
 				onDrop={onStackDrop}
 				isLast={index === board.stacks.length - 1}
 				dynamicWidth={dynamicWidth}
