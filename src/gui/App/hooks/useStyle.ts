@@ -4,6 +4,7 @@ import { Colors, colorsToCss } from "../../../utils/colors";
 interface Props {
 	stackDynamicWidth: boolean;
 	stackWidth: number;
+	cardMaxHeight: number;
 	backgroundColors: Colors;
 	cssStrings: string[];
 }
@@ -30,12 +31,26 @@ export default (props:Props) => {
 			`);
 		}
 
+		if (props.cardMaxHeight > 0) {
+			styles.push(`
+				.card {
+					max-height: ${props.cardMaxHeight}em;
+				}
+			`);
+		} else {
+			styles.push(`
+				.card {
+					max-height: none;
+				}
+			`);
+		}
+
 		styles.push(colorsToCss(props.backgroundColors, 'background', 'background-color'));
 
 		styles.push(props.cssStrings.join('\n'));
 
 		return styles.join('\n\n');
-	}, [props.stackDynamicWidth, props.stackWidth, props.backgroundColors, props.cssStrings]);
+	}, [props.stackDynamicWidth, props.stackWidth, props.cardMaxHeight, props.backgroundColors, props.cssStrings]);
 
 	return appStyle;
 }

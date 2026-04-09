@@ -8,6 +8,8 @@ interface Props {
 	onRedoBoard: () => void;
 	onAddStack: () => void;
 	onFilter: () => void;
+	onToggleShowCardBody: () => void;
+	showCardBody: boolean;
 	filterTotalCardCount: number;
 	filterVisibleCardCount: number;
 }
@@ -55,9 +57,18 @@ export default (props:Props) => {
 					props.onFilter();
 				},
 			},
+
+			{
+				name: 'toggleCardBody',
+				icon: props.showCardBody ? 'eye' : 'eye-slash',
+				title: props.showCardBody ? 'Hide card body' : 'Show card body',
+				onClick: () => {
+					props.onToggleShowCardBody();
+				},
+			},
 		];		
 		return output;
-	}, [props.onUndoBoard, props.onRedoBoard, props.historyUndoLength, props.historyRedoLength, props.onAddStack, props.onFilter, props.filterTotalCardCount, props.filterVisibleCardCount]);
+	}, [props.onUndoBoard, props.onRedoBoard, props.historyUndoLength, props.historyRedoLength, props.onAddStack, props.onFilter, props.filterTotalCardCount, props.filterVisibleCardCount, props.onToggleShowCardBody, props.showCardBody]);
 
 	return toolbarButtons;
 }

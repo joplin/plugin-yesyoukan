@@ -151,6 +151,7 @@ export interface PluginSettings {
 	showCardBody?: boolean;
 	cardInsertLocation?: CardInsertLocation;
 	showCardCounter?: boolean;
+	cardMaxHeight?: number;
 }
 
 export interface CardSettings {
@@ -316,6 +317,15 @@ export const pluginSettingItems:PluginSettingItems = {
 		type: SettingItemType.Bool,
 		public: true,
 		value: true,
+		section: settingSectionName,
+	},
+
+	cardMaxHeight: {
+		label: 'Card maximum height (em)',
+		description: 'Maximum height of a card in em units. Set to 0 for no limit.',
+		type: SettingItemType.Int,
+		public: true,
+		value: 20,
 		section: settingSectionName,
 	},
 };
