@@ -211,7 +211,7 @@ export default () => {
 		cssStrings,
 		stackDynamicWidth: effectiveBoardSettings.stackDynamicWidth,
 		stackWidth: effectiveBoardSettings.stackWidth,
-		cardMaxHeight: effectiveBoardSettings.cardMaxHeight ?? 20,
+		cardMaxHeight: effectiveBoardSettings.cardMaxHeight ?? 15,
 	});
 
 	const onFilter = useCallback(() => {

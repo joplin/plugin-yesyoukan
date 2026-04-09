@@ -325,7 +325,7 @@ export const pluginSettingItems:PluginSettingItems = {
 		description: 'Maximum height of a card in em units. Set to 0 for no limit.',
 		type: SettingItemType.Int,
 		public: true,
-		value: 20,
+		value: 15,
 		section: settingSectionName,
 	},
 };
